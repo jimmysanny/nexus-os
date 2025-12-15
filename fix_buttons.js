@@ -1,4 +1,8 @@
-"use client";
+const fs = require('fs');
+
+console.log("🚀 Wiring up Landing Page Buttons...");
+
+const content = `"use client";
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Globe, CreditCard, Layout } from "lucide-react";
 
@@ -76,4 +80,7 @@ export default function LandingPage() {
       </footer>
     </div>
   );
-}
+}`;
+
+fs.writeFileSync('app/page.tsx', content);
+console.log("✅ Buttons Fixed! 'View Live Demo' now points to /f/1");
