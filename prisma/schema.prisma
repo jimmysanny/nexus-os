@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Funnel {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  blocks      Json     @default("[]")
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  price     Float
+  currency  String   @default("KES")
+  createdAt DateTime @default(now())
+}

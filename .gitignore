@@ -26,3 +26,8 @@ pnpm-debug.log*
 # local env files (IMPORTANT: KEEPS KEYS SAFE)
 .env*.local
 .env
+
+# clerk configuration (can include secrets)
+/.clerk/
+
+/lib/generated/prisma
