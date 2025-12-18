@@ -1,31 +1,42 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model User {
+  id        String   @id @default(uuid())
+  clerkId   String   @unique
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  funnels   Funnel[]
 }
 
 model Funnel {
   id          String   @id @default(uuid())
-  userId      String
   name        String
+  subdomain   String   @unique
   description String?
-  subdomain   String?  @unique
   published   Boolean  @default(false)
-  visits      Int      @default(0)
-  blocks      Json?    @default("[]")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Product {
-  id          String   @id @default(uuid())
   userId      String
-  name        String
-  price       Float
-  currency    String   @default("KES")
+  user        User     @relation(fields: [userId], references: [clerkId])
+  
+  // Content Fields
+  headline    String   @default("Unlock Your Potential")
+  subheadline String   @default("Join thousands of happy customers.")
+  price       Float    @default(49.99)
+  
+  // Design Fields
+  theme       String   @default("blue")
+  font        String   @default("sans")
+  logoUrl     String?
+  heroImage   String   @default("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3")
+  customHtml  String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
