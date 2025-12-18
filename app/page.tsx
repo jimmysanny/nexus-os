@@ -62,7 +62,6 @@ export default function LandingPage() {
       <section className="py-24 bg-gray-900/30 border-y border-white/5">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Feature 1 */}
             <div className="p-8 rounded-3xl bg-black border border-white/10 hover:border-blue-500/50 transition group hover:bg-gray-900/50">
               <div className="w-14 h-14 bg-blue-900/20 text-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
                 <Globe size={28} />
@@ -71,7 +70,6 @@ export default function LandingPage() {
               <p className="text-gray-400 leading-relaxed">Create stunning landing pages without writing code. Use our pre-built templates to launch professional sites in seconds.</p>
             </div>
 
-            {/* Feature 2 */}
             <div className="p-8 rounded-3xl bg-black border border-white/10 hover:border-green-500/50 transition group hover:bg-gray-900/50">
               <div className="w-14 h-14 bg-green-900/20 text-green-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
                 <CreditCard size={28} />
@@ -80,7 +78,6 @@ export default function LandingPage() {
               <p className="text-gray-400 leading-relaxed">Accept payments globally. Whether your customers use Visa, Mastercard, M-Pesa, or local Mobile Money wallets, we handle it all.</p>
             </div>
 
-            {/* Feature 3 */}
             <div className="p-8 rounded-3xl bg-black border border-white/10 hover:border-purple-500/50 transition group hover:bg-gray-900/50">
               <div className="w-14 h-14 bg-purple-900/20 text-purple-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
                 <BarChart3 size={28} />
