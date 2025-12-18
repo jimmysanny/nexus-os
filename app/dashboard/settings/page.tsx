@@ -1,14 +1,37 @@
-﻿export default function SettingsPage() {
+﻿"use client";
+
+import { UserProfile } from "@clerk/nextjs";
+
+export default function SettingsPage() {
   return (
-    <div className="p-8 text-white max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 space-y-8">
-        <div>
-            <h3 className="text-xl font-bold mb-2">Profile Information</h3>
-            <p className="text-gray-400 mb-4">Manage your account details.</p>
-            <div className="flex gap-4">
-                <button className="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg text-white font-medium transition">Edit Profile</button>
-            </div>
+    <div className="flex justify-center p-8 w-full">
+      <div className="w-full max-w-4xl">
+        <h1 className="text-3xl font-bold text-white mb-8">Account Settings</h1>
+        
+        {/* CLERK'S MAGIC COMPONENT */}
+        {/* This handles Photos, Emails, Passwords, and Security automatically */}
+        <div className="bg-gray-900 rounded-xl overflow-hidden border border-gray-800">
+            <UserProfile 
+                path="/dashboard/settings"
+                routing="path"
+                appearance={{
+                    variables: {
+                        colorBackground: "#111827", // Matches our dark mode
+                        colorText: "white",
+                        colorPrimary: "#2563eb",
+                        colorInputBackground: "#1f2937",
+                        colorInputText: "white",
+                        colorTextSecondary: "#9ca3af",
+                    },
+                    elements: {
+                        card: "shadow-none border-0",
+                        navbar: "border-r border-gray-700",
+                        navbarButton: "text-gray-400 hover:text-white",
+                        headerTitle: "text-white",
+                        headerSubtitle: "text-gray-400"
+                    }
+                }}
+            />
         </div>
       </div>
     </div>
