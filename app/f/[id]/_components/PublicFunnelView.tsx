@@ -26,8 +26,8 @@ export default function PublicFunnelView({ funnel }: { funnel: any }) {
             <span className="text-3xl font-black text-blue-600">${funnel.price}</span>
           </div>
           <button 
-            onClick={() => initializePayment({ onSuccess: () => alert("Success!"), onClose: () => {} })}
-            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-xl"
+            onClick={() => initializePayment({ onSuccess: () => alert("Payment Successful!"), onClose: () => {} })}
+            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-xl hover:scale-[1.02] transition"
           >
             Buy Now
           </button>
