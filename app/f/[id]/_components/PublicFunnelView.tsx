@@ -19,15 +19,15 @@ export default function PublicFunnelView({ funnel }: { funnel: any }) {
             <h1 className="text-3xl font-bold text-white leading-tight">{funnel.headline}</h1>
           </div>
         </div>
-        <div className="p-8 space-y-6">
-          <p className="text-gray-600 text-lg">{funnel.subheadline}</p>
-          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl">
-            <span className="text-gray-400">Price</span>
+        <div className="p-8 space-y-6 text-center">
+          <p className="text-gray-600 text-lg leading-relaxed">{funnel.subheadline}</p>
+          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <span className="text-gray-400 font-medium">Total</span>
             <span className="text-3xl font-black text-blue-600">${funnel.price}</span>
           </div>
           <button 
-            onClick={() => initializePayment({ onSuccess: () => alert("Payment Successful!"), onClose: () => {} })}
-            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-xl hover:scale-[1.02] transition"
+            onClick={() => initializePayment({ onSuccess: () => alert("Success!"), onClose: () => {} })}
+            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold text-xl hover:bg-blue-700 transition"
           >
             Buy Now
           </button>
