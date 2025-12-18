@@ -1,10 +1,11 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Save, Monitor, Smartphone, Settings, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle } from "lucide-react";
-import { saveFunnel } from "@/app/actions/saveFunnel"; // Import the Server Action
+import { Save, Monitor, Smartphone, Settings, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard } from "lucide-react";
+import { saveFunnel } from "@/app/actions/saveFunnel";
+import { usePaystackPayment } from "react-paystack";
 
-// Mock ID for now - in real app this comes from props
+// Mock ID for now
 const MOCK_FUNNEL_ID = "test-funnel-id"; 
 
 export default function FunnelEditor() {
@@ -21,7 +22,26 @@ export default function FunnelEditor() {
   const [customHtml, setCustomHtml] = useState("");
 
   const [activeTab, setActiveTab] = useState("content");
-  const [status, setStatus] = useState("idle"); // idle, saving, success
+  const [status, setStatus] = useState("idle");
+
+  // PAYSTACK CONFIG
+  const config = {
+      reference: (new Date()).getTime().toString(),
+      email: "customer@example.com", // In a real app, you'd ask the user for this
+      amount: Math.floor(parseFloat(price) * 100), // Paystack expects amount in kobo/cents
+      publicKey: process.env.NEXT_PUBLIC_PAYSTACK_KEY || "", 
+      currency: "KES", // Change to USD if you prefer
+  };
+
+  const initializePayment = usePaystackPayment(config);
+
+  const onSuccess = (reference: any) => {
+      alert("Payment Successful! Reference: " + reference.reference);
+  };
+
+  const onClose = () => {
+      alert("Payment cancelled.");
+  };
 
   // Helper to get theme classes
   const getThemeClass = (color: string) => {
@@ -43,24 +63,8 @@ export default function FunnelEditor() {
 
   const handleSave = async () => {
     setStatus("saving");
-    
-    // Prepare data packet
-    const funnelData = {
-        headline,
-        description,
-        price,
-        themeColor,
-        font,
-        logoUrl,
-        heroImageUrl,
-        customHtml
-    };
-
-    // Call the Server Action
-    // Note: We use a placeholder ID because we are in test mode. 
-    // In production, this ID comes from the URL.
+    const funnelData = { headline, description, price, themeColor, font, logoUrl, heroImageUrl, customHtml };
     await saveFunnel(MOCK_FUNNEL_ID, funnelData);
-
     setTimeout(() => {
         setStatus("success");
         setTimeout(() => setStatus("idle"), 2000);
@@ -71,7 +75,6 @@ export default function FunnelEditor() {
     <div className="flex h-[calc(100vh-4rem)] text-white">
       {/* LEFT: SIDEBAR CONTROLS */}
       <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col">
-        {/* TABS */}
         <div className="flex border-b border-gray-800">
             <button onClick={() => setActiveTab("content")} className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 ${activeTab === "content" ? "text-blue-400 bg-gray-800" : "text-gray-400 hover:text-white"}`}>
                 <Layout size={16} /> Content
@@ -81,7 +84,6 @@ export default function FunnelEditor() {
             </button>
         </div>
 
-        {/* CONTROLS SCROLL AREA */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
             {activeTab === "content" && (
                 <div className="space-y-6">
@@ -131,7 +133,7 @@ export default function FunnelEditor() {
             )}
         </div>
 
-        {/* SAVE BUTTON AREA */}
+        {/* SAVE BUTTON */}
         <div className="p-4 border-t border-gray-800">
             <button 
                 onClick={handleSave}
@@ -165,7 +167,14 @@ export default function FunnelEditor() {
                     <span className="text-gray-500 font-medium">Total</span>
                     <span className={`text-3xl font-bold ${themeColor === 'blue' ? 'text-blue-600' : themeColor === 'purple' ? 'text-purple-600' : themeColor === 'green' ? 'text-green-600' : 'text-red-600'}`}>${price}</span>
                 </div>
-                <button className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] ${getThemeClass(themeColor)}`}>Buy Now</button>
+                
+                {/* REAL PAYMENT BUTTON */}
+                <button 
+                  onClick={() => initializePayment({ onSuccess, onClose })}
+                  className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] flex items-center justify-center gap-2 ${getThemeClass(themeColor)}`}
+                >
+                    Buy Now <CreditCard size={20} />
+                </button>
             </div>
         </div>
       </div>
