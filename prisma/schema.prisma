@@ -1,4 +1,5 @@
-// This connects to your Neon Database
+﻿// prisma/schema.prisma
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -8,19 +9,25 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// The Funnel Model
 model Funnel {
   id          String   @id @default(uuid())
-  userId      String   // Links to Clerk User ID (Security)
-  name        String   // Funnel Name (e.g. "My Webinar")
-  description String?  // Optional description
+  userId      String
+  name        String
+  description String?
   subdomain   String?  @unique
   published   Boolean  @default(false)
-  visits      Int      @default(0)  // <--- NEW: Tracks Page Views
-  
-  // The content blocks (JSON data for the editor)
-  blocks      Json?    @default("[]") 
-  
+  visits      Int      @default(0)
+  blocks      Json?    @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  price       Float
+  currency    String   @default("KES")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

@@ -1,15 +1,13 @@
-'use server'
-import { PrismaClient } from '@prisma/client'
+﻿'use server'
+import { db } from '@/lib/db'; // Using the safe connection
 import { auth } from '@clerk/nextjs/server'
 
-const prisma = new PrismaClient()
-
-// 1. Get All Products (Owner Only)
+// 1. Get All Products
 export async function getProducts() {
   const { userId } = await auth()
   if (!userId) return []
   
-  return await prisma.product.findMany({
+  return await db.product.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' }
   })
@@ -20,7 +18,7 @@ export async function createProduct(name: string, price: number, currency: strin
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 
-  return await prisma.product.create({
+  return await db.product.create({
     data: {
       userId,
       name,
@@ -35,11 +33,10 @@ export async function deleteProduct(id: string) {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
 
-  // Ensure user owns the product before deleting
-  const product = await prisma.product.findUnique({ where: { id } })
+  const product = await db.product.findUnique({ where: { id } })
   if (product?.userId !== userId) throw new Error("Unauthorized")
 
-  return await prisma.product.delete({
+  return await db.product.delete({
     where: { id }
   })
 }
