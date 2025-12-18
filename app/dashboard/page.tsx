@@ -4,18 +4,9 @@ import { redirect } from "next/navigation";
 import { BarChart3, Globe, MousePointerClick, Plus } from "lucide-react";
 import Link from "next/link";
 
-// 1. SIMPLE CARD COMPONENTS (Defined right here to prevent errors)
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={g-gray-900 border border-gray-800 rounded-xl }>{children}</div>;
-}
-function CardHeader({ children }: { children: React.ReactNode }) {
-  return <div className="p-6 pb-2">{children}</div>;
-}
-function CardTitle({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-2xl font-bold text-white">{children}</h3>;
-}
-function CardContent({ children }: { children: React.ReactNode }) {
-  return <div className="p-6 pt-0">{children}</div>;
+// 1. SIMPLE CARD COMPONENTS (Inline to prevent errors)
+function Card({ children }: { children: React.ReactNode }) {
+  return <div className="bg-gray-900 border border-gray-800 rounded-xl">{children}</div>;
 }
 
 // 2. MAIN DASHBOARD PAGE
