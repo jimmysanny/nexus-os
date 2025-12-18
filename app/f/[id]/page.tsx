@@ -2,7 +2,8 @@
 import { useEffect, useState, use } from "react";
 import { Loader2, CheckCircle, Lock, ShieldCheck, PlayCircle } from "lucide-react";
 import PaystackWrapper from "@/components/PaystackWrapper";
-import { getPublicFunnel } from "@/app/actions/funnel";
+// 1. UPDATE IMPORT: Add recordVisit
+import { getPublicFunnel, recordVisit } from "@/app/actions/funnel"; 
 
 export default function PublicFunnelPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -16,6 +17,10 @@ export default function PublicFunnelPage({ params }: { params: Promise<{ id: str
         const data = await getPublicFunnel(id);
         if (data && data.blocks) {
              setBlocks(data.blocks as any[]);
+
+             // 2. TRIGGER ANALYTICS: Count this visit
+             await recordVisit(id); 
+
         } else {
              setError(true);
         }
@@ -51,6 +56,7 @@ export default function PublicFunnelPage({ params }: { params: Promise<{ id: str
 
       {blocks.map((block) => (
         <div key={block.id} className="w-full">
+            
             {/* HERO SECTION */}
             {block.type === 'hero' && (
                 <section className="bg-white border-b border-gray-100">

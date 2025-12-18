@@ -50,4 +50,21 @@ export async function saveFunnel(id: string, blocks: any[], name: string = "Unti
       published: false
     }
   })
+}// --- ANALYTICS: Record a Visit ---
+export async function recordVisit(funnelId: string) {
+  try {
+    // This talks to your new database field
+    await prisma.funnel.update({
+      where: { id: funnelId },
+      data: {
+        visits: {
+          increment: 1, // Simple math: Current + 1
+        },
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to record visit:", error);
+    return { success: false };
+  }
 }
