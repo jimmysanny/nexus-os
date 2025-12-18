@@ -55,13 +55,13 @@ export default function FunnelEditor() {
         <div className="flex border-b border-gray-800">
             <button 
                 onClick={() => setActiveTab("content")}
-                className={lex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 \}
+                className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 ${activeTab === "content" ? "text-blue-400 bg-gray-800" : "text-gray-400 hover:text-white"}`}
             >
                 <Layout size={16} /> Content
             </button>
             <button 
                 onClick={() => setActiveTab("design")}
-                className={lex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 \}
+                className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 ${activeTab === "design" ? "text-blue-400 bg-gray-800" : "text-gray-400 hover:text-white"}`}
             >
                 <Palette size={16} /> Design
             </button>
@@ -99,7 +99,7 @@ export default function FunnelEditor() {
                                 <button 
                                     key={c}
                                     onClick={() => setThemeColor(c)}
-                                    className={w-8 h-8 rounded-full border-2 \}
+                                    className={`w-8 h-8 rounded-full border-2 ${themeColor === c ? "border-white" : "border-transparent"}`}
                                     style={{ backgroundColor: c === 'blue' ? '#2563eb' : c === 'purple' ? '#9333ea' : c === 'green' ? '#16a34a' : '#dc2626' }}
                                 />
                             ))}
@@ -153,7 +153,7 @@ export default function FunnelEditor() {
         </div>
 
         {/* THE PHONE / PREVIEW SCREEN */}
-        <div className={w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative \}>
+        <div className={`w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative ${getFontClass(font)}`}>
             
             {/* 1. Header with optional Logo */}
             <div className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
@@ -167,7 +167,7 @@ export default function FunnelEditor() {
             {/* 2. Hero Section with Background Image */}
             <div className="h-64 relative flex items-end p-6">
                 <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
-                <div className={bsolute inset-0 opacity-80 \}></div>
+                <div className={`absolute inset-0 opacity-80 ${themeColor === 'blue' ? 'bg-blue-900/60' : themeColor === 'purple' ? 'bg-purple-900/60' : themeColor === 'green' ? 'bg-green-900/60' : 'bg-red-900/60'}`}></div>
                 <h1 className="text-3xl font-extrabold text-white relative z-10 leading-tight">{headline}</h1>
             </div>
 
@@ -182,12 +182,12 @@ export default function FunnelEditor() {
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <span className="text-gray-500 font-medium">Total</span>
-                    <span className={	ext-3xl font-bold \}>
-                        \
+                    <span className={`text-3xl font-bold ${themeColor === 'blue' ? 'text-blue-600' : themeColor === 'purple' ? 'text-purple-600' : themeColor === 'green' ? 'text-green-600' : 'text-red-600'}`}>
+                        ${price}
                     </span>
                 </div>
 
-                <button className={w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] \}>
+                <button className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] ${getThemeClass(themeColor)}`}>
                     Buy Now
                 </button>
             </div>
