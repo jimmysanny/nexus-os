@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter } from "next/font/google"; // 1. Import the pro font
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 
+// 2. Configure the font
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -18,7 +19,8 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={inter.className}>
+        {/* 3. APPLY THE FONT HERE (antialiased makes it sharp) */}
+        <body className={`${inter.className} antialiased bg-gray-50 text-slate-900`}>
           {children}
         </body>
       </html>

@@ -1,0 +1,3459 @@
+
+
+================
+FILE: funnel.ts
+================
+'use server'
+import { PrismaClient } from '@prisma/client'
+import { auth } from '@clerk/nextjs/server'
+
+const prisma = new PrismaClient()
+
+// 1. Secure: Get Funnel for Dashboard (Owner Only)
+export async function getFunnel(id: string) {
+  const { userId } = await auth()
+  if (!userId) return null
+  
+  const funnel = await prisma.funnel.findUnique({
+    where: { id }
+  })
+  
+  // Security check: Only return if owner matches
+  if (funnel && funnel.userId !== userId) return null
+  return funnel
+}
+
+// 2. Public: Get Funnel for Viewer (Everyone)
+export async function getPublicFunnel(id: string) {
+  try {
+    const funnel = await prisma.funnel.findUnique({
+      where: { id }
+    })
+    return funnel
+  } catch (e) {
+    console.error("Database Error:", e)
+    return null
+  }
+}
+
+// 3. Secure: Save Funnel
+export async function saveFunnel(id: string, blocks: any[], name: string = "Untitled Funnel") {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+
+  return await prisma.funnel.upsert({
+    where: { id },
+    update: { 
+      blocks: blocks,
+      updatedAt: new Date()
+    },
+    create: {
+      id,
+      userId,
+      name,
+      blocks: blocks,
+      published: false
+    }
+  })
+}// --- ANALYTICS: Record a Visit ---
+export async function recordVisit(funnelId: string) {
+  try {
+    // This talks to your new database field
+    await prisma.funnel.update({
+      where: { id: funnelId },
+      data: {
+        visits: {
+          increment: 1, // Simple math: Current + 1
+        },
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to record visit:", error);
+    return { success: false };
+  }
+}
+
+
+================
+FILE: product.ts
+================
+'use server'
+import { PrismaClient } from '@prisma/client'
+import { auth } from '@clerk/nextjs/server'
+
+const prisma = new PrismaClient()
+
+// 1. Get All Products (Owner Only)
+export async function getProducts() {
+  const { userId } = await auth()
+  if (!userId) return []
+  
+  return await prisma.product.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' }
+  })
+}
+
+// 2. Create Product
+export async function createProduct(name: string, price: number, currency: string = "KES") {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+
+  return await prisma.product.create({
+    data: {
+      userId,
+      name,
+      price,
+      currency
+    }
+  })
+}
+
+// 3. Delete Product
+export async function deleteProduct(id: string) {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+
+  // Ensure user owns the product before deleting
+  const product = await prisma.product.findUnique({ where: { id } })
+  if (product?.userId !== userId) throw new Error("Unauthorized")
+
+  return await prisma.product.delete({
+    where: { id }
+  })
+}
+
+
+================
+FILE: route.ts
+================
+
+
+================
+FILE: page.tsx
+================
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+
+export default function NewFunnelRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Generate a random ID (or you could use a library like uuid)
+    const randomId = Math.random().toString(36).substring(7);
+    
+    // Redirect to the Editor with that new ID
+    router.push(`/dashboard/funnels/${randomId}`);
+  }, [router]);
+
+  return (
+    <div className="h-screen bg-black flex items-center justify-center text-white">
+      <Loader2 className="animate-spin mr-2" /> Creating your funnel...
+    </div>
+  );
+}
+
+
+================
+FILE: page.tsx
+================
+
+
+================
+FILE: page.tsx
+================
+"use client";
+import Link from "next/link";
+import { Plus, Globe, MoreVertical, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { saveFunnel } from "@/app/actions/funnel";
+
+export default function FunnelsList() {
+  const [loading, setLoading] = useState(false);
+
+  // This will create a real funnel in your database
+  const handleCreate = async () => {
+    setLoading(true);
+    const newId = crypto.randomUUID(); // Generates a unique ID
+    
+    try {
+        // Save empty funnel to database
+        await saveFunnel(newId, [], "My New Funnel");
+        
+        // Redirect to the editor
+        window.location.href = `/dashboard/funnels/${newId}`;
+    } catch (e) {
+        alert("Error creating funnel. Make sure you are logged in.");
+        setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-8 text-white">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">My Funnels</h1>
+          <p className="text-gray-400">Manage your landing pages and sales flows.</p>
+        </div>
+        <button 
+            onClick={handleCreate} 
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition flex items-center gap-2"
+        >
+            {loading ? <Loader2 className="animate-spin" /> : <Plus size={20} />} 
+            Create Funnel
+        </button>
+      </div>
+
+      {/* Empty State / List */}
+      <div className="text-center py-20 bg-gray-900 border border-gray-800 rounded-xl border-dashed">
+        <h3 className="text-xl font-bold text-gray-500 mb-2">No funnels found</h3>
+        <p className="text-gray-600 mb-6">Click the button above to start building.</p>
+      </div>
+    </div>
+  );
+}
+
+
+================
+FILE: page.tsx
+================
+"use client";
+import { useState, useEffect } from "react";
+import { Package, Plus, Search, Trash2, X, Loader2, ShoppingBag } from "lucide-react";
+import { createProduct, getProducts, deleteProduct } from "@/app/actions/product";
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Form State
+  const [newProduct, setNewProduct] = useState({ name: "", price: "", currency: "KES" });
+
+  // 1. Load Products
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const data = await getProducts();
+      setProducts(data);
+    } catch (e) { console.error(e); }
+    setLoading(false);
+  };
+
+  // 2. Add Product
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await createProduct(newProduct.name, parseFloat(newProduct.price), newProduct.currency);
+      setIsModalOpen(false);
+      setNewProduct({ name: "", price: "", currency: "KES" }); // Reset form
+      loadData(); // Refresh list
+    } catch (e) {
+      alert("Error creating product");
+    }
+    setSaving(false);
+  };
+
+  // 3. Delete Product
+  const handleDelete = async (id: string) => {
+    if(!confirm("Are you sure you want to delete this product?")) return;
+    try {
+        setProducts(products.filter(p => p.id !== id)); // Optimistic update
+        await deleteProduct(id);
+    } catch(e) {
+        loadData(); // Revert on error
+    }
+  };
+
+  return (
+    <div className="p-8 text-white min-h-screen relative">
+      
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 className="text-3xl font-bold mb-1">Products</h1>
+            <p className="text-gray-400">Manage your digital assets and pricing.</p>
+        </div>
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 px-6 py-3 rounded-xl flex items-center gap-2 font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-900/20"
+        >
+          <Plus size={20} /> New Product
+        </button>
+      </div>
+
+      {/* LOADING STATE */}
+      {loading && (
+        <div className="flex justify-center py-20 text-blue-500">
+            <Loader2 className="animate-spin" size={40} />
+        </div>
+      )}
+
+      {/* EMPTY STATE */}
+      {!loading && products.length === 0 && (
+        <div className="bg-gray-900/50 border border-gray-800 border-dashed rounded-2xl p-16 text-center">
+          <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Package size={40} className="text-gray-500" />
+          </div>
+          <h3 className="text-2xl font-bold mb-2">No products found</h3>
+          <p className="text-gray-400 mb-8 max-w-md mx-auto">
+             Start by adding a digital course, ebook, or service.
+          </p>
+          <button onClick={() => setIsModalOpen(true)} className="text-blue-400 font-bold hover:text-blue-300 hover:underline transition">
+            + Create your first product
+          </button>
+        </div>
+      )}
+
+      {/* PRODUCTS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {products.map((product) => (
+            <div key={product.id} className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition group relative">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400">
+                        <ShoppingBag size={24} />
+                    </div>
+                    <button onClick={() => handleDelete(product.id)} className="text-gray-600 hover:text-red-500 transition">
+                        <Trash2 size={18} />
+                    </button>
+                </div>
+                <h3 className="font-bold text-lg mb-1">{product.name}</h3>
+                <p className="text-2xl font-bold text-green-400">{product.currency} {product.price}</p>
+                <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between text-sm text-gray-500">
+                    <span>Digital Item</span>
+                    <span>{new Date(product.createdAt).toLocaleDateString()}</span>
+                </div>
+            </div>
+        ))}
+      </div>
+
+      {/* CREATE MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl relative">
+                <button 
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute right-4 top-4 text-gray-500 hover:text-white"
+                >
+                    <X size={20} />
+                </button>
+                
+                <h2 className="text-xl font-bold mb-6">Add New Product</h2>
+                
+                <form onSubmit={handleCreate} className="space-y-4">
+                    <div>
+                        <label className="block text-xs uppercase font-bold text-gray-500 mb-2">Product Name</label>
+                        <input 
+                            required
+                            autoFocus
+                            className="w-full bg-black border border-gray-800 rounded-lg p-3 outline-none focus:border-blue-500 transition text-white"
+                            placeholder="e.g. Masterclass 2025"
+                            value={newProduct.name}
+                            onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs uppercase font-bold text-gray-500 mb-2">Price</label>
+                            <input 
+                                required
+                                type="number"
+                                className="w-full bg-black border border-gray-800 rounded-lg p-3 outline-none focus:border-green-500 transition text-white"
+                                placeholder="5000"
+                                value={newProduct.price}
+                                onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs uppercase font-bold text-gray-500 mb-2">Currency</label>
+                            <select 
+                                className="w-full bg-black border border-gray-800 rounded-lg p-3 outline-none focus:border-blue-500 transition text-white"
+                                value={newProduct.currency}
+                                onChange={(e) => setNewProduct({...newProduct, currency: e.target.value})}
+                            >
+                                <option value="KES">KES (Shilling)</option>
+                                <option value="USD">USD (Dollar)</option>
+                                <option value="NGN">NGN (Naira)</option>
+                                <option value="ZAR">ZAR (Rand)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button 
+                        disabled={saving}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl mt-4 flex items-center justify-center gap-2 transition"
+                    >
+                        {saving ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
+                        {saving ? "Saving..." : "Create Product"}
+                    </button>
+                </form>
+            </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+
+================
+FILE: layout.tsx
+================
+import Link from "next/link";
+import { LayoutDashboard, ShoppingBag, Users, Settings, LogOut, Globe } from "lucide-react";
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex h-screen bg-black text-white">
+      {/* Sidebar */}
+      <div className="w-64 border-r border-gray-800 p-6 flex flex-col">
+        <div className="text-2xl font-bold mb-10 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+          Nexus OS
+        </div>
+        
+        <nav className="flex-1 space-y-2">
+          <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-gray-900 text-white rounded-lg">
+            <LayoutDashboard size={20} /> Overview
+          </Link>
+          <Link href="/dashboard/funnels" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-900/50 rounded-lg transition">
+            <Globe size={20} /> My Funnels
+          </Link>
+          <Link href="/dashboard/store" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-900/50 rounded-lg transition">
+            <ShoppingBag size={20} /> Products
+          </Link>
+          <Link href="/dashboard/customers" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-900/50 rounded-lg transition">
+            <Users size={20} /> Customers
+          </Link>
+          <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-900/50 rounded-lg transition">
+            <Settings size={20} /> Settings
+          </Link>
+        </nav>
+
+        <div className="pt-6 border-t border-gray-800">
+          <button className="flex items-center gap-3 text-gray-500 hover:text-red-400 transition w-full px-4">
+            <LogOut size={20} /> Sign Out
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-auto">
+        <header className="h-16 border-b border-gray-800 flex items-center justify-between px-8 bg-black/50 backdrop-blur-md sticky top-0 z-10">
+          <div className="text-gray-400 text-sm"> / dashboard / overview</div>
+          <div className="flex items-center gap-4">
+             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500"></div>
+          </div>
+        </header>
+        <main className="p-8">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+
+================
+FILE: page.tsx
+================
+"use client";
+import Link from "next/link";
+import { Plus, Globe, MoreVertical, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { saveFunnel } from "@/app/actions/funnel";
+
+export default function FunnelsList() {
+  const [loading, setLoading] = useState(false);
+
+  // This is a placeholder list. 
+  // Once we connect the "List" action, real funnels will appear here.
+  const funnels = [
+    { id: "demo-funnel", name: "Demo Funnel", visits: 0, revenue: "KES 0" },
+  ];
+
+  const handleCreate = async () => {
+    setLoading(true);
+    const newId = crypto.randomUUID();
+    // Create a new empty funnel in the database
+    await saveFunnel(newId, [], "New Funnel");
+    // Redirect to the editor
+    window.location.href = `/dashboard/funnels/${newId}`;
+  };
+
+  return (
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-1 text-white">My Funnels</h1>
+          <p className="text-gray-400">Manage your landing pages and sales flows.</p>
+        </div>
+        <button 
+            onClick={handleCreate} 
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition flex items-center gap-2"
+        >
+            {loading ? <Loader2 className="animate-spin" /> : <Plus size={20} />} 
+            Create Funnel
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {funnels.map(funnel => (
+            <div key={funnel.id} className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition relative group">
+                <div className="absolute top-4 right-4 text-gray-500 cursor-pointer hover:text-white"><MoreVertical size={20}/></div>
+                <div className="w-12 h-12 bg-blue-900/20 text-blue-500 rounded-lg flex items-center justify-center mb-4">
+                    <Globe size={24} />
+                </div>
+                <h3 className="text-xl font-bold mb-1 text-white">{funnel.name}</h3>
+                <div className="flex gap-4 text-sm text-gray-400 mt-4 pt-4 border-t border-gray-800">
+                    <span>👀 {funnel.visits} Visits</span>
+                    <span className="text-green-500">💰 {funnel.revenue}</span>
+                </div>
+                <Link href={`/dashboard/funnels/${funnel.id}`} className="mt-4 block text-center bg-gray-800 hover:bg-gray-700 text-white py-2 rounded font-medium transition">
+                    Edit Design
+                </Link>
+            </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+================
+FILE: page.tsx
+================
+
+
+================
+FILE: page.tsx
+================
+"use client";
+import { SignIn } from "@clerk/nextjs";
+
+export default function SignInPage() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+      <SignIn routing="hash" />
+    </div>
+  );
+}
+
+
+================
+FILE: globals.css
+================
+@import "tailwindcss";
+
+/* 1. Reset standard variables */
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+}
+
+/* 2. Set defaults, but allow pages to override them */
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 3. Fix the "Theme" warning and ensure colors work */
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+
+================
+FILE: layout.tsx
+================
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Nexus OS",
+  description: "Operating System for African Business",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
+  );
+}
+
+
+================
+FILE: page.tsx
+================
+"use client";
+import Link from "next/link";
+import { ArrowRight, CheckCircle, Globe, CreditCard, Layout } from "lucide-react";
+
+export default function LandingPage() {
+  return (
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500 selection:text-white">
+      
+      {/* NAVBAR */}
+      <nav className="border-b border-gray-800 p-6 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
+        <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl">N</div>
+            <span className="font-bold text-xl tracking-tight">Nexus OS</span>
+        </div>
+        <div className="flex gap-4">
+            <Link href="/dashboard" className="text-sm font-medium text-gray-400 hover:text-white transition">Log In</Link>
+            <Link href="/dashboard" className="text-sm font-medium bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition">Get Started</Link>
+        </div>
+      </nav>
+
+      {/* HERO SECTION */}
+      <header className="relative py-32 px-6 text-center overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="relative z-10 max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-900 border border-gray-800 text-xs font-medium text-blue-400 mb-6">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                v1.0 Live
+            </div>
+            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
+                Launch your <span className="text-blue-500">Digital Empire</span>
+            </h1>
+            <p className="text-xl text-gray-400 leading-relaxed mb-10 max-w-2xl mx-auto">
+                Nexus OS is the complete platform for African creators and consultants. Build funnels, collect payments, and host courses in minutes.
+            </p>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+                <Link href="/dashboard" className="px-8 py-4 bg-white text-black font-bold text-lg rounded-full hover:bg-gray-200 transition flex items-center gap-2">
+                    Start Free Trial <ArrowRight size={20} />
+                </Link>
+                
+                {/* THIS IS THE FIXED LINK LINKING TO /f/1 */}
+                <Link href="/f/1" className="px-8 py-4 bg-gray-900 text-white border border-gray-800 font-bold text-lg rounded-full hover:bg-gray-800 transition">
+                    View Live Demo
+                </Link>
+            </div>
+        </div>
+      </header>
+
+      {/* FEATURES GRID */}
+      <section className="py-20 px-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6">
+            <div className="p-8 bg-gray-950 border border-gray-900 rounded-2xl hover:border-blue-500/50 transition group">
+                <Globe className="text-blue-500 mb-6 group-hover:scale-110 transition" size={40} />
+                <h3 className="text-xl font-bold mb-3">Custom Website</h3>
+                <p className="text-gray-500">Get your own professional link (e.g., nexus-os.vercel.app) instantly.</p>
+            </div>
+            <div className="p-8 bg-gray-950 border border-gray-900 rounded-2xl hover:border-green-500/50 transition group">
+                <CreditCard className="text-green-500 mb-6 group-hover:scale-110 transition" size={40} />
+                <h3 className="text-xl font-bold mb-3">Secure Payments</h3>
+                <p className="text-gray-500">Accept M-Pesa and Cards globally via our integrated Paystack gateway.</p>
+            </div>
+            <div className="p-8 bg-gray-950 border border-gray-900 rounded-2xl hover:border-purple-500/50 transition group">
+                <Layout className="text-purple-500 mb-6 group-hover:scale-110 transition" size={40} />
+                <h3 className="text-xl font-bold mb-3">Course Portal</h3>
+                <p className="text-gray-500">Upload your videos and let Nexus handle the hosting and access.</p>
+            </div>
+        </div>
+      </section>
+
+      <footer className="py-10 text-center text-gray-600 text-sm border-t border-gray-900">
+        <p>&copy; 2025 Nexus OS. Built for Africa.</p>
+      </footer>
+    </div>
+  );
+}
+
+
+================
+FILE: class.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * WARNING: This is an internal file that is subject to change!
+ *
+ * 🛑 Under no circumstances should you import this file directly! 🛑
+ *
+ * Please import the `PrismaClient` class from the `client.ts` file instead.
+ */
+
+import * as runtime from "@prisma/client/runtime/client"
+import type * as Prisma from "./prismaNamespace"
+
+
+const config: runtime.GetPrismaClientConfig = {
+  "previewFeatures": [],
+  "clientVersion": "7.1.0",
+  "engineVersion": "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba",
+  "activeProvider": "postgresql",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../lib/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\n// This creates the \"Funnel\" table in your database\nmodel Funnel {\n  id          String   @id @default(uuid())\n  name        String\n  description String?\n  content     String // This will store your blocks (Headline, Image, etc.) as text\n  published   Boolean  @default(false)\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n",
+  "runtimeDataModel": {
+    "models": {},
+    "enums": {},
+    "types": {}
+  }
+}
+
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Funnel\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"content\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"published\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+
+async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
+  const { Buffer } = await import('node:buffer')
+  const wasmArray = Buffer.from(wasmBase64, 'base64')
+  return new WebAssembly.Module(wasmArray)
+}
+
+config.compilerWasm = {
+  getRuntime: async () => await import("@prisma/client/runtime/query_compiler_bg.postgresql.mjs"),
+
+  getQueryCompilerWasmModule: async () => {
+    const { wasm } = await import("@prisma/client/runtime/query_compiler_bg.postgresql.wasm-base64.mjs")
+    return await decodeBase64AsWasm(wasm)
+  }
+}
+
+
+
+export type LogOptions<ClientOptions extends Prisma.PrismaClientOptions> =
+  'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never
+
+export interface PrismaClientConstructor {
+    /**
+   * ## Prisma Client
+   * 
+   * Type-safe database client for TypeScript
+   * @example
+   * ```
+   * const prisma = new PrismaClient()
+   * // Fetch zero or more Funnels
+   * const funnels = await prisma.funnel.findMany()
+   * ```
+   * 
+   * Read more in our [docs](https://pris.ly/d/client).
+   */
+
+  new <
+    Options extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
+    LogOpts extends LogOptions<Options> = LogOptions<Options>,
+    OmitOpts extends Prisma.PrismaClientOptions['omit'] = Options extends { omit: infer U } ? U : Prisma.PrismaClientOptions['omit'],
+    ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs
+  >(options: Prisma.Subset<Options, Prisma.PrismaClientOptions> ): PrismaClient<LogOpts, OmitOpts, ExtArgs>
+}
+
+/**
+ * ## Prisma Client
+ * 
+ * Type-safe database client for TypeScript
+ * @example
+ * ```
+ * const prisma = new PrismaClient()
+ * // Fetch zero or more Funnels
+ * const funnels = await prisma.funnel.findMany()
+ * ```
+ * 
+ * Read more in our [docs](https://pris.ly/d/client).
+ */
+
+export interface PrismaClient<
+  in LogOpts extends Prisma.LogLevel = never,
+  in out OmitOpts extends Prisma.PrismaClientOptions['omit'] = undefined,
+  in out ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs
+> {
+  [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
+
+  $on<V extends LogOpts>(eventType: V, callback: (event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent) => void): PrismaClient;
+
+  /**
+   * Connect with the database
+   */
+  $connect(): runtime.Types.Utils.JsPromise<void>;
+
+  /**
+   * Disconnect from the database
+   */
+  $disconnect(): runtime.Types.Utils.JsPromise<void>;
+
+/**
+   * Executes a prepared raw query and returns the number of affected rows.
+   * @example
+   * ```
+   * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   */
+  $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Executes a raw query and returns the number of affected rows.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   */
+  $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
+
+  /**
+   * Performs a prepared raw query and returns the `SELECT` data.
+   * @example
+   * ```
+   * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   */
+  $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<T>;
+
+  /**
+   * Performs a raw query and returns the `SELECT` data.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://pris.ly/d/raw-queries).
+   */
+  $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
+
+
+  /**
+   * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
+   * @example
+   * ```
+   * const [george, bob, alice] = await prisma.$transaction([
+   *   prisma.user.create({ data: { name: 'George' } }),
+   *   prisma.user.create({ data: { name: 'Bob' } }),
+   *   prisma.user.create({ data: { name: 'Alice' } }),
+   * ])
+   * ```
+   * 
+   * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
+   */
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+
+  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => runtime.Types.Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): runtime.Types.Utils.JsPromise<R>
+
+  $extends: runtime.Types.Extensions.ExtendsHook<"extends", Prisma.TypeMapCb<OmitOpts>, ExtArgs, runtime.Types.Utils.Call<Prisma.TypeMapCb<OmitOpts>, {
+    extArgs: ExtArgs
+  }>>
+
+      /**
+   * `prisma.funnel`: Exposes CRUD operations for the **Funnel** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Funnels
+    * const funnels = await prisma.funnel.findMany()
+    * ```
+    */
+  get funnel(): Prisma.FunnelDelegate<ExtArgs, { omit: OmitOpts }>;
+}
+
+export function getPrismaClientClass(): PrismaClientConstructor {
+  return runtime.getPrismaClient(config) as unknown as PrismaClientConstructor
+}
+
+
+================
+FILE: prismaNamespace.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * WARNING: This is an internal file that is subject to change!
+ *
+ * 🛑 Under no circumstances should you import this file directly! 🛑
+ *
+ * All exports from this file are wrapped under a `Prisma` namespace object in the client.ts file.
+ * While this enables partial backward compatibility, it is not part of the stable public API.
+ *
+ * If you are looking for your Models, Enums, and Input Types, please import them from the respective
+ * model files in the `model` directory!
+ */
+
+import * as runtime from "@prisma/client/runtime/client"
+import type * as Prisma from "../models"
+import { type PrismaClient } from "./class"
+
+export type * from '../models'
+
+export type DMMF = typeof runtime.DMMF
+
+export type PrismaPromise<T> = runtime.Types.Public.PrismaPromise<T>
+
+/**
+ * Prisma Errors
+ */
+
+export const PrismaClientKnownRequestError = runtime.PrismaClientKnownRequestError
+export type PrismaClientKnownRequestError = runtime.PrismaClientKnownRequestError
+
+export const PrismaClientUnknownRequestError = runtime.PrismaClientUnknownRequestError
+export type PrismaClientUnknownRequestError = runtime.PrismaClientUnknownRequestError
+
+export const PrismaClientRustPanicError = runtime.PrismaClientRustPanicError
+export type PrismaClientRustPanicError = runtime.PrismaClientRustPanicError
+
+export const PrismaClientInitializationError = runtime.PrismaClientInitializationError
+export type PrismaClientInitializationError = runtime.PrismaClientInitializationError
+
+export const PrismaClientValidationError = runtime.PrismaClientValidationError
+export type PrismaClientValidationError = runtime.PrismaClientValidationError
+
+/**
+ * Re-export of sql-template-tag
+ */
+export const sql = runtime.sqltag
+export const empty = runtime.empty
+export const join = runtime.join
+export const raw = runtime.raw
+export const Sql = runtime.Sql
+export type Sql = runtime.Sql
+
+
+
+/**
+ * Decimal.js
+ */
+export const Decimal = runtime.Decimal
+export type Decimal = runtime.Decimal
+
+export type DecimalJsLike = runtime.DecimalJsLike
+
+/**
+* Extensions
+*/
+export type Extension = runtime.Types.Extensions.UserArgs
+export const getExtensionContext = runtime.Extensions.getExtensionContext
+export type Args<T, F extends runtime.Operation> = runtime.Types.Public.Args<T, F>
+export type Payload<T, F extends runtime.Operation = never> = runtime.Types.Public.Payload<T, F>
+export type Result<T, A, F extends runtime.Operation> = runtime.Types.Public.Result<T, A, F>
+export type Exact<A, W> = runtime.Types.Public.Exact<A, W>
+
+export type PrismaVersion = {
+  client: string
+  engine: string
+}
+
+/**
+ * Prisma Client JS version: 7.1.0
+ * Query Engine version: ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba
+ */
+export const prismaVersion: PrismaVersion = {
+  client: "7.1.0",
+  engine: "ab635e6b9d606fa5c8fb8b1a7f909c3c3c1c98ba"
+}
+
+/**
+ * Utility Types
+ */
+
+export type Bytes = runtime.Bytes
+export type JsonObject = runtime.JsonObject
+export type JsonArray = runtime.JsonArray
+export type JsonValue = runtime.JsonValue
+export type InputJsonObject = runtime.InputJsonObject
+export type InputJsonArray = runtime.InputJsonArray
+export type InputJsonValue = runtime.InputJsonValue
+
+
+export const NullTypes = {
+  DbNull: runtime.NullTypes.DbNull as (new (secret: never) => typeof runtime.DbNull),
+  JsonNull: runtime.NullTypes.JsonNull as (new (secret: never) => typeof runtime.JsonNull),
+  AnyNull: runtime.NullTypes.AnyNull as (new (secret: never) => typeof runtime.AnyNull),
+}
+/**
+ * Helper for filtering JSON entries that have `null` on the database (empty on the db)
+ *
+ * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+ */
+export const DbNull = runtime.DbNull
+
+/**
+ * Helper for filtering JSON entries that have JSON `null` values (not empty on the db)
+ *
+ * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+ */
+export const JsonNull = runtime.JsonNull
+
+/**
+ * Helper for filtering JSON entries that are `Prisma.DbNull` or `Prisma.JsonNull`
+ *
+ * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+ */
+export const AnyNull = runtime.AnyNull
+
+
+type SelectAndInclude = {
+  select: any
+  include: any
+}
+
+type SelectAndOmit = {
+  select: any
+  omit: any
+}
+
+/**
+ * From T, pick a set of properties whose keys are in the union K
+ */
+type Prisma__Pick<T, K extends keyof T> = {
+    [P in K]: T[P];
+};
+
+export type Enumerable<T> = T | Array<T>;
+
+/**
+ * Subset
+ * @desc From `T` pick properties that exist in `U`. Simple version of Intersection
+ */
+export type Subset<T, U> = {
+  [key in keyof T]: key extends keyof U ? T[key] : never;
+};
+
+/**
+ * SelectSubset
+ * @desc From `T` pick properties that exist in `U`. Simple version of Intersection.
+ * Additionally, it validates, if both select and include are present. If the case, it errors.
+ */
+export type SelectSubset<T, U> = {
+  [key in keyof T]: key extends keyof U ? T[key] : never
+} &
+  (T extends SelectAndInclude
+    ? 'Please either choose `select` or `include`.'
+    : T extends SelectAndOmit
+      ? 'Please either choose `select` or `omit`.'
+      : {})
+
+/**
+ * Subset + Intersection
+ * @desc From `T` pick properties that exist in `U` and intersect `K`
+ */
+export type SubsetIntersection<T, U, K> = {
+  [key in keyof T]: key extends keyof U ? T[key] : never
+} &
+  K
+
+type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
+
+/**
+ * XOR is needed to have a real mutually exclusive union type
+ * https://stackoverflow.com/questions/42123407/does-typescript-support-mutually-exclusive-types
+ */
+export type XOR<T, U> =
+  T extends object ?
+  U extends object ?
+    (Without<T, U> & U) | (Without<U, T> & T)
+  : U : T
+
+
+/**
+ * Is T a Record?
+ */
+type IsObject<T extends any> = T extends Array<any>
+? False
+: T extends Date
+? False
+: T extends Uint8Array
+? False
+: T extends BigInt
+? False
+: T extends object
+? True
+: False
+
+
+/**
+ * If it's T[], return T
+ */
+export type UnEnumerate<T extends unknown> = T extends Array<infer U> ? U : T
+
+/**
+ * From ts-toolbelt
+ */
+
+type __Either<O extends object, K extends Key> = Omit<O, K> &
+  {
+    // Merge all but K
+    [P in K]: Prisma__Pick<O, P & keyof O> // With K possibilities
+  }[K]
+
+type EitherStrict<O extends object, K extends Key> = Strict<__Either<O, K>>
+
+type EitherLoose<O extends object, K extends Key> = ComputeRaw<__Either<O, K>>
+
+type _Either<
+  O extends object,
+  K extends Key,
+  strict extends Boolean
+> = {
+  1: EitherStrict<O, K>
+  0: EitherLoose<O, K>
+}[strict]
+
+export type Either<
+  O extends object,
+  K extends Key,
+  strict extends Boolean = 1
+> = O extends unknown ? _Either<O, K, strict> : never
+
+export type Union = any
+
+export type PatchUndefined<O extends object, O1 extends object> = {
+  [K in keyof O]: O[K] extends undefined ? At<O1, K> : O[K]
+} & {}
+
+/** Helper Types for "Merge" **/
+export type IntersectOf<U extends Union> = (
+  U extends unknown ? (k: U) => void : never
+) extends (k: infer I) => void
+  ? I
+  : never
+
+export type Overwrite<O extends object, O1 extends object> = {
+    [K in keyof O]: K extends keyof O1 ? O1[K] : O[K];
+} & {};
+
+type _Merge<U extends object> = IntersectOf<Overwrite<U, {
+    [K in keyof U]-?: At<U, K>;
+}>>;
+
+type Key = string | number | symbol;
+type AtStrict<O extends object, K extends Key> = O[K & keyof O];
+type AtLoose<O extends object, K extends Key> = O extends unknown ? AtStrict<O, K> : never;
+export type At<O extends object, K extends Key, strict extends Boolean = 1> = {
+    1: AtStrict<O, K>;
+    0: AtLoose<O, K>;
+}[strict];
+
+export type ComputeRaw<A extends any> = A extends Function ? A : {
+  [K in keyof A]: A[K];
+} & {};
+
+export type OptionalFlat<O> = {
+  [K in keyof O]?: O[K];
+} & {};
+
+type _Record<K extends keyof any, T> = {
+  [P in K]: T;
+};
+
+// cause typescript not to expand types and preserve names
+type NoExpand<T> = T extends unknown ? T : never;
+
+// this type assumes the passed object is entirely optional
+export type AtLeast<O extends object, K extends string> = NoExpand<
+  O extends unknown
+  ? | (K extends keyof O ? { [P in K]: O[P] } & O : O)
+    | {[P in keyof O as P extends K ? P : never]-?: O[P]} & O
+  : never>;
+
+type _Strict<U, _U = U> = U extends unknown ? U & OptionalFlat<_Record<Exclude<Keys<_U>, keyof U>, never>> : never;
+
+export type Strict<U extends object> = ComputeRaw<_Strict<U>>;
+/** End Helper Types for "Merge" **/
+
+export type Merge<U extends object> = ComputeRaw<_Merge<Strict<U>>>;
+
+export type Boolean = True | False
+
+export type True = 1
+
+export type False = 0
+
+export type Not<B extends Boolean> = {
+  0: 1
+  1: 0
+}[B]
+
+export type Extends<A1 extends any, A2 extends any> = [A1] extends [never]
+  ? 0 // anything `never` is false
+  : A1 extends A2
+  ? 1
+  : 0
+
+export type Has<U extends Union, U1 extends Union> = Not<
+  Extends<Exclude<U1, U>, U1>
+>
+
+export type Or<B1 extends Boolean, B2 extends Boolean> = {
+  0: {
+    0: 0
+    1: 1
+  }
+  1: {
+    0: 1
+    1: 1
+  }
+}[B1][B2]
+
+export type Keys<U extends Union> = U extends unknown ? keyof U : never
+
+export type GetScalarType<T, O> = O extends object ? {
+  [P in keyof T]: P extends keyof O
+    ? O[P]
+    : never
+} : never
+
+type FieldPaths<
+  T,
+  U = Omit<T, '_avg' | '_sum' | '_count' | '_min' | '_max'>
+> = IsObject<T> extends True ? U : T
+
+export type GetHavingFields<T> = {
+  [K in keyof T]: Or<
+    Or<Extends<'OR', K>, Extends<'AND', K>>,
+    Extends<'NOT', K>
+  > extends True
+    ? // infer is only needed to not hit TS limit
+      // based on the brilliant idea of Pierre-Antoine Mills
+      // https://github.com/microsoft/TypeScript/issues/30188#issuecomment-478938437
+      T[K] extends infer TK
+      ? GetHavingFields<UnEnumerate<TK> extends object ? Merge<UnEnumerate<TK>> : never>
+      : never
+    : {} extends FieldPaths<T[K]>
+    ? never
+    : K
+}[keyof T]
+
+/**
+ * Convert tuple to union
+ */
+type _TupleToUnion<T> = T extends (infer E)[] ? E : never
+type TupleToUnion<K extends readonly any[]> = _TupleToUnion<K>
+export type MaybeTupleToUnion<T> = T extends any[] ? TupleToUnion<T> : T
+
+/**
+ * Like `Pick`, but additionally can also accept an array of keys
+ */
+export type PickEnumerable<T, K extends Enumerable<keyof T> | keyof T> = Prisma__Pick<T, MaybeTupleToUnion<K>>
+
+/**
+ * Exclude all keys with underscores
+ */
+export type ExcludeUnderscoreKeys<T extends string> = T extends `_${string}` ? never : T
+
+
+export type FieldRef<Model, FieldType> = runtime.FieldRef<Model, FieldType>
+
+type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRef<Model, FieldType>
+
+
+export const ModelName = {
+  Funnel: 'Funnel'
+} as const
+
+export type ModelName = (typeof ModelName)[keyof typeof ModelName]
+
+
+
+export interface TypeMapCb<GlobalOmitOptions = {}> extends runtime.Types.Utils.Fn<{extArgs: runtime.Types.Extensions.InternalArgs }, runtime.Types.Utils.Record<string, any>> {
+  returns: TypeMap<this['params']['extArgs'], GlobalOmitOptions>
+}
+
+export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> = {
+  globalOmitOptions: {
+    omit: GlobalOmitOptions
+  }
+  meta: {
+    modelProps: "funnel"
+    txIsolationLevel: TransactionIsolationLevel
+  }
+  model: {
+    Funnel: {
+      payload: Prisma.$FunnelPayload<ExtArgs>
+      fields: Prisma.FunnelFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FunnelFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FunnelFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>
+        }
+        findFirst: {
+          args: Prisma.FunnelFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FunnelFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>
+        }
+        findMany: {
+          args: Prisma.FunnelFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>[]
+        }
+        create: {
+          args: Prisma.FunnelCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>
+        }
+        createMany: {
+          args: Prisma.FunnelCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FunnelCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>[]
+        }
+        delete: {
+          args: Prisma.FunnelDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>
+        }
+        update: {
+          args: Prisma.FunnelUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>
+        }
+        deleteMany: {
+          args: Prisma.FunnelDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FunnelUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FunnelUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>[]
+        }
+        upsert: {
+          args: Prisma.FunnelUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FunnelPayload>
+        }
+        aggregate: {
+          args: Prisma.FunnelAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFunnel>
+        }
+        groupBy: {
+          args: Prisma.FunnelGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FunnelGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FunnelCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FunnelCountAggregateOutputType> | number
+        }
+      }
+    }
+  }
+} & {
+  other: {
+    payload: any
+    operations: {
+      $executeRaw: {
+        args: [query: TemplateStringsArray | Sql, ...values: any[]],
+        result: any
+      }
+      $executeRawUnsafe: {
+        args: [query: string, ...values: any[]],
+        result: any
+      }
+      $queryRaw: {
+        args: [query: TemplateStringsArray | Sql, ...values: any[]],
+        result: any
+      }
+      $queryRawUnsafe: {
+        args: [query: string, ...values: any[]],
+        result: any
+      }
+    }
+  }
+}
+
+/**
+ * Enums
+ */
+
+export const TransactionIsolationLevel = runtime.makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
+  Serializable: 'Serializable'
+} as const)
+
+export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const FunnelScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  content: 'content',
+  published: 'published',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FunnelScalarFieldEnum = (typeof FunnelScalarFieldEnum)[keyof typeof FunnelScalarFieldEnum]
+
+
+export const SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+} as const
+
+export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+
+/**
+ * Field references
+ */
+
+
+/**
+ * Reference to a field of type 'String'
+ */
+export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
+    
+
+
+/**
+ * Reference to a field of type 'String[]'
+ */
+export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime'
+ */
+export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime[]'
+ */
+export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+/**
+ * Batch Payload for updateMany & deleteMany & createMany
+ */
+export type BatchPayload = {
+  count: number
+}
+
+export const defineExtension = runtime.Extensions.defineExtension as unknown as runtime.Types.Extensions.ExtendsHook<"define", TypeMapCb, runtime.Types.Extensions.DefaultArgs>
+export type DefaultPrismaClient = PrismaClient
+export type ErrorFormat = 'pretty' | 'colorless' | 'minimal'
+export type PrismaClientOptions = ({
+  /**
+   * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-pg`.
+   */
+  adapter: runtime.SqlDriverAdapterFactory
+  accelerateUrl?: never
+} | {
+  /**
+   * Prisma Accelerate URL allowing the client to connect through Accelerate instead of a direct database.
+   */
+  accelerateUrl: string
+  adapter?: never
+}) & {
+  /**
+   * @default "colorless"
+   */
+  errorFormat?: ErrorFormat
+  /**
+   * @example
+   * ```
+   * // Shorthand for `emit: 'stdout'`
+   * log: ['query', 'info', 'warn', 'error']
+   * 
+   * // Emit as events only
+   * log: [
+   *   { emit: 'event', level: 'query' },
+   *   { emit: 'event', level: 'info' },
+   *   { emit: 'event', level: 'warn' }
+   *   { emit: 'event', level: 'error' }
+   * ]
+   * 
+   * / Emit as events and log to stdout
+   * og: [
+   *  { emit: 'stdout', level: 'query' },
+   *  { emit: 'stdout', level: 'info' },
+   *  { emit: 'stdout', level: 'warn' }
+   *  { emit: 'stdout', level: 'error' }
+   * 
+   * ```
+   * Read more in our [docs](https://pris.ly/d/logging).
+   */
+  log?: (LogLevel | LogDefinition)[]
+  /**
+   * The default values for transactionOptions
+   * maxWait ?= 2000
+   * timeout ?= 5000
+   */
+  transactionOptions?: {
+    maxWait?: number
+    timeout?: number
+    isolationLevel?: TransactionIsolationLevel
+  }
+  /**
+   * Global configuration for omitting model fields by default.
+   * 
+   * @example
+   * ```
+   * const prisma = new PrismaClient({
+   *   omit: {
+   *     user: {
+   *       password: true
+   *     }
+   *   }
+   * })
+   * ```
+   */
+  omit?: GlobalOmitConfig
+  /**
+   * SQL commenter plugins that add metadata to SQL queries as comments.
+   * Comments follow the sqlcommenter format: https://google.github.io/sqlcommenter/
+   * 
+   * @example
+   * ```
+   * const prisma = new PrismaClient({
+   *   adapter,
+   *   comments: [
+   *     traceContext(),
+   *     queryInsights(),
+   *   ],
+   * })
+   * ```
+   */
+  comments?: runtime.SqlCommenterPlugin[]
+}
+export type GlobalOmitConfig = {
+  funnel?: Prisma.FunnelOmit
+}
+
+/* Types for Logging */
+export type LogLevel = 'info' | 'query' | 'warn' | 'error'
+export type LogDefinition = {
+  level: LogLevel
+  emit: 'stdout' | 'event'
+}
+
+export type CheckIsLogLevel<T> = T extends LogLevel ? T : never;
+
+export type GetLogType<T> = CheckIsLogLevel<
+  T extends LogDefinition ? T['level'] : T
+>;
+
+export type GetEvents<T extends any[]> = T extends Array<LogLevel | LogDefinition>
+  ? GetLogType<T[number]>
+  : never;
+
+export type QueryEvent = {
+  timestamp: Date
+  query: string
+  params: string
+  duration: number
+  target: string
+}
+
+export type LogEvent = {
+  timestamp: Date
+  message: string
+  target: string
+}
+/* End Types for Logging */
+
+
+export type PrismaAction =
+  | 'findUnique'
+  | 'findUniqueOrThrow'
+  | 'findMany'
+  | 'findFirst'
+  | 'findFirstOrThrow'
+  | 'create'
+  | 'createMany'
+  | 'createManyAndReturn'
+  | 'update'
+  | 'updateMany'
+  | 'updateManyAndReturn'
+  | 'upsert'
+  | 'delete'
+  | 'deleteMany'
+  | 'executeRaw'
+  | 'queryRaw'
+  | 'aggregate'
+  | 'count'
+  | 'runCommandRaw'
+  | 'findRaw'
+  | 'groupBy'
+
+/**
+ * `PrismaClient` proxy available in interactive transactions.
+ */
+export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
+
+
+
+================
+FILE: prismaNamespaceBrowser.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * WARNING: This is an internal file that is subject to change!
+ *
+ * 🛑 Under no circumstances should you import this file directly! 🛑
+ *
+ * All exports from this file are wrapped under a `Prisma` namespace object in the browser.ts file.
+ * While this enables partial backward compatibility, it is not part of the stable public API.
+ *
+ * If you are looking for your Models, Enums, and Input Types, please import them from the respective
+ * model files in the `model` directory!
+ */
+
+import * as runtime from "@prisma/client/runtime/index-browser"
+
+export type * from '../models'
+export type * from './prismaNamespace'
+
+export const Decimal = runtime.Decimal
+
+
+export const NullTypes = {
+  DbNull: runtime.NullTypes.DbNull as (new (secret: never) => typeof runtime.DbNull),
+  JsonNull: runtime.NullTypes.JsonNull as (new (secret: never) => typeof runtime.JsonNull),
+  AnyNull: runtime.NullTypes.AnyNull as (new (secret: never) => typeof runtime.AnyNull),
+}
+/**
+ * Helper for filtering JSON entries that have `null` on the database (empty on the db)
+ *
+ * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+ */
+export const DbNull = runtime.DbNull
+
+/**
+ * Helper for filtering JSON entries that have JSON `null` values (not empty on the db)
+ *
+ * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+ */
+export const JsonNull = runtime.JsonNull
+
+/**
+ * Helper for filtering JSON entries that are `Prisma.DbNull` or `Prisma.JsonNull`
+ *
+ * @see https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-on-a-json-field
+ */
+export const AnyNull = runtime.AnyNull
+
+
+export const ModelName = {
+  Funnel: 'Funnel'
+} as const
+
+export type ModelName = (typeof ModelName)[keyof typeof ModelName]
+
+/*
+ * Enums
+ */
+
+export const TransactionIsolationLevel = {
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
+  Serializable: 'Serializable'
+} as const
+
+export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const FunnelScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  content: 'content',
+  published: 'published',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FunnelScalarFieldEnum = (typeof FunnelScalarFieldEnum)[keyof typeof FunnelScalarFieldEnum]
+
+
+export const SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+} as const
+
+export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+
+================
+FILE: Funnel.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * This file exports the `Funnel` model and its related types.
+ *
+ * 🟢 You can import this file directly.
+ */
+import type * as runtime from "@prisma/client/runtime/client"
+import type * as $Enums from "../enums"
+import type * as Prisma from "../internal/prismaNamespace"
+
+/**
+ * Model Funnel
+ * 
+ */
+export type FunnelModel = runtime.Types.Result.DefaultSelection<Prisma.$FunnelPayload>
+
+export type AggregateFunnel = {
+  _count: FunnelCountAggregateOutputType | null
+  _min: FunnelMinAggregateOutputType | null
+  _max: FunnelMaxAggregateOutputType | null
+}
+
+export type FunnelMinAggregateOutputType = {
+  id: string | null
+  name: string | null
+  description: string | null
+  content: string | null
+  published: boolean | null
+  createdAt: Date | null
+  updatedAt: Date | null
+}
+
+export type FunnelMaxAggregateOutputType = {
+  id: string | null
+  name: string | null
+  description: string | null
+  content: string | null
+  published: boolean | null
+  createdAt: Date | null
+  updatedAt: Date | null
+}
+
+export type FunnelCountAggregateOutputType = {
+  id: number
+  name: number
+  description: number
+  content: number
+  published: number
+  createdAt: number
+  updatedAt: number
+  _all: number
+}
+
+
+export type FunnelMinAggregateInputType = {
+  id?: true
+  name?: true
+  description?: true
+  content?: true
+  published?: true
+  createdAt?: true
+  updatedAt?: true
+}
+
+export type FunnelMaxAggregateInputType = {
+  id?: true
+  name?: true
+  description?: true
+  content?: true
+  published?: true
+  createdAt?: true
+  updatedAt?: true
+}
+
+export type FunnelCountAggregateInputType = {
+  id?: true
+  name?: true
+  description?: true
+  content?: true
+  published?: true
+  createdAt?: true
+  updatedAt?: true
+  _all?: true
+}
+
+export type FunnelAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Filter which Funnel to aggregate.
+   */
+  where?: Prisma.FunnelWhereInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * 
+   * Determine the order of Funnels to fetch.
+   */
+  orderBy?: Prisma.FunnelOrderByWithRelationInput | Prisma.FunnelOrderByWithRelationInput[]
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * 
+   * Sets the start position
+   */
+  cursor?: Prisma.FunnelWhereUniqueInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Take `±n` Funnels from the position of the cursor.
+   */
+  take?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Skip the first `n` Funnels.
+   */
+  skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Count returned Funnels
+  **/
+  _count?: true | FunnelCountAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to find the minimum value
+  **/
+  _min?: FunnelMinAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to find the maximum value
+  **/
+  _max?: FunnelMaxAggregateInputType
+}
+
+export type GetFunnelAggregateType<T extends FunnelAggregateArgs> = {
+      [P in keyof T & keyof AggregateFunnel]: P extends '_count' | 'count'
+    ? T[P] extends true
+      ? number
+      : Prisma.GetScalarType<T[P], AggregateFunnel[P]>
+    : Prisma.GetScalarType<T[P], AggregateFunnel[P]>
+}
+
+
+
+
+export type FunnelGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FunnelWhereInput
+  orderBy?: Prisma.FunnelOrderByWithAggregationInput | Prisma.FunnelOrderByWithAggregationInput[]
+  by: Prisma.FunnelScalarFieldEnum[] | Prisma.FunnelScalarFieldEnum
+  having?: Prisma.FunnelScalarWhereWithAggregatesInput
+  take?: number
+  skip?: number
+  _count?: FunnelCountAggregateInputType | true
+  _min?: FunnelMinAggregateInputType
+  _max?: FunnelMaxAggregateInputType
+}
+
+export type FunnelGroupByOutputType = {
+  id: string
+  name: string
+  description: string | null
+  content: string
+  published: boolean
+  createdAt: Date
+  updatedAt: Date
+  _count: FunnelCountAggregateOutputType | null
+  _min: FunnelMinAggregateOutputType | null
+  _max: FunnelMaxAggregateOutputType | null
+}
+
+type GetFunnelGroupByPayload<T extends FunnelGroupByArgs> = Prisma.PrismaPromise<
+  Array<
+    Prisma.PickEnumerable<FunnelGroupByOutputType, T['by']> &
+      {
+        [P in ((keyof T) & (keyof FunnelGroupByOutputType))]: P extends '_count'
+          ? T[P] extends boolean
+            ? number
+            : Prisma.GetScalarType<T[P], FunnelGroupByOutputType[P]>
+          : Prisma.GetScalarType<T[P], FunnelGroupByOutputType[P]>
+      }
+    >
+  >
+
+
+
+export type FunnelWhereInput = {
+  AND?: Prisma.FunnelWhereInput | Prisma.FunnelWhereInput[]
+  OR?: Prisma.FunnelWhereInput[]
+  NOT?: Prisma.FunnelWhereInput | Prisma.FunnelWhereInput[]
+  id?: Prisma.StringFilter<"Funnel"> | string
+  name?: Prisma.StringFilter<"Funnel"> | string
+  description?: Prisma.StringNullableFilter<"Funnel"> | string | null
+  content?: Prisma.StringFilter<"Funnel"> | string
+  published?: Prisma.BoolFilter<"Funnel"> | boolean
+  createdAt?: Prisma.DateTimeFilter<"Funnel"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Funnel"> | Date | string
+}
+
+export type FunnelOrderByWithRelationInput = {
+  id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
+  content?: Prisma.SortOrder
+  published?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
+}
+
+export type FunnelWhereUniqueInput = Prisma.AtLeast<{
+  id?: string
+  AND?: Prisma.FunnelWhereInput | Prisma.FunnelWhereInput[]
+  OR?: Prisma.FunnelWhereInput[]
+  NOT?: Prisma.FunnelWhereInput | Prisma.FunnelWhereInput[]
+  name?: Prisma.StringFilter<"Funnel"> | string
+  description?: Prisma.StringNullableFilter<"Funnel"> | string | null
+  content?: Prisma.StringFilter<"Funnel"> | string
+  published?: Prisma.BoolFilter<"Funnel"> | boolean
+  createdAt?: Prisma.DateTimeFilter<"Funnel"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Funnel"> | Date | string
+}, "id">
+
+export type FunnelOrderByWithAggregationInput = {
+  id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
+  content?: Prisma.SortOrder
+  published?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
+  _count?: Prisma.FunnelCountOrderByAggregateInput
+  _max?: Prisma.FunnelMaxOrderByAggregateInput
+  _min?: Prisma.FunnelMinOrderByAggregateInput
+}
+
+export type FunnelScalarWhereWithAggregatesInput = {
+  AND?: Prisma.FunnelScalarWhereWithAggregatesInput | Prisma.FunnelScalarWhereWithAggregatesInput[]
+  OR?: Prisma.FunnelScalarWhereWithAggregatesInput[]
+  NOT?: Prisma.FunnelScalarWhereWithAggregatesInput | Prisma.FunnelScalarWhereWithAggregatesInput[]
+  id?: Prisma.StringWithAggregatesFilter<"Funnel"> | string
+  name?: Prisma.StringWithAggregatesFilter<"Funnel"> | string
+  description?: Prisma.StringNullableWithAggregatesFilter<"Funnel"> | string | null
+  content?: Prisma.StringWithAggregatesFilter<"Funnel"> | string
+  published?: Prisma.BoolWithAggregatesFilter<"Funnel"> | boolean
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<"Funnel"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Funnel"> | Date | string
+}
+
+export type FunnelCreateInput = {
+  id?: string
+  name: string
+  description?: string | null
+  content: string
+  published?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type FunnelUncheckedCreateInput = {
+  id?: string
+  name: string
+  description?: string | null
+  content: string
+  published?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type FunnelUpdateInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  published?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FunnelUncheckedUpdateInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  published?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FunnelCreateManyInput = {
+  id?: string
+  name: string
+  description?: string | null
+  content: string
+  published?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type FunnelUpdateManyMutationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  published?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FunnelUncheckedUpdateManyInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  content?: Prisma.StringFieldUpdateOperationsInput | string
+  published?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type FunnelCountOrderByAggregateInput = {
+  id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  content?: Prisma.SortOrder
+  published?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
+}
+
+export type FunnelMaxOrderByAggregateInput = {
+  id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  content?: Prisma.SortOrder
+  published?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
+}
+
+export type FunnelMinOrderByAggregateInput = {
+  id?: Prisma.SortOrder
+  name?: Prisma.SortOrder
+  description?: Prisma.SortOrder
+  content?: Prisma.SortOrder
+  published?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
+}
+
+export type StringFieldUpdateOperationsInput = {
+  set?: string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type DateTimeFieldUpdateOperationsInput = {
+  set?: Date | string
+}
+
+
+
+export type FunnelSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
+  name?: boolean
+  description?: boolean
+  content?: boolean
+  published?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
+}, ExtArgs["result"]["funnel"]>
+
+export type FunnelSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
+  name?: boolean
+  description?: boolean
+  content?: boolean
+  published?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
+}, ExtArgs["result"]["funnel"]>
+
+export type FunnelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
+  id?: boolean
+  name?: boolean
+  description?: boolean
+  content?: boolean
+  published?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
+}, ExtArgs["result"]["funnel"]>
+
+export type FunnelSelectScalar = {
+  id?: boolean
+  name?: boolean
+  description?: boolean
+  content?: boolean
+  published?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
+}
+
+export type FunnelOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "description" | "content" | "published" | "createdAt" | "updatedAt", ExtArgs["result"]["funnel"]>
+
+export type $FunnelPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  name: "Funnel"
+  objects: {}
+  scalars: runtime.Types.Extensions.GetPayloadResult<{
+    id: string
+    name: string
+    description: string | null
+    content: string
+    published: boolean
+    createdAt: Date
+    updatedAt: Date
+  }, ExtArgs["result"]["funnel"]>
+  composites: {}
+}
+
+export type FunnelGetPayload<S extends boolean | null | undefined | FunnelDefaultArgs> = runtime.Types.Result.GetResult<Prisma.$FunnelPayload, S>
+
+export type FunnelCountArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> =
+  Omit<FunnelFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+    select?: FunnelCountAggregateInputType | true
+  }
+
+export interface FunnelDelegate<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+  [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Funnel'], meta: { name: 'Funnel' } }
+  /**
+   * Find zero or one Funnel that matches the filter.
+   * @param {FunnelFindUniqueArgs} args - Arguments to find a Funnel
+   * @example
+   * // Get one Funnel
+   * const funnel = await prisma.funnel.findUnique({
+   *   where: {
+   *     // ... provide filter here
+   *   }
+   * })
+   */
+  findUnique<T extends FunnelFindUniqueArgs>(args: Prisma.SelectSubset<T, FunnelFindUniqueArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+  /**
+   * Find one Funnel that matches the filter or throw an error with `error.code='P2025'`
+   * if no matches were found.
+   * @param {FunnelFindUniqueOrThrowArgs} args - Arguments to find a Funnel
+   * @example
+   * // Get one Funnel
+   * const funnel = await prisma.funnel.findUniqueOrThrow({
+   *   where: {
+   *     // ... provide filter here
+   *   }
+   * })
+   */
+  findUniqueOrThrow<T extends FunnelFindUniqueOrThrowArgs>(args: Prisma.SelectSubset<T, FunnelFindUniqueOrThrowArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+  /**
+   * Find the first Funnel that matches the filter.
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * @param {FunnelFindFirstArgs} args - Arguments to find a Funnel
+   * @example
+   * // Get one Funnel
+   * const funnel = await prisma.funnel.findFirst({
+   *   where: {
+   *     // ... provide filter here
+   *   }
+   * })
+   */
+  findFirst<T extends FunnelFindFirstArgs>(args?: Prisma.SelectSubset<T, FunnelFindFirstArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+  /**
+   * Find the first Funnel that matches the filter or
+   * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * @param {FunnelFindFirstOrThrowArgs} args - Arguments to find a Funnel
+   * @example
+   * // Get one Funnel
+   * const funnel = await prisma.funnel.findFirstOrThrow({
+   *   where: {
+   *     // ... provide filter here
+   *   }
+   * })
+   */
+  findFirstOrThrow<T extends FunnelFindFirstOrThrowArgs>(args?: Prisma.SelectSubset<T, FunnelFindFirstOrThrowArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+  /**
+   * Find zero or more Funnels that matches the filter.
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * @param {FunnelFindManyArgs} args - Arguments to filter and select certain fields only.
+   * @example
+   * // Get all Funnels
+   * const funnels = await prisma.funnel.findMany()
+   * 
+   * // Get first 10 Funnels
+   * const funnels = await prisma.funnel.findMany({ take: 10 })
+   * 
+   * // Only select the `id`
+   * const funnelWithIdOnly = await prisma.funnel.findMany({ select: { id: true } })
+   * 
+   */
+  findMany<T extends FunnelFindManyArgs>(args?: Prisma.SelectSubset<T, FunnelFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+  /**
+   * Create a Funnel.
+   * @param {FunnelCreateArgs} args - Arguments to create a Funnel.
+   * @example
+   * // Create one Funnel
+   * const Funnel = await prisma.funnel.create({
+   *   data: {
+   *     // ... data to create a Funnel
+   *   }
+   * })
+   * 
+   */
+  create<T extends FunnelCreateArgs>(args: Prisma.SelectSubset<T, FunnelCreateArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+  /**
+   * Create many Funnels.
+   * @param {FunnelCreateManyArgs} args - Arguments to create many Funnels.
+   * @example
+   * // Create many Funnels
+   * const funnel = await prisma.funnel.createMany({
+   *   data: [
+   *     // ... provide data here
+   *   ]
+   * })
+   *     
+   */
+  createMany<T extends FunnelCreateManyArgs>(args?: Prisma.SelectSubset<T, FunnelCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<Prisma.BatchPayload>
+
+  /**
+   * Create many Funnels and returns the data saved in the database.
+   * @param {FunnelCreateManyAndReturnArgs} args - Arguments to create many Funnels.
+   * @example
+   * // Create many Funnels
+   * const funnel = await prisma.funnel.createManyAndReturn({
+   *   data: [
+   *     // ... provide data here
+   *   ]
+   * })
+   * 
+   * // Create many Funnels and only return the `id`
+   * const funnelWithIdOnly = await prisma.funnel.createManyAndReturn({
+   *   select: { id: true },
+   *   data: [
+   *     // ... provide data here
+   *   ]
+   * })
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * 
+   */
+  createManyAndReturn<T extends FunnelCreateManyAndReturnArgs>(args?: Prisma.SelectSubset<T, FunnelCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+  /**
+   * Delete a Funnel.
+   * @param {FunnelDeleteArgs} args - Arguments to delete one Funnel.
+   * @example
+   * // Delete one Funnel
+   * const Funnel = await prisma.funnel.delete({
+   *   where: {
+   *     // ... filter to delete one Funnel
+   *   }
+   * })
+   * 
+   */
+  delete<T extends FunnelDeleteArgs>(args: Prisma.SelectSubset<T, FunnelDeleteArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+  /**
+   * Update one Funnel.
+   * @param {FunnelUpdateArgs} args - Arguments to update one Funnel.
+   * @example
+   * // Update one Funnel
+   * const funnel = await prisma.funnel.update({
+   *   where: {
+   *     // ... provide filter here
+   *   },
+   *   data: {
+   *     // ... provide data here
+   *   }
+   * })
+   * 
+   */
+  update<T extends FunnelUpdateArgs>(args: Prisma.SelectSubset<T, FunnelUpdateArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+  /**
+   * Delete zero or more Funnels.
+   * @param {FunnelDeleteManyArgs} args - Arguments to filter Funnels to delete.
+   * @example
+   * // Delete a few Funnels
+   * const { count } = await prisma.funnel.deleteMany({
+   *   where: {
+   *     // ... provide filter here
+   *   }
+   * })
+   * 
+   */
+  deleteMany<T extends FunnelDeleteManyArgs>(args?: Prisma.SelectSubset<T, FunnelDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<Prisma.BatchPayload>
+
+  /**
+   * Update zero or more Funnels.
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * @param {FunnelUpdateManyArgs} args - Arguments to update one or more rows.
+   * @example
+   * // Update many Funnels
+   * const funnel = await prisma.funnel.updateMany({
+   *   where: {
+   *     // ... provide filter here
+   *   },
+   *   data: {
+   *     // ... provide data here
+   *   }
+   * })
+   * 
+   */
+  updateMany<T extends FunnelUpdateManyArgs>(args: Prisma.SelectSubset<T, FunnelUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<Prisma.BatchPayload>
+
+  /**
+   * Update zero or more Funnels and returns the data updated in the database.
+   * @param {FunnelUpdateManyAndReturnArgs} args - Arguments to update many Funnels.
+   * @example
+   * // Update many Funnels
+   * const funnel = await prisma.funnel.updateManyAndReturn({
+   *   where: {
+   *     // ... provide filter here
+   *   },
+   *   data: [
+   *     // ... provide data here
+   *   ]
+   * })
+   * 
+   * // Update zero or more Funnels and only return the `id`
+   * const funnelWithIdOnly = await prisma.funnel.updateManyAndReturn({
+   *   select: { id: true },
+   *   where: {
+   *     // ... provide filter here
+   *   },
+   *   data: [
+   *     // ... provide data here
+   *   ]
+   * })
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * 
+   */
+  updateManyAndReturn<T extends FunnelUpdateManyAndReturnArgs>(args: Prisma.SelectSubset<T, FunnelUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+  /**
+   * Create or update one Funnel.
+   * @param {FunnelUpsertArgs} args - Arguments to update or create a Funnel.
+   * @example
+   * // Update or create a Funnel
+   * const funnel = await prisma.funnel.upsert({
+   *   create: {
+   *     // ... data to create a Funnel
+   *   },
+   *   update: {
+   *     // ... in case it already exists, update
+   *   },
+   *   where: {
+   *     // ... the filter for the Funnel we want to update
+   *   }
+   * })
+   */
+  upsert<T extends FunnelUpsertArgs>(args: Prisma.SelectSubset<T, FunnelUpsertArgs<ExtArgs>>): Prisma.Prisma__FunnelClient<runtime.Types.Result.GetResult<Prisma.$FunnelPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+  /**
+   * Count the number of Funnels.
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * @param {FunnelCountArgs} args - Arguments to filter Funnels to count.
+   * @example
+   * // Count the number of Funnels
+   * const count = await prisma.funnel.count({
+   *   where: {
+   *     // ... the filter for the Funnels we want to count
+   *   }
+   * })
+  **/
+  count<T extends FunnelCountArgs>(
+    args?: Prisma.Subset<T, FunnelCountArgs>,
+  ): Prisma.PrismaPromise<
+    T extends runtime.Types.Utils.Record<'select', any>
+      ? T['select'] extends true
+        ? number
+        : Prisma.GetScalarType<T['select'], FunnelCountAggregateOutputType>
+      : number
+  >
+
+  /**
+   * Allows you to perform aggregations operations on a Funnel.
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * @param {FunnelAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+   * @example
+   * // Ordered by age ascending
+   * // Where email contains prisma.io
+   * // Limited to the 10 users
+   * const aggregations = await prisma.user.aggregate({
+   *   _avg: {
+   *     age: true,
+   *   },
+   *   where: {
+   *     email: {
+   *       contains: "prisma.io",
+   *     },
+   *   },
+   *   orderBy: {
+   *     age: "asc",
+   *   },
+   *   take: 10,
+   * })
+  **/
+  aggregate<T extends FunnelAggregateArgs>(args: Prisma.Subset<T, FunnelAggregateArgs>): Prisma.PrismaPromise<GetFunnelAggregateType<T>>
+
+  /**
+   * Group by Funnel.
+   * Note, that providing `undefined` is treated as the value not being there.
+   * Read more here: https://pris.ly/d/null-undefined
+   * @param {FunnelGroupByArgs} args - Group by arguments.
+   * @example
+   * // Group by city, order by createdAt, get count
+   * const result = await prisma.user.groupBy({
+   *   by: ['city', 'createdAt'],
+   *   orderBy: {
+   *     createdAt: true
+   *   },
+   *   _count: {
+   *     _all: true
+   *   },
+   * })
+   * 
+  **/
+  groupBy<
+    T extends FunnelGroupByArgs,
+    HasSelectOrTake extends Prisma.Or<
+      Prisma.Extends<'skip', Prisma.Keys<T>>,
+      Prisma.Extends<'take', Prisma.Keys<T>>
+    >,
+    OrderByArg extends Prisma.True extends HasSelectOrTake
+      ? { orderBy: FunnelGroupByArgs['orderBy'] }
+      : { orderBy?: FunnelGroupByArgs['orderBy'] },
+    OrderFields extends Prisma.ExcludeUnderscoreKeys<Prisma.Keys<Prisma.MaybeTupleToUnion<T['orderBy']>>>,
+    ByFields extends Prisma.MaybeTupleToUnion<T['by']>,
+    ByValid extends Prisma.Has<ByFields, OrderFields>,
+    HavingFields extends Prisma.GetHavingFields<T['having']>,
+    HavingValid extends Prisma.Has<ByFields, HavingFields>,
+    ByEmpty extends T['by'] extends never[] ? Prisma.True : Prisma.False,
+    InputErrors extends ByEmpty extends Prisma.True
+    ? `Error: "by" must not be empty.`
+    : HavingValid extends Prisma.False
+    ? {
+        [P in HavingFields]: P extends ByFields
+          ? never
+          : P extends string
+          ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+          : [
+              Error,
+              'Field ',
+              P,
+              ` in "having" needs to be provided in "by"`,
+            ]
+      }[HavingFields]
+    : 'take' extends Prisma.Keys<T>
+    ? 'orderBy' extends Prisma.Keys<T>
+      ? ByValid extends Prisma.True
+        ? {}
+        : {
+            [P in OrderFields]: P extends ByFields
+              ? never
+              : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+          }[OrderFields]
+      : 'Error: If you provide "take", you also need to provide "orderBy"'
+    : 'skip' extends Prisma.Keys<T>
+    ? 'orderBy' extends Prisma.Keys<T>
+      ? ByValid extends Prisma.True
+        ? {}
+        : {
+            [P in OrderFields]: P extends ByFields
+              ? never
+              : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+          }[OrderFields]
+      : 'Error: If you provide "skip", you also need to provide "orderBy"'
+    : ByValid extends Prisma.True
+    ? {}
+    : {
+        [P in OrderFields]: P extends ByFields
+          ? never
+          : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+      }[OrderFields]
+  >(args: Prisma.SubsetIntersection<T, FunnelGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFunnelGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+/**
+ * Fields of the Funnel model
+ */
+readonly fields: FunnelFieldRefs;
+}
+
+/**
+ * The delegate class that acts as a "Promise-like" for Funnel.
+ * Why is this prefixed with `Prisma__`?
+ * Because we want to prevent naming conflicts as mentioned in
+ * https://github.com/prisma/prisma-client-js/issues/707
+ */
+export interface Prisma__FunnelClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+  readonly [Symbol.toStringTag]: "PrismaPromise"
+  /**
+   * Attaches callbacks for the resolution and/or rejection of the Promise.
+   * @param onfulfilled The callback to execute when the Promise is resolved.
+   * @param onrejected The callback to execute when the Promise is rejected.
+   * @returns A Promise for the completion of which ever callback is executed.
+   */
+  then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): runtime.Types.Utils.JsPromise<TResult1 | TResult2>
+  /**
+   * Attaches a callback for only the rejection of the Promise.
+   * @param onrejected The callback to execute when the Promise is rejected.
+   * @returns A Promise for the completion of the callback.
+   */
+  catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): runtime.Types.Utils.JsPromise<T | TResult>
+  /**
+   * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+   * resolved value cannot be modified from the callback.
+   * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+   * @returns A Promise for the completion of the callback.
+   */
+  finally(onfinally?: (() => void) | undefined | null): runtime.Types.Utils.JsPromise<T>
+}
+
+
+
+
+/**
+ * Fields of the Funnel model
+ */
+export interface FunnelFieldRefs {
+  readonly id: Prisma.FieldRef<"Funnel", 'String'>
+  readonly name: Prisma.FieldRef<"Funnel", 'String'>
+  readonly description: Prisma.FieldRef<"Funnel", 'String'>
+  readonly content: Prisma.FieldRef<"Funnel", 'String'>
+  readonly published: Prisma.FieldRef<"Funnel", 'Boolean'>
+  readonly createdAt: Prisma.FieldRef<"Funnel", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Funnel", 'DateTime'>
+}
+    
+
+// Custom InputTypes
+/**
+ * Funnel findUnique
+ */
+export type FunnelFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * Filter, which Funnel to fetch.
+   */
+  where: Prisma.FunnelWhereUniqueInput
+}
+
+/**
+ * Funnel findUniqueOrThrow
+ */
+export type FunnelFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * Filter, which Funnel to fetch.
+   */
+  where: Prisma.FunnelWhereUniqueInput
+}
+
+/**
+ * Funnel findFirst
+ */
+export type FunnelFindFirstArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * Filter, which Funnel to fetch.
+   */
+  where?: Prisma.FunnelWhereInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * 
+   * Determine the order of Funnels to fetch.
+   */
+  orderBy?: Prisma.FunnelOrderByWithRelationInput | Prisma.FunnelOrderByWithRelationInput[]
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * 
+   * Sets the position for searching for Funnels.
+   */
+  cursor?: Prisma.FunnelWhereUniqueInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Take `±n` Funnels from the position of the cursor.
+   */
+  take?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Skip the first `n` Funnels.
+   */
+  skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Funnels.
+   */
+  distinct?: Prisma.FunnelScalarFieldEnum | Prisma.FunnelScalarFieldEnum[]
+}
+
+/**
+ * Funnel findFirstOrThrow
+ */
+export type FunnelFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * Filter, which Funnel to fetch.
+   */
+  where?: Prisma.FunnelWhereInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * 
+   * Determine the order of Funnels to fetch.
+   */
+  orderBy?: Prisma.FunnelOrderByWithRelationInput | Prisma.FunnelOrderByWithRelationInput[]
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * 
+   * Sets the position for searching for Funnels.
+   */
+  cursor?: Prisma.FunnelWhereUniqueInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Take `±n` Funnels from the position of the cursor.
+   */
+  take?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Skip the first `n` Funnels.
+   */
+  skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of Funnels.
+   */
+  distinct?: Prisma.FunnelScalarFieldEnum | Prisma.FunnelScalarFieldEnum[]
+}
+
+/**
+ * Funnel findMany
+ */
+export type FunnelFindManyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * Filter, which Funnels to fetch.
+   */
+  where?: Prisma.FunnelWhereInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+   * 
+   * Determine the order of Funnels to fetch.
+   */
+  orderBy?: Prisma.FunnelOrderByWithRelationInput | Prisma.FunnelOrderByWithRelationInput[]
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+   * 
+   * Sets the position for listing Funnels.
+   */
+  cursor?: Prisma.FunnelWhereUniqueInput
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Take `±n` Funnels from the position of the cursor.
+   */
+  take?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+   * 
+   * Skip the first `n` Funnels.
+   */
+  skip?: number
+  distinct?: Prisma.FunnelScalarFieldEnum | Prisma.FunnelScalarFieldEnum[]
+}
+
+/**
+ * Funnel create
+ */
+export type FunnelCreateArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * The data needed to create a Funnel.
+   */
+  data: Prisma.XOR<Prisma.FunnelCreateInput, Prisma.FunnelUncheckedCreateInput>
+}
+
+/**
+ * Funnel createMany
+ */
+export type FunnelCreateManyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * The data used to create many Funnels.
+   */
+  data: Prisma.FunnelCreateManyInput | Prisma.FunnelCreateManyInput[]
+  skipDuplicates?: boolean
+}
+
+/**
+ * Funnel createManyAndReturn
+ */
+export type FunnelCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelectCreateManyAndReturn<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * The data used to create many Funnels.
+   */
+  data: Prisma.FunnelCreateManyInput | Prisma.FunnelCreateManyInput[]
+  skipDuplicates?: boolean
+}
+
+/**
+ * Funnel update
+ */
+export type FunnelUpdateArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * The data needed to update a Funnel.
+   */
+  data: Prisma.XOR<Prisma.FunnelUpdateInput, Prisma.FunnelUncheckedUpdateInput>
+  /**
+   * Choose, which Funnel to update.
+   */
+  where: Prisma.FunnelWhereUniqueInput
+}
+
+/**
+ * Funnel updateMany
+ */
+export type FunnelUpdateManyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * The data used to update Funnels.
+   */
+  data: Prisma.XOR<Prisma.FunnelUpdateManyMutationInput, Prisma.FunnelUncheckedUpdateManyInput>
+  /**
+   * Filter which Funnels to update
+   */
+  where?: Prisma.FunnelWhereInput
+  /**
+   * Limit how many Funnels to update.
+   */
+  limit?: number
+}
+
+/**
+ * Funnel updateManyAndReturn
+ */
+export type FunnelUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelectUpdateManyAndReturn<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * The data used to update Funnels.
+   */
+  data: Prisma.XOR<Prisma.FunnelUpdateManyMutationInput, Prisma.FunnelUncheckedUpdateManyInput>
+  /**
+   * Filter which Funnels to update
+   */
+  where?: Prisma.FunnelWhereInput
+  /**
+   * Limit how many Funnels to update.
+   */
+  limit?: number
+}
+
+/**
+ * Funnel upsert
+ */
+export type FunnelUpsertArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * The filter to search for the Funnel to update in case it exists.
+   */
+  where: Prisma.FunnelWhereUniqueInput
+  /**
+   * In case the Funnel found by the `where` argument doesn't exist, create a new Funnel with this data.
+   */
+  create: Prisma.XOR<Prisma.FunnelCreateInput, Prisma.FunnelUncheckedCreateInput>
+  /**
+   * In case the Funnel was found with the provided `where` argument, update it with this data.
+   */
+  update: Prisma.XOR<Prisma.FunnelUpdateInput, Prisma.FunnelUncheckedUpdateInput>
+}
+
+/**
+ * Funnel delete
+ */
+export type FunnelDeleteArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+  /**
+   * Filter which Funnel to delete.
+   */
+  where: Prisma.FunnelWhereUniqueInput
+}
+
+/**
+ * Funnel deleteMany
+ */
+export type FunnelDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Filter which Funnels to delete
+   */
+  where?: Prisma.FunnelWhereInput
+  /**
+   * Limit how many Funnels to delete.
+   */
+  limit?: number
+}
+
+/**
+ * Funnel without action
+ */
+export type FunnelDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Funnel
+   */
+  select?: Prisma.FunnelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Funnel
+   */
+  omit?: Prisma.FunnelOmit<ExtArgs> | null
+}
+
+
+================
+FILE: browser.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * This file should be your main import to use Prisma-related types and utilities in a browser. 
+ * Use it to get access to models, enums, and input types.
+ * 
+ * This file does not contain a `PrismaClient` class, nor several other helpers that are intended as server-side only.
+ * See `client.ts` for the standard, server-side entry point.
+ *
+ * 🟢 You can import this file directly.
+ */
+
+import * as Prisma from './internal/prismaNamespaceBrowser'
+export { Prisma }
+export * as $Enums from './enums'
+export * from './enums';
+/**
+ * Model Funnel
+ * 
+ */
+export type Funnel = Prisma.FunnelModel
+
+
+================
+FILE: client.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * This file should be your main import to use Prisma. Through it you get access to all the models, enums, and input types.
+ * If you're looking for something you can import in the client-side of your application, please refer to the `browser.ts` file instead.
+ *
+ * 🟢 You can import this file directly.
+ */
+
+import * as process from 'node:process'
+import * as path from 'node:path'
+import { fileURLToPath } from 'node:url'
+globalThis['__dirname'] = path.dirname(fileURLToPath(import.meta.url))
+
+import * as runtime from "@prisma/client/runtime/client"
+import * as $Enums from "./enums"
+import * as $Class from "./internal/class"
+import * as Prisma from "./internal/prismaNamespace"
+
+export * as $Enums from './enums'
+export * from "./enums"
+/**
+ * ## Prisma Client
+ * 
+ * Type-safe database client for TypeScript
+ * @example
+ * ```
+ * const prisma = new PrismaClient()
+ * // Fetch zero or more Funnels
+ * const funnels = await prisma.funnel.findMany()
+ * ```
+ * 
+ * Read more in our [docs](https://pris.ly/d/client).
+ */
+export const PrismaClient = $Class.getPrismaClientClass()
+export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts extends Prisma.PrismaClientOptions["omit"] = Prisma.PrismaClientOptions["omit"], ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = $Class.PrismaClient<LogOpts, OmitOpts, ExtArgs>
+export { Prisma }
+
+/**
+ * Model Funnel
+ * 
+ */
+export type Funnel = Prisma.FunnelModel
+
+
+================
+FILE: commonInputTypes.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * This file exports various common sort, input & filter types that are not directly linked to a particular model.
+ *
+ * 🟢 You can import this file directly.
+ */
+
+import type * as runtime from "@prisma/client/runtime/client"
+import * as $Enums from "./enums"
+import type * as Prisma from "./internal/prismaNamespace"
+
+
+export type StringFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  mode?: Prisma.QueryMode
+  not?: Prisma.NestedStringFilter<$PrismaModel> | string
+}
+
+export type StringNullableFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  mode?: Prisma.QueryMode
+  not?: Prisma.NestedStringNullableFilter<$PrismaModel> | string | null
+}
+
+export type BoolFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
+}
+
+export type DateTimeFilter<$PrismaModel = never> = {
+  equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  notIn?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  lt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  lte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedDateTimeFilter<$PrismaModel> | Date | string
+}
+
+export type SortOrderInput = {
+  sort: Prisma.SortOrder
+  nulls?: Prisma.NullsOrder
+}
+
+export type StringWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  mode?: Prisma.QueryMode
+  not?: Prisma.NestedStringWithAggregatesFilter<$PrismaModel> | string
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedStringFilter<$PrismaModel>
+  _max?: Prisma.NestedStringFilter<$PrismaModel>
+}
+
+export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  mode?: Prisma.QueryMode
+  not?: Prisma.NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedStringNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedStringNullableFilter<$PrismaModel>
+}
+
+export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedBoolFilter<$PrismaModel>
+  _max?: Prisma.NestedBoolFilter<$PrismaModel>
+}
+
+export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  notIn?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  lt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  lte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedDateTimeFilter<$PrismaModel>
+  _max?: Prisma.NestedDateTimeFilter<$PrismaModel>
+}
+
+export type NestedStringFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedStringFilter<$PrismaModel> | string
+}
+
+export type NestedStringNullableFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedStringNullableFilter<$PrismaModel> | string | null
+}
+
+export type NestedBoolFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
+}
+
+export type NestedDateTimeFilter<$PrismaModel = never> = {
+  equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  notIn?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  lt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  lte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedDateTimeFilter<$PrismaModel> | Date | string
+}
+
+export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedStringWithAggregatesFilter<$PrismaModel> | string
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedStringFilter<$PrismaModel>
+  _max?: Prisma.NestedStringFilter<$PrismaModel>
+}
+
+export type NestedIntFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  notIn?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
+  lt?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedIntFilter<$PrismaModel> | number
+}
+
+export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
+  in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  notIn?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
+  lt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  lte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gt?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  gte?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  contains?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  startsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  endsWith?: string | Prisma.StringFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedStringNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedStringNullableFilter<$PrismaModel>
+}
+
+export type NestedIntNullableFilter<$PrismaModel = never> = {
+  equals?: number | Prisma.IntFieldRefInput<$PrismaModel> | null
+  in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
+  notIn?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel> | null
+  lt?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  lte?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  gt?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  gte?: number | Prisma.IntFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedIntNullableFilter<$PrismaModel> | number | null
+}
+
+export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedBoolFilter<$PrismaModel>
+  _max?: Prisma.NestedBoolFilter<$PrismaModel>
+}
+
+export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  notIn?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel>
+  lt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  lte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  gte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedDateTimeFilter<$PrismaModel>
+  _max?: Prisma.NestedDateTimeFilter<$PrismaModel>
+}
+
+
+
+
+================
+FILE: enums.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+* This file exports all enum related types from the schema.
+*
+* 🟢 You can import this file directly.
+*/
+
+
+
+// This file is empty because there are no enums in the schema.
+export {}
+
+
+================
+FILE: models.ts
+================
+
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck 
+/*
+ * This is a barrel export file for all models and their related types.
+ *
+ * 🟢 You can import this file directly.
+ */
+export type * from './models/Funnel'
+export type * from './commonInputTypes'
+
+
+================
+FILE: db.ts
+================
+import { PrismaClient } from "@prisma/client";
+
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+export const db = globalThis.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalThis.prisma = db;
+}
+
+
+================
+FILE: firebase.ts
+================
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+
+
+================
+FILE: schema.prisma
+================
+// This connects to your Neon Database
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// The Funnel Model
+model Funnel {
+  id          String   @id @default(uuid())
+  userId      String   // Links to Clerk User ID (Security)
+  name        String   // Funnel Name (e.g. "My Webinar")
+  description String?  // Optional description
+  subdomain   String?  @unique
+  published   Boolean  @default(false)
+  visits      Int      @default(0)  // <--- NEW: Tracks Page Views
+  
+  // The content blocks (JSON data for the editor)
+  blocks      Json?    @default("[]") 
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+================
+FILE: PaystackWrapper.tsx
+================
+"use client";
+import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
+
+// This forces the button to ONLY load in the browser, fixing 'window is not defined'
+const PaystackButton = dynamic(() => import("react-paystack").then((mod) => mod.PaystackButton), {
+  ssr: false,
+  loading: () => <button className="bg-gray-700 text-gray-400 w-full py-3 rounded font-bold flex justify-center"><Loader2 className="animate-spin"/></button>,
+});
+
+export default function PaystackWrapper(props: any) {
+  return <PaystackButton {...props} />;
+}

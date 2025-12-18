@@ -1,70 +1,50 @@
-'use server'
-import { PrismaClient } from '@prisma/client'
+﻿'use server'
+import { db } from '@/lib/db';
 import { auth } from '@clerk/nextjs/server'
+import { revalidatePath } from 'next/cache';
 
-const prisma = new PrismaClient()
+// GET LIST
+export async function getFunnels() {
+  const { userId } = await auth();
+  if (!userId) return [];
+  return await db.funnel.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' }
+  });
+}
 
-// 1. Secure: Get Funnel for Dashboard (Owner Only)
+// GET SINGLE
 export async function getFunnel(id: string) {
   const { userId } = await auth()
   if (!userId) return null
-  
-  const funnel = await prisma.funnel.findUnique({
-    where: { id }
-  })
-  
-  // Security check: Only return if owner matches
+  const funnel = await db.funnel.findUnique({ where: { id } })
   if (funnel && funnel.userId !== userId) return null
   return funnel
 }
 
-// 2. Public: Get Funnel for Viewer (Everyone)
+// GET PUBLIC
 export async function getPublicFunnel(id: string) {
-  try {
-    const funnel = await prisma.funnel.findUnique({
-      where: { id }
-    })
-    return funnel
-  } catch (e) {
-    console.error("Database Error:", e)
-    return null
+  try { return await db.funnel.findUnique({ where: { id } }) } catch (e) { return null }
+}
+
+// SAVE
+export async function saveFunnel(content: string, name: string, id: string) {
+  const { userId } = await auth()
+  if (!userId) throw new Error("Unauthorized")
+  const existing = await db.funnel.findUnique({ where: { id } })
+  
+  if (existing) {
+    return await db.funnel.update({ where: { id }, data: { blocks: content, name: name, updatedAt: new Date() } })
+  } else {
+    return await db.funnel.create({ data: { id, userId, name: name || "Untitled Funnel", blocks: content, published: false } })
   }
 }
 
-// 3. Secure: Save Funnel
-export async function saveFunnel(id: string, blocks: any[], name: string = "Untitled Funnel") {
+// DELETE (New!)
+export async function deleteFunnel(id: string) {
   const { userId } = await auth()
   if (!userId) throw new Error("Unauthorized")
-
-  return await prisma.funnel.upsert({
-    where: { id },
-    update: { 
-      blocks: blocks,
-      updatedAt: new Date()
-    },
-    create: {
-      id,
-      userId,
-      name,
-      blocks: blocks,
-      published: false
-    }
-  })
-}// --- ANALYTICS: Record a Visit ---
-export async function recordVisit(funnelId: string) {
-  try {
-    // This talks to your new database field
-    await prisma.funnel.update({
-      where: { id: funnelId },
-      data: {
-        visits: {
-          increment: 1, // Simple math: Current + 1
-        },
-      },
-    });
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to record visit:", error);
-    return { success: false };
-  }
+  
+  await db.funnel.delete({ where: { id } })
+  revalidatePath('/dashboard/funnels') // Refresh the list automatically
 }
