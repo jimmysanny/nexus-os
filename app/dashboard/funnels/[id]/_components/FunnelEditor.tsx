@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Save, Monitor, Smartphone, Settings, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard } from "lucide-react";
 import { saveFunnel } from "@/app/actions/saveFunnel";
 import { usePaystackPayment } from "react-paystack";
+import { FileUpload } from "@/components/FileUpload"; // IMPORT THE NEW UPLOADER
 
 // Mock ID for now
 const MOCK_FUNNEL_ID = "test-funnel-id"; 
@@ -27,10 +28,10 @@ export default function FunnelEditor() {
   // PAYSTACK CONFIG
   const config = {
       reference: (new Date()).getTime().toString(),
-      email: "customer@example.com", // In a real app, you'd ask the user for this
-      amount: Math.floor(parseFloat(price) * 100), // Paystack expects amount in kobo/cents
+      email: "customer@example.com",
+      amount: Math.floor(parseFloat(price) * 100),
       publicKey: process.env.NEXT_PUBLIC_PAYSTACK_KEY || "", 
-      currency: "KES", // Change to USD if you prefer
+      currency: "KES",
   };
 
   const initializePayment = usePaystackPayment(config);
@@ -43,7 +44,6 @@ export default function FunnelEditor() {
       alert("Payment cancelled.");
   };
 
-  // Helper to get theme classes
   const getThemeClass = (color: string) => {
     switch(color) {
         case "purple": return "bg-purple-600 hover:bg-purple-700";
@@ -120,11 +120,25 @@ export default function FunnelEditor() {
                             <option value="mono">Tech Mono</option>
                         </select>
                     </div>
+                    
+                    {/* NEW IMAGE UPLOADERS */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14}/> Media (Image URLs)</label>
-                        <input type="text" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg p-2 text-sm mb-2" placeholder="Logo URL (optional)" />
-                        <input type="text" value={heroImageUrl} onChange={(e) => setHeroImageUrl(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg p-2 text-sm" placeholder="Hero Image URL" />
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14}/> Hero Image</label>
+                        <FileUpload 
+                            endpoint="imageUploader"
+                            value={heroImageUrl}
+                            onChange={(url) => { if (url) setHeroImageUrl(url); }}
+                        />
                     </div>
+                    <div>
+                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 mt-4 flex items-center gap-2"><ImageIcon size={14}/> Logo</label>
+                        <FileUpload 
+                            endpoint="imageUploader"
+                            value={logoUrl}
+                            onChange={(url) => { if (url) setLogoUrl(url); }}
+                        />
+                    </div>
+
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><Code size={14}/> Custom HTML</label>
                         <textarea rows={3} value={customHtml} onChange={(e) => setCustomHtml(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg p-2 text-xs font-mono text-green-400 focus:border-blue-500 outline-none" placeholder="<div>Custom Badge</div>" />
