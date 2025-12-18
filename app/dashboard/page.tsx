@@ -1,18 +1,31 @@
-﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getFunnels } from "@/app/actions/funnel";
+﻿import { getFunnels } from "@/app/actions/funnel";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { BarChart3, Globe, MousePointerClick, Plus } from "lucide-react";
 import Link from "next/link";
 
+// 1. SIMPLE CARD COMPONENTS (Defined right here to prevent errors)
+function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={g-gray-900 border border-gray-800 rounded-xl }>{children}</div>;
+}
+function CardHeader({ children }: { children: React.ReactNode }) {
+  return <div className="p-6 pb-2">{children}</div>;
+}
+function CardTitle({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-2xl font-bold text-white">{children}</h3>;
+}
+function CardContent({ children }: { children: React.ReactNode }) {
+  return <div className="p-6 pt-0">{children}</div>;
+}
+
+// 2. MAIN DASHBOARD PAGE
 export default async function DashboardOverview() {
   const { userId } = await auth();
   if (!userId) return redirect("/sign-in");
 
   const funnels = await getFunnels();
   const totalVisits = funnels.reduce((acc: number, curr: any) => acc + (curr.visits || 0), 0);
-  const liveFunnels = funnels.filter((f: any) => f.published).length;
-
+  
   return (
     <div className="p-8 text-white min-h-screen space-y-8">
       <div>
@@ -22,8 +35,8 @@ export default async function DashboardOverview() {
 
       {/* STATS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl">
-            <div className="flex items-center gap-4">
+        <Card>
+            <div className="p-6 flex items-center gap-4">
                 <div className="p-3 bg-blue-900/20 rounded-lg text-blue-500">
                     <Globe size={24} />
                 </div>
@@ -32,10 +45,10 @@ export default async function DashboardOverview() {
                     <h3 className="text-2xl font-bold">{funnels.length}</h3>
                 </div>
             </div>
-        </div>
+        </Card>
 
-        <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl">
-            <div className="flex items-center gap-4">
+        <Card>
+            <div className="p-6 flex items-center gap-4">
                 <div className="p-3 bg-green-900/20 rounded-lg text-green-500">
                     <MousePointerClick size={24} />
                 </div>
@@ -44,10 +57,10 @@ export default async function DashboardOverview() {
                     <h3 className="text-2xl font-bold">{totalVisits}</h3>
                 </div>
             </div>
-        </div>
+        </Card>
 
-        <div className="bg-gray-900 border border-gray-800 p-6 rounded-xl">
-            <div className="flex items-center gap-4">
+        <Card>
+            <div className="p-6 flex items-center gap-4">
                 <div className="p-3 bg-purple-900/20 rounded-lg text-purple-500">
                     <BarChart3 size={24} />
                 </div>
@@ -56,7 +69,7 @@ export default async function DashboardOverview() {
                     <h3 className="text-2xl font-bold">0%</h3>
                 </div>
             </div>
-        </div>
+        </Card>
       </div>
 
       {/* QUICK ACTIONS */}
@@ -70,9 +83,3 @@ export default async function DashboardOverview() {
     </div>
   );
 }
-
-// Minimal Card Components to prevent import errors if they are missing
-function Card({children, className}: any) { return <div className={className}>{children}</div> }
-function CardHeader({children}: any) { return <div className="mb-2">{children}</div> }
-function CardTitle({children}: any) { return <h3 className="font-bold">{children}</h3> }
-function CardContent({children}: any) { return <div>{children}</div> }
