@@ -1,78 +1,100 @@
-"use client";
-import Link from "next/link";
-import { ArrowRight, CheckCircle, Globe, CreditCard, Layout } from "lucide-react";
+﻿import Link from "next/link";
+import { ArrowRight, CheckCircle, CreditCard, BarChart3, Globe, ShieldCheck } from "lucide-react";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen bg-black text-white selection:bg-blue-500 selection:text-white font-sans">
       
-      {/* NAVBAR */}
-      <nav className="border-b border-gray-800 p-6 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-50">
-        <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl">N</div>
-            <span className="font-bold text-xl tracking-tight">Nexus OS</span>
-        </div>
-        <div className="flex gap-4">
-            <Link href="/dashboard" className="text-sm font-medium text-gray-400 hover:text-white transition">Log In</Link>
-            <Link href="/dashboard" className="text-sm font-medium bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition">Get Started</Link>
+      {/* 1. NAVBAR */}
+      <nav className="border-b border-white/10 backdrop-blur-md fixed top-0 w-full z-50 bg-black/50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Globe size={18} className="text-white" />
+            </div>
+            Nexus OS
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/sign-in" className="text-sm text-gray-400 hover:text-white transition">
+              Sign In
+            </Link>
+            <Link 
+              href="/sign-up" 
+              className="bg-white text-black px-4 py-2 rounded-full text-sm font-bold hover:bg-gray-200 transition"
+            >
+              Get Started
+            </Link>
+          </div>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <header className="relative py-32 px-6 text-center overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
-        
-        <div className="relative z-10 max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-900 border border-gray-800 text-xs font-medium text-blue-400 mb-6">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                v1.0 Live
-            </div>
-            <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
-                Launch your <span className="text-blue-500">Digital Empire</span>
-            </h1>
-            <p className="text-xl text-gray-400 leading-relaxed mb-10 max-w-2xl mx-auto">
-                Nexus OS is the complete platform for African creators and consultants. Build funnels, collect payments, and host courses in minutes.
-            </p>
-            
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-                <Link href="/dashboard" className="px-8 py-4 bg-white text-black font-bold text-lg rounded-full hover:bg-gray-200 transition flex items-center gap-2">
-                    Start Free Trial <ArrowRight size={20} />
-                </Link>
-                
-                {/* THIS IS THE FIXED LINK LINKING TO /f/1 */}
-                <Link href="/f/1" className="px-8 py-4 bg-gray-900 text-white border border-gray-800 font-bold text-lg rounded-full hover:bg-gray-800 transition">
-                    View Live Demo
-                </Link>
-            </div>
-        </div>
-      </header>
-
-      {/* FEATURES GRID */}
-      <section className="py-20 px-6 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-3 gap-6">
-            <div className="p-8 bg-gray-950 border border-gray-900 rounded-2xl hover:border-blue-500/50 transition group">
-                <Globe className="text-blue-500 mb-6 group-hover:scale-110 transition" size={40} />
-                <h3 className="text-xl font-bold mb-3">Custom Website</h3>
-                <p className="text-gray-500">Get your own professional link (e.g., nexus-os.vercel.app) instantly.</p>
-            </div>
-            <div className="p-8 bg-gray-950 border border-gray-900 rounded-2xl hover:border-green-500/50 transition group">
-                <CreditCard className="text-green-500 mb-6 group-hover:scale-110 transition" size={40} />
-                <h3 className="text-xl font-bold mb-3">Secure Payments</h3>
-                <p className="text-gray-500">Accept M-Pesa and Cards globally via our integrated Paystack gateway.</p>
-            </div>
-            <div className="p-8 bg-gray-950 border border-gray-900 rounded-2xl hover:border-purple-500/50 transition group">
-                <Layout className="text-purple-500 mb-6 group-hover:scale-110 transition" size={40} />
-                <h3 className="text-xl font-bold mb-3">Course Portal</h3>
-                <p className="text-gray-500">Upload your videos and let Nexus handle the hosting and access.</p>
-            </div>
+      {/* 2. HERO SECTION */}
+      <section className="pt-32 pb-20 px-6 text-center max-w-5xl mx-auto">
+        <span className="inline-block py-1 px-3 rounded-full bg-blue-900/30 text-blue-400 text-xs font-bold uppercase tracking-wider mb-6 border border-blue-800">
+          The Future of Digital Commerce
+        </span>
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+          Build your digital empire <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-blue-600">
+            in minutes, not months.
+          </span>
+        </h1>
+        <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+          Nexus OS empowers you to build high-converting sales funnels, accept 
+          <span className="text-white font-medium"> Visa, Mastercard, M-Pesa, & Mobile Money</span>, 
+          and manage customersall in one unified platform.
+        </p>
+        <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+          <Link 
+            href="/dashboard/funnels" 
+            className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-full font-bold text-lg transition flex items-center gap-2 shadow-lg shadow-blue-900/20 hover:scale-105 transform duration-200"
+          >
+            Start Building Free <ArrowRight size={20} />
+          </Link>
+          <div className="flex items-center gap-2 text-gray-500 text-sm">
+            <ShieldCheck size={16} className="text-green-500"/>
+            <span>No credit card required</span>
+          </div>
         </div>
       </section>
 
-      <footer className="py-10 text-center text-gray-600 text-sm border-t border-gray-900">
-        <p>&copy; 2025 Nexus OS. Built for Africa.</p>
+      {/* 3. FEATURES GRID */}
+      <section className="py-24 bg-gray-900/30 border-y border-white/5">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="p-8 rounded-3xl bg-black border border-white/10 hover:border-blue-500/50 transition group hover:bg-gray-900/50">
+              <div className="w-14 h-14 bg-blue-900/20 text-blue-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+                <Globe size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-white">Drag & Drop Builder</h3>
+              <p className="text-gray-400 leading-relaxed">Create stunning landing pages without writing code. Use our pre-built templates to launch professional sites in seconds.</p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="p-8 rounded-3xl bg-black border border-white/10 hover:border-green-500/50 transition group hover:bg-gray-900/50">
+              <div className="w-14 h-14 bg-green-900/20 text-green-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+                <CreditCard size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-white">Universal Payments</h3>
+              <p className="text-gray-400 leading-relaxed">Accept payments globally. Whether your customers use Visa, Mastercard, M-Pesa, or local Mobile Money wallets, we handle it all.</p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="p-8 rounded-3xl bg-black border border-white/10 hover:border-purple-500/50 transition group hover:bg-gray-900/50">
+              <div className="w-14 h-14 bg-purple-900/20 text-purple-500 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+                <BarChart3 size={28} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-white">Real-time Analytics</h3>
+              <p className="text-gray-400 leading-relaxed">Track every click and sale. Understand your traffic sources and optimize your conversion rates with built-in data tools.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. FOOTER */}
+      <footer className="py-12 border-t border-white/10 text-center text-gray-500 text-sm">
+        <p>&copy; 2025 Nexus Frontier. Empowering African Commerce.</p>
       </footer>
     </div>
   );
