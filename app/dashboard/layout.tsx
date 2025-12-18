@@ -1,5 +1,6 @@
-﻿import { UserButton } from "@clerk/nextjs";
-import { SignOutButton } from "@clerk/nextjs";
+﻿"use client"; // <--- THIS IS THE MAGIC KEY FOR BUTTONS
+
+import { UserButton, SignOutButton } from "@clerk/nextjs";
 import { BarChart3, Globe, Home, Layout, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { ReactNode } from "react";
@@ -32,7 +33,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         <div className="p-4 border-t border-gray-800">
            {/* THE WORKING SIGN OUT BUTTON */}
-           <SignOutButton redirectUrl="/">
+           <SignOutButton>
               <button className="flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-xl transition w-full text-left font-bold cursor-pointer">
                 <LogOut size={20} /> Sign Out
               </button>
@@ -44,9 +45,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <main className="flex-1 flex flex-col">
         <header className="h-16 border-b border-gray-800 flex items-center justify-end px-8 gap-4 bg-black/50 backdrop-blur-md">
           <span className="text-sm text-gray-400">Welcome back</span>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </header>
-        <div className="flex-1 bg-black">
+        <div className="flex-1 bg-black overflow-y-auto">
           {children}
         </div>
       </main>
