@@ -1,75 +1,116 @@
-﻿import { getFunnels } from "@/app/actions/funnel";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { BarChart3, Globe, MousePointerClick, Plus } from "lucide-react";
-import Link from "next/link";
+﻿import { db } from "@/lib/db";
+import { currentUser } from "@clerk/nextjs/server";
+import { CreditCard, Users, DollarSign, Activity } from "lucide-react";
 
-// 1. SIMPLE CARD COMPONENTS (Inline to prevent errors)
-function Card({ children }: { children: React.ReactNode }) {
-  return <div className="bg-gray-900 border border-gray-800 rounded-xl">{children}</div>;
-}
+export default async function DashboardPage() {
+  const user = await currentUser();
+  if (!user) return <div>Please sign in</div>;
 
-// 2. MAIN DASHBOARD PAGE
-export default async function DashboardOverview() {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
+  // 1. Fetch all funnels for this user
+  const funnels = await db.funnel.findMany({
+    where: { userId: user.id },
+    include: { orders: true },
+  });
 
-  const funnels = await getFunnels();
-  const totalVisits = funnels.reduce((acc: number, curr: any) => acc + (curr.visits || 0), 0);
+  // 2. Calculate Real Stats
+  const totalFunnels = funnels.length;
   
+  // Flatten all orders from all funnels into one list
+  const allOrders = funnels.flatMap(f => f.orders);
+  
+  const totalSales = allOrders.length;
+  const totalRevenue = allOrders.reduce((sum, order) => sum + order.amount, 0);
+
   return (
-    <div className="p-8 text-white min-h-screen space-y-8">
-      <div>
+    <div className="p-8 text-white space-y-8">
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard Overview</h1>
-        <p className="text-gray-400">Welcome back to Nexus OS.</p>
+        <span className="text-gray-400">Welcome back, {user.firstName}</span>
       </div>
 
       {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-            <div className="p-6 flex items-center gap-4">
-                <div className="p-3 bg-blue-900/20 rounded-lg text-blue-500">
-                    <Globe size={24} />
-                </div>
-                <div>
-                    <p className="text-gray-400 text-sm">Total Funnels</p>
-                    <h3 className="text-2xl font-bold">{funnels.length}</h3>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* REVENUE CARD */}
+        <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-gray-400 text-sm font-medium">Total Revenue</p>
+              <h3 className="text-3xl font-bold text-white mt-1">${totalRevenue.toFixed(2)}</h3>
             </div>
-        </Card>
+            <div className="p-3 bg-green-500/10 rounded-lg text-green-500">
+              <DollarSign size={24} />
+            </div>
+          </div>
+          <span className="text-green-400 text-sm font-medium">+100% from last month</span>
+        </div>
 
-        <Card>
-            <div className="p-6 flex items-center gap-4">
-                <div className="p-3 bg-green-900/20 rounded-lg text-green-500">
-                    <MousePointerClick size={24} />
-                </div>
-                <div>
-                    <p className="text-gray-400 text-sm">Total Visits</p>
-                    <h3 className="text-2xl font-bold">{totalVisits}</h3>
-                </div>
+        {/* SALES CARD */}
+        <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-gray-400 text-sm font-medium">Total Sales</p>
+              <h3 className="text-3xl font-bold text-white mt-1">{totalSales}</h3>
             </div>
-        </Card>
+            <div className="p-3 bg-blue-500/10 rounded-lg text-blue-500">
+              <CreditCard size={24} />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-            <div className="p-6 flex items-center gap-4">
-                <div className="p-3 bg-purple-900/20 rounded-lg text-purple-500">
-                    <BarChart3 size={24} />
-                </div>
-                <div>
-                    <p className="text-gray-400 text-sm">Conversion Rate</p>
-                    <h3 className="text-2xl font-bold">0%</h3>
-                </div>
+        {/* FUNNELS CARD */}
+        <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <p className="text-gray-400 text-sm font-medium">Active Funnels</p>
+              <h3 className="text-3xl font-bold text-white mt-1">{totalFunnels}</h3>
             </div>
-        </Card>
+            <div className="p-3 bg-purple-500/10 rounded-lg text-purple-500">
+              <Activity size={24} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* QUICK ACTIONS */}
-      <div className="p-8 bg-gray-900 border border-dashed border-gray-800 rounded-xl flex flex-col items-center justify-center text-center">
-        <h3 className="text-xl font-bold mb-2">Start a New Project</h3>
-        <p className="text-gray-400 mb-6 max-w-md">Create a high-converting landing page in minutes.</p>
-        <Link href="/dashboard/funnels" className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2">
-            <Plus size={20} /> Go to My Funnels
-        </Link>
+      {/* RECENT CUSTOMERS TABLE */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        <div className="p-6 border-b border-gray-800">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Users size={18} className="text-gray-400" /> Recent Customers
+          </h3>
+        </div>
+        
+        {allOrders.length === 0 ? (
+          <div className="p-12 text-center text-gray-500">
+            No sales yet. Share your funnel to get started!
+          </div>
+        ) : (
+          <table className="w-full text-left">
+            <thead className="bg-gray-800/50 text-gray-400 text-sm uppercase">
+              <tr>
+                <th className="p-4">Customer Email</th>
+                <th className="p-4">Amount</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Date</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800">
+              {allOrders.map((order) => (
+                <tr key={order.id} className="hover:bg-gray-800/30 transition">
+                  <td className="p-4 text-white font-medium">{order.customerEmail}</td>
+                  <td className="p-4 text-green-400 font-bold">+${order.amount}</td>
+                  <td className="p-4">
+                    <span className="bg-green-500/10 text-green-500 px-2 py-1 rounded text-xs font-bold">
+                      {order.status}
+                    </span>
+                  </td>
+                  <td className="p-4 text-gray-400 text-sm">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
