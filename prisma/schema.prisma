@@ -1,4 +1,4 @@
-﻿generator client {
+generator client {
   provider = "prisma-client-js"
 }
 
@@ -25,12 +25,10 @@ model Funnel {
   userId      String
   user        User     @relation(fields: [userId], references: [clerkId])
   
-  // Content Fields
   headline    String   @default("Unlock Your Potential")
   subheadline String   @default("Join thousands of happy customers.")
   price       Float    @default(49.99)
   
-  // Design Fields
   theme       String   @default("blue")
   font        String   @default("sans")
   logoUrl     String?
