@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import PublicFunnelView from "./_components/PublicFunnelView";
 
 export default async function PublicPage({ params }: { params: { id: string } }) {
-  // We search for the subdomain in the DB using the URL parameter 'id'
+  // We use 'id' to please the router, but search by subdomain in the database
   const funnel = await db.funnel.findUnique({
     where: { subdomain: params.id },
   });
