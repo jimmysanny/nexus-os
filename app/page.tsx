@@ -42,7 +42,7 @@ export default function LandingPage() {
         <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
           Nexus OS empowers you to build high-converting sales funnels, accept 
           <span className="text-white font-medium"> Visa, Mastercard, M-Pesa, & Mobile Money</span>, 
-          and manage customersall in one unified platform.
+          and manage customers all in one unified platform.
         </p>
         <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
           <Link 
