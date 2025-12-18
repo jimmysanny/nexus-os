@@ -10,13 +10,13 @@ export default function FunnelEditor() {
   const [price, setPrice] = useState("49.99");
   
   // --- DESIGN STATE ---
-  const [themeColor, setThemeColor] = useState("blue"); // blue, purple, green, red
-  const [font, setFont] = useState("sans"); // sans, serif, mono
+  const [themeColor, setThemeColor] = useState("blue");
+  const [font, setFont] = useState("sans");
   const [logoUrl, setLogoUrl] = useState("");
   const [heroImageUrl, setHeroImageUrl] = useState("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1632&q=80");
   const [customHtml, setCustomHtml] = useState("");
 
-  const [activeTab, setActiveTab] = useState("content"); // 'content' or 'design'
+  const [activeTab, setActiveTab] = useState("content");
   const [isSaving, setIsSaving] = useState(false);
 
   // Helper to get theme classes
@@ -25,7 +25,7 @@ export default function FunnelEditor() {
         case "purple": return "bg-purple-600 hover:bg-purple-700";
         case "green": return "bg-green-600 hover:bg-green-700";
         case "red": return "bg-red-600 hover:bg-red-700";
-        default: return "bg-blue-600 hover:bg-blue-700"; // Blue
+        default: return "bg-blue-600 hover:bg-blue-700";
     }
   };
   
