@@ -1,4 +1,4 @@
-﻿generator client {
+generator client {
   provider = "prisma-client-js"
 }
 
@@ -24,14 +24,17 @@ model Funnel {
   published   Boolean  @default(false)
   userId      String
   user        User     @relation(fields: [userId], references: [clerkId])
+  
   headline    String   @default("Unlock Your Potential")
   subheadline String   @default("Join thousands of happy customers.")
   price       Float    @default(49.99)
+  
   theme       String   @default("blue")
   font        String   @default("sans")
   logoUrl     String?
-  heroImage   String   @default("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3")
+  heroImage   String   @default("https://images.unsplash.com/photo-1556761175-5973dc0f32e7")
   customHtml  String?
+
   orders      Order[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -43,7 +46,7 @@ model Order {
   funnel        Funnel   @relation(fields: [funnelId], references: [id])
   customerEmail String
   amount        Float
-  status        String   @default("paid")
+  status        String   @default("SUCCESS")
   reference     String   @unique
   createdAt     DateTime @default(now())
 }
