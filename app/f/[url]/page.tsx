@@ -2,10 +2,10 @@
 import { notFound } from "next/navigation";
 import PublicFunnelView from "./_components/PublicFunnelView";
 
-export default async function PublicPage({ params }: { params: { subdomain: string } }) {
-  // Look up the funnel in the DB by its subdomain
+export default async function PublicPage({ params }: { params: { url: string } }) {
+  // Use 'url' here to match the new folder name [url]
   const funnel = await db.funnel.findUnique({
-    where: { subdomain: params.subdomain },
+    where: { subdomain: params.url },
   });
 
   if (!funnel) return notFound();
