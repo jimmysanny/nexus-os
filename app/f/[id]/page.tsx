@@ -1,7 +1,7 @@
 ﻿import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { CreditCard, CheckCircle } from "lucide-react";
-import { PaymentButton } from "./_components/PaymentButton"; // We will create this small helper
+import { PaymentButton } from "./_components/PaymentButton";
 
 // Helper to get theme colors
 const getThemeColors = (color: string) => {
@@ -22,20 +22,24 @@ const getButtonColor = (color: string) => {
     }
 };
 
-export default async function FunnelPage({ params }: { params: { id: string } }) {
-  // 1. Try to find by SUBDOMAIN first (e.g., "test")
+// FIXED: params is now a Promise in Next.js 15+
+export default async function FunnelPage({ params }: { params: Promise<{ id: string }> }) {
+  // 1. AWAIT THE PARAMS (Crucial Fix)
+  const { id } = await params;
+
+  // 2. Try to find by SUBDOMAIN first (e.g., "test")
   let funnel = await db.funnel.findFirst({
-    where: { subdomain: params.id, published: true }
+    where: { subdomain: id, published: true }
   });
 
-  // 2. If not found, try by ID (fallback)
+  // 3. If not found, try by ID (fallback)
   if (!funnel) {
     funnel = await db.funnel.findUnique({
-      where: { id: params.id }
+      where: { id: id }
     });
   }
 
-  // 3. Still nothing? 404.
+  // 4. Still nothing? 404.
   if (!funnel) return notFound();
 
   return (
