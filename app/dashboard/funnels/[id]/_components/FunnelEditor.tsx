@@ -1,14 +1,13 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Save, Monitor, Smartphone, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard, ExternalLink } from "lucide-react";
+import { Save, Monitor, Smartphone, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard, ExternalLink, Tablet } from "lucide-react";
 import { saveFunnel } from "@/app/actions/saveFunnel";
 import { usePaystackPayment } from "react-paystack";
 import { FileUpload } from "@/components/FileUpload";
 
-// Mock ID and Subdomain for now
 const MOCK_FUNNEL_ID = "test-funnel-id"; 
-const MOCK_SUBDOMAIN = "test"; // This matches the public URL
+const MOCK_SUBDOMAIN = "test"; 
 
 export default function FunnelEditor() {
   // --- CONTENT STATE ---
@@ -25,8 +24,10 @@ export default function FunnelEditor() {
 
   const [activeTab, setActiveTab] = useState("content");
   const [status, setStatus] = useState("idle");
+  
+  // NEW: VIEW MODE STATE (Controls the width)
+  const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
 
-  // PAYSTACK CONFIG
   const config = {
       reference: (new Date()).getTime().toString(),
       email: "customer@example.com",
@@ -70,7 +71,7 @@ export default function FunnelEditor() {
   return (
     <div className="flex h-[calc(100vh-4rem)] text-white overflow-hidden">
       {/* LEFT: SIDEBAR CONTROLS */}
-      <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col z-20 shadow-xl">
+      <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col z-20 shadow-xl shrink-0">
         <div className="flex border-b border-gray-800">
             <button onClick={() => setActiveTab("content")} className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 ${activeTab === "content" ? "text-blue-400 bg-gray-800" : "text-gray-400 hover:text-white"}`}>
                 <Layout size={16} /> Content
@@ -163,32 +164,55 @@ export default function FunnelEditor() {
         </div>
       </div>
 
-      {/* RIGHT: LIVE PREVIEW AREA (Hidden on small mobile) */}
-      <div className="flex-1 bg-black p-4 md:p-8 flex flex-col items-center justify-center relative overflow-hidden hidden md:flex">
-        <div className="absolute top-6 flex bg-gray-900 rounded-lg p-1 border border-gray-800 z-10">
-            <button className="p-2 text-white bg-gray-800 rounded"><Monitor size={18} /></button>
-            <button className="p-2 text-gray-500 hover:text-white"><Smartphone size={18} /></button>
+      {/* RIGHT: LIVE PREVIEW AREA */}
+      <div className="flex-1 bg-black p-4 md:p-8 flex flex-col items-center justify-center relative overflow-hidden">
+        
+        {/* VIEW MODE TOGGLE */}
+        <div className="absolute top-6 flex bg-gray-900 rounded-lg p-1 border border-gray-800 z-10 shadow-xl">
+            <button 
+                onClick={() => setViewMode("desktop")}
+                className={`p-2 rounded transition ${viewMode === "desktop" ? "bg-blue-600 text-white" : "text-gray-500 hover:text-white"}`}
+            >
+                <Monitor size={18} />
+            </button>
+            <button 
+                onClick={() => setViewMode("mobile")}
+                className={`p-2 rounded transition ${viewMode === "mobile" ? "bg-blue-600 text-white" : "text-gray-500 hover:text-white"}`}
+            >
+                <Smartphone size={18} />
+            </button>
         </div>
-        <div className={`w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative ${getFontClass(font)} transform transition-all duration-500`}>
+
+        {/* PREVIEW CONTAINER (RESIZES BASED ON MODE) */}
+        <div 
+            className={`bg-white text-black overflow-hidden shadow-2xl flex flex-col relative transition-all duration-500 ease-in-out ${getFontClass(font)}
+                ${viewMode === 'mobile' ? 'w-full max-w-[375px] rounded-3xl min-h-[600px] border-8 border-gray-900' : 'w-full max-w-5xl h-[90%] rounded-md border border-gray-200'}
+            `}
+        >
             <div className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
                 {logoUrl ? <img src={logoUrl} alt="Logo" className="h-8 object-contain" /> : <span className="font-bold text-white/80">BrandName</span>}
             </div>
-            <div className="h-64 relative flex items-end p-6">
+            
+            {/* HERO SECTION */}
+            <div className={`${viewMode === 'mobile' ? 'h-64' : 'h-96'} relative flex items-end p-6 shrink-0`}>
                 <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500" alt="Hero" />
                 <div className={`absolute inset-0 opacity-80 ${themeColor === 'blue' ? 'bg-blue-900/60' : themeColor === 'purple' ? 'bg-purple-900/60' : themeColor === 'green' ? 'bg-green-900/60' : 'bg-red-900/60'}`}></div>
-                <h1 className="text-3xl font-extrabold text-white relative z-10 leading-tight">{headline}</h1>
+                <h1 className={`${viewMode === 'mobile' ? 'text-3xl' : 'text-5xl'} font-extrabold text-white relative z-10 leading-tight`}>{headline}</h1>
             </div>
-            <div className="p-6 space-y-6 bg-white flex-1">
-                <p className="text-gray-600 leading-relaxed">{description}</p>
+            
+            {/* BODY CONTENT */}
+            <div className="p-6 space-y-6 bg-white flex-1 overflow-y-auto">
+                <p className={`text-gray-600 leading-relaxed ${viewMode === 'desktop' ? 'text-xl' : 'text-base'}`}>{description}</p>
                 {customHtml && <div dangerouslySetInnerHTML={{ __html: customHtml }} className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm" />}
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 max-w-md mx-auto">
                     <span className="text-gray-500 font-medium">Total</span>
                     <span className={`text-3xl font-bold ${themeColor === 'blue' ? 'text-blue-600' : themeColor === 'purple' ? 'text-purple-600' : themeColor === 'green' ? 'text-green-600' : 'text-red-600'}`}>${price}</span>
                 </div>
                 
                 <button 
                   onClick={() => initializePayment({ onSuccess, onClose })}
-                  className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg flex items-center justify-center gap-2 ${getThemeClass(themeColor)}`}
+                  className={`w-full max-w-md mx-auto py-4 rounded-xl font-bold text-lg text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition ${getThemeClass(themeColor)}`}
                 >
                     Buy Now <CreditCard size={20} />
                 </button>
