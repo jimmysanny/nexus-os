@@ -25,8 +25,7 @@ model Funnel {
   price       Float    @default(0.0)
   published   boolean  @default(false)
   
-  // DESIGN FIELDS (The missing pieces)
-  logo        String?  // The field causing the error
+  logo        String?
   heroImage   String?
   theme       String?  @default("blue")
   font        String?  @default("sans")
