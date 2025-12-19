@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Save, Monitor, Smartphone, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard, X } from "lucide-react";
+import { Save, Monitor, Smartphone, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard, X, MousePointerClick, Clock, Briefcase } from "lucide-react";
 import { saveFunnel } from "@/app/actions/saveFunnel";
 import { usePaystackPayment } from "react-paystack";
 import { UploadButton } from "@/lib/uploadthing";
@@ -21,8 +21,9 @@ export default function FunnelEditor() {
   const [logoUrl, setLogoUrl] = useState("");
   const [heroImageUrl, setHeroImageUrl] = useState("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3");
   const [customHtml, setCustomHtml] = useState("");
+  const [template, setTemplate] = useState("modern"); // modern, urgency, luxury
 
-  const [activeTab, setActiveTab] = useState("content");
+  const [activeTab, setActiveTab] = useState("design");
   const [status, setStatus] = useState("idle");
 
   // PAYSTACK CONFIG
@@ -36,11 +37,26 @@ export default function FunnelEditor() {
 
   const initializePayment = usePaystackPayment(config);
 
+  const applyTemplate = (t: string) => {
+    setTemplate(t);
+    if (t === "modern") {
+        setFont("sans");
+        setThemeColor("blue");
+    } else if (t === "urgency") {
+        setFont("sans");
+        setThemeColor("red");
+    } else if (t === "luxury") {
+        setFont("serif");
+        setThemeColor("black");
+    }
+  };
+
   const getThemeClass = (color: string) => {
     switch(color) {
         case "purple": return "bg-purple-600 hover:bg-purple-700";
         case "green": return "bg-green-600 hover:bg-green-700";
         case "red": return "bg-red-600 hover:bg-red-700";
+        case "black": return "bg-black hover:bg-gray-800";
         default: return "bg-blue-600 hover:bg-blue-700";
     }
   };
@@ -66,7 +82,7 @@ export default function FunnelEditor() {
   return (
     <div className="flex h-[calc(100vh-4rem)] text-white">
       {/* LEFT: SIDEBAR CONTROLS */}
-      <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col">
+      <div className="w-96 border-r border-gray-800 bg-gray-900 flex flex-col">
         <div className="flex border-b border-gray-800">
             <button onClick={() => setActiveTab("content")} className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 ${activeTab === "content" ? "text-blue-400 bg-gray-800" : "text-gray-400 hover:text-white"}`}>
                 <Layout size={16} /> Content
@@ -95,12 +111,28 @@ export default function FunnelEditor() {
             )}
 
             {activeTab === "design" && (
-                <div className="space-y-6">
+                <div className="space-y-8">
+                    {/* TEMPLATE SELECTOR */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Choose Template</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            <button onClick={() => applyTemplate("modern")} className={`p-2 rounded-lg border flex flex-col items-center gap-1 ${template === "modern" ? "border-blue-500 bg-blue-900/20 text-blue-400" : "border-gray-700 text-gray-400 hover:border-gray-500"}`}>
+                                <MousePointerClick size={16} /> <span className="text-[10px]">SaaS</span>
+                            </button>
+                            <button onClick={() => applyTemplate("urgency")} className={`p-2 rounded-lg border flex flex-col items-center gap-1 ${template === "urgency" ? "border-red-500 bg-red-900/20 text-red-400" : "border-gray-700 text-gray-400 hover:border-gray-500"}`}>
+                                <Clock size={16} /> <span className="text-[10px]">Sales</span>
+                            </button>
+                            <button onClick={() => applyTemplate("luxury")} className={`p-2 rounded-lg border flex flex-col items-center gap-1 ${template === "luxury" ? "border-white bg-white/10 text-white" : "border-gray-700 text-gray-400 hover:border-gray-500"}`}>
+                                <Briefcase size={16} /> <span className="text-[10px]">Pro</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Theme Color</label>
                         <div className="flex gap-3">
-                            {["blue", "purple", "green", "red"].map((c) => (
-                                <button key={c} onClick={() => setThemeColor(c)} className={`w-8 h-8 rounded-full border-2 ${themeColor === c ? "border-white" : "border-transparent"}`} style={{ backgroundColor: c === 'blue' ? '#2563eb' : c === 'purple' ? '#9333ea' : c === 'green' ? '#16a34a' : '#dc2626' }} />
+                            {["blue", "purple", "green", "red", "black"].map((c) => (
+                                <button key={c} onClick={() => setThemeColor(c)} className={`w-8 h-8 rounded-full border-2 ${themeColor === c ? "border-white" : "border-transparent"}`} style={{ backgroundColor: c === 'blue' ? '#2563eb' : c === 'purple' ? '#9333ea' : c === 'green' ? '#16a34a' : c === 'red' ? '#dc2626' : '#000000' }} />
                             ))}
                         </div>
                     </div>
@@ -132,14 +164,12 @@ export default function FunnelEditor() {
                             onClientUploadComplete={(res) => {
                                 if (res?.[0]) {
                                     setHeroImageUrl(res[0].url);
-                                    alert("Image Uploaded!");
                                 }
                             }}
                             onUploadError={(error: Error) => {
                                 alert(`ERROR! ${error.message}`);
                             }}
                         />
-                        <p className="text-[10px] text-gray-500 mt-2 text-center">Max 4MB</p>
                     </div>
 
                     <div>
@@ -172,30 +202,46 @@ export default function FunnelEditor() {
             <button className="p-2 text-white bg-gray-800 rounded"><Monitor size={18} /></button>
             <button className="p-2 text-gray-500 hover:text-white"><Smartphone size={18} /></button>
         </div>
-        <div className={`w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative ${getFontClass(font)}`}>
-            <div className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
-                {logoUrl ? <img src={logoUrl} alt="Logo" className="h-8 object-contain" /> : <span className="font-bold text-white/80">BrandName</span>}
-            </div>
-            <div className="h-64 relative flex items-end p-6">
-                <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
-                <div className={`absolute inset-0 opacity-80 ${themeColor === 'blue' ? 'bg-blue-900/60' : themeColor === 'purple' ? 'bg-purple-900/60' : themeColor === 'green' ? 'bg-green-900/60' : 'bg-red-900/60'}`}></div>
-                <h1 className="text-3xl font-extrabold text-white relative z-10 leading-tight">{headline}</h1>
-            </div>
-            <div className="p-6 space-y-6 bg-white flex-1">
-                <p className="text-gray-600 leading-relaxed">{description}</p>
-                {customHtml && <div dangerouslySetInnerHTML={{ __html: customHtml }} className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm" />}
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <span className="text-gray-500 font-medium">Total</span>
-                    <span className={`text-3xl font-bold ${themeColor === 'blue' ? 'text-blue-600' : themeColor === 'purple' ? 'text-purple-600' : themeColor === 'green' ? 'text-green-600' : 'text-red-600'}`}>${price}</span>
+        
+        {/* PREVIEW CONTAINER */}
+        <div className={`w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative ${getFontClass(font)} transition-all duration-300`}>
+            
+            {/* --- TEMPLATE: URGENCY (Red banner at top) --- */}
+            {template === 'urgency' && (
+                <div className="bg-red-600 text-white text-center py-2 text-xs font-bold tracking-widest uppercase animate-pulse">
+                     Offer Ends Soon  50% OFF
                 </div>
+            )}
+
+            <div className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
+                {logoUrl ? <img src={logoUrl} alt="Logo" className="h-8 object-contain" /> : <span className={`font-bold ${template === 'luxury' ? 'text-black' : 'text-white/80'}`}>BrandName</span>}
+            </div>
+
+            <div className={`relative ${template === 'luxury' ? 'h-96' : 'h-64'} flex items-end p-6`}>
+                <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
+                <div className={`absolute inset-0 opacity-80 ${themeColor === 'blue' ? 'bg-blue-900/60' : themeColor === 'purple' ? 'bg-purple-900/60' : themeColor === 'green' ? 'bg-green-900/60' : themeColor === 'red' ? 'bg-red-900/80' : 'bg-black/0'}`}></div>
                 
-                {/* REAL PAYMENT BUTTON */}
-                <button 
-                  onClick={() => initializePayment({ onSuccess: () => alert('Paid!'), onClose: () => {} })}
-                  className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] flex items-center justify-center gap-2 ${getThemeClass(themeColor)}`}
-                >
-                    Buy Now <CreditCard size={20} />
-                </button>
+                {/* HEADLINE STYLES */}
+                <h1 className={`relative z-10 leading-tight ${template === 'luxury' ? 'text-4xl text-white drop-shadow-lg italic' : 'text-3xl font-extrabold text-white'}`}>
+                    {headline}
+                </h1>
+            </div>
+
+            <div className="p-6 space-y-6 bg-white flex-1 flex flex-col">
+                <p className="text-gray-600 leading-relaxed text-lg">{description}</p>
+                
+                <div className="mt-auto">
+                    {template === 'urgency' && <div className="text-center text-red-600 font-bold text-sm mb-2"> 12 people are viewing this page</div>}
+                    
+                    <button 
+                    onClick={() => initializePayment({ onSuccess: () => alert('Paid!'), onClose: () => {} })}
+                    className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] flex items-center justify-center gap-2 ${getThemeClass(themeColor)} ${template === 'luxury' ? 'rounded-none uppercase tracking-[4px] bg-black' : ''}`}
+                    >
+                        {template === 'urgency' ? "GET IT NOW!" : "Buy Now"} <CreditCard size={20} />
+                    </button>
+                    
+                    {template === 'modern' && <p className="text-center text-xs text-gray-400 mt-4">Secure payment via Paystack</p>}
+                </div>
             </div>
         </div>
       </div>
