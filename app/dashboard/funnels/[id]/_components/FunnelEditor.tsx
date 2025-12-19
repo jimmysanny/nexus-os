@@ -1,13 +1,13 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Save, Monitor, Smartphone, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard, ExternalLink, Tablet } from "lucide-react";
+import { Save, Monitor, Smartphone, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard, X } from "lucide-react";
 import { saveFunnel } from "@/app/actions/saveFunnel";
 import { usePaystackPayment } from "react-paystack";
-import { FileUpload } from "@/components/FileUpload";
+import { UploadButton } from "@/lib/uploadthing";
 
+// Mock ID for now
 const MOCK_FUNNEL_ID = "test-funnel-id"; 
-const MOCK_SUBDOMAIN = "test"; 
 
 export default function FunnelEditor() {
   // --- CONTENT STATE ---
@@ -24,10 +24,8 @@ export default function FunnelEditor() {
 
   const [activeTab, setActiveTab] = useState("content");
   const [status, setStatus] = useState("idle");
-  
-  // NEW: VIEW MODE STATE (Controls the width)
-  const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
 
+  // PAYSTACK CONFIG
   const config = {
       reference: (new Date()).getTime().toString(),
       email: "customer@example.com",
@@ -37,9 +35,6 @@ export default function FunnelEditor() {
   };
 
   const initializePayment = usePaystackPayment(config);
-
-  const onSuccess = (reference: any) => { alert("Payment Successful! Ref: " + reference.reference); };
-  const onClose = () => { alert("Payment cancelled."); };
 
   const getThemeClass = (color: string) => {
     switch(color) {
@@ -69,9 +64,9 @@ export default function FunnelEditor() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] text-white overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] text-white">
       {/* LEFT: SIDEBAR CONTROLS */}
-      <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col z-20 shadow-xl shrink-0">
+      <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col">
         <div className="flex border-b border-gray-800">
             <button onClick={() => setActiveTab("content")} className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 ${activeTab === "content" ? "text-blue-400 bg-gray-800" : "text-gray-400 hover:text-white"}`}>
                 <Layout size={16} /> Content
@@ -109,6 +104,44 @@ export default function FunnelEditor() {
                             ))}
                         </div>
                     </div>
+                    
+                    {/* UPLOAD HERO IMAGE */}
+                    <div className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                           <ImageIcon size={14}/> Hero Image
+                        </label>
+                        
+                        {heroImageUrl ? (
+                            <div className="relative mb-3 group">
+                                <img src={heroImageUrl} alt="Hero" className="w-full h-32 object-cover rounded-lg border border-gray-600" />
+                                <button 
+                                    onClick={() => setHeroImageUrl("")} 
+                                    className="absolute top-2 right-2 bg-red-600 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ) : null}
+
+                        <UploadButton
+                            endpoint="imageUploader"
+                            appearance={{
+                                button: "bg-blue-600 text-sm font-bold w-full",
+                                allowedContent: "hidden"
+                            }}
+                            onClientUploadComplete={(res) => {
+                                if (res?.[0]) {
+                                    setHeroImageUrl(res[0].url);
+                                    alert("Image Uploaded!");
+                                }
+                            }}
+                            onUploadError={(error: Error) => {
+                                alert(`ERROR! ${error.message}`);
+                            }}
+                        />
+                        <p className="text-[10px] text-gray-500 mt-2 text-center">Max 4MB</p>
+                    </div>
+
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><Type size={14}/> Typography</label>
                         <select value={font} onChange={(e) => setFont(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 outline-none">
@@ -117,35 +150,12 @@ export default function FunnelEditor() {
                             <option value="mono">Tech Mono</option>
                         </select>
                     </div>
-                    
-                    {/* IMAGE UPLOADERS */}
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14}/> Hero Image</label>
-                        <FileUpload 
-                            endpoint="imageUploader"
-                            value={heroImageUrl}
-                            onChange={(url) => { if (url) setHeroImageUrl(url); }}
-                        />
-                    </div>
-                    <div>
-                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 mt-4 flex items-center gap-2"><ImageIcon size={14}/> Logo</label>
-                        <FileUpload 
-                            endpoint="imageUploader"
-                            value={logoUrl}
-                            onChange={(url) => { if (url) setLogoUrl(url); }}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><Code size={14}/> Custom HTML</label>
-                        <textarea rows={3} value={customHtml} onChange={(e) => setCustomHtml(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg p-2 text-xs font-mono text-green-400 focus:border-blue-500 outline-none" placeholder="<div>Custom Badge</div>" />
-                    </div>
                 </div>
             )}
         </div>
 
-        {/* SAVE & VIEW BUTTONS */}
-        <div className="p-4 border-t border-gray-800 space-y-3">
+        {/* SAVE BUTTON */}
+        <div className="p-4 border-t border-gray-800">
             <button 
                 onClick={handleSave}
                 disabled={status === "saving"}
@@ -153,66 +163,36 @@ export default function FunnelEditor() {
             >
                 {status === "saving" ? <><Loader2 className="animate-spin" size={18} /> Saving...</> : status === "success" ? <><CheckCircle size={18} /> Saved!</> : <><Save size={18} /> Publish Changes</>}
             </button>
-            
-            <a 
-                href={`/f/${MOCK_SUBDOMAIN}`} 
-                target="_blank"
-                className="w-full py-3 rounded-lg flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-700 transition text-sm font-medium"
-            >
-                <ExternalLink size={16} /> View Live Page
-            </a>
         </div>
       </div>
 
       {/* RIGHT: LIVE PREVIEW AREA */}
-      <div className="flex-1 bg-black p-4 md:p-8 flex flex-col items-center justify-center relative overflow-hidden">
-        
-        {/* VIEW MODE TOGGLE */}
-        <div className="absolute top-6 flex bg-gray-900 rounded-lg p-1 border border-gray-800 z-10 shadow-xl">
-            <button 
-                onClick={() => setViewMode("desktop")}
-                className={`p-2 rounded transition ${viewMode === "desktop" ? "bg-blue-600 text-white" : "text-gray-500 hover:text-white"}`}
-            >
-                <Monitor size={18} />
-            </button>
-            <button 
-                onClick={() => setViewMode("mobile")}
-                className={`p-2 rounded transition ${viewMode === "mobile" ? "bg-blue-600 text-white" : "text-gray-500 hover:text-white"}`}
-            >
-                <Smartphone size={18} />
-            </button>
+      <div className="flex-1 bg-black p-8 flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute top-6 flex bg-gray-900 rounded-lg p-1 border border-gray-800 z-10">
+            <button className="p-2 text-white bg-gray-800 rounded"><Monitor size={18} /></button>
+            <button className="p-2 text-gray-500 hover:text-white"><Smartphone size={18} /></button>
         </div>
-
-        {/* PREVIEW CONTAINER (RESIZES BASED ON MODE) */}
-        <div 
-            className={`bg-white text-black overflow-hidden shadow-2xl flex flex-col relative transition-all duration-500 ease-in-out ${getFontClass(font)}
-                ${viewMode === 'mobile' ? 'w-full max-w-[375px] rounded-3xl min-h-[600px] border-8 border-gray-900' : 'w-full max-w-5xl h-[90%] rounded-md border border-gray-200'}
-            `}
-        >
+        <div className={`w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative ${getFontClass(font)}`}>
             <div className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
                 {logoUrl ? <img src={logoUrl} alt="Logo" className="h-8 object-contain" /> : <span className="font-bold text-white/80">BrandName</span>}
             </div>
-            
-            {/* HERO SECTION */}
-            <div className={`${viewMode === 'mobile' ? 'h-64' : 'h-96'} relative flex items-end p-6 shrink-0`}>
-                <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500" alt="Hero" />
+            <div className="h-64 relative flex items-end p-6">
+                <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
                 <div className={`absolute inset-0 opacity-80 ${themeColor === 'blue' ? 'bg-blue-900/60' : themeColor === 'purple' ? 'bg-purple-900/60' : themeColor === 'green' ? 'bg-green-900/60' : 'bg-red-900/60'}`}></div>
-                <h1 className={`${viewMode === 'mobile' ? 'text-3xl' : 'text-5xl'} font-extrabold text-white relative z-10 leading-tight`}>{headline}</h1>
+                <h1 className="text-3xl font-extrabold text-white relative z-10 leading-tight">{headline}</h1>
             </div>
-            
-            {/* BODY CONTENT */}
-            <div className="p-6 space-y-6 bg-white flex-1 overflow-y-auto">
-                <p className={`text-gray-600 leading-relaxed ${viewMode === 'desktop' ? 'text-xl' : 'text-base'}`}>{description}</p>
+            <div className="p-6 space-y-6 bg-white flex-1">
+                <p className="text-gray-600 leading-relaxed">{description}</p>
                 {customHtml && <div dangerouslySetInnerHTML={{ __html: customHtml }} className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm" />}
-                
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 max-w-md mx-auto">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <span className="text-gray-500 font-medium">Total</span>
                     <span className={`text-3xl font-bold ${themeColor === 'blue' ? 'text-blue-600' : themeColor === 'purple' ? 'text-purple-600' : themeColor === 'green' ? 'text-green-600' : 'text-red-600'}`}>${price}</span>
                 </div>
                 
+                {/* REAL PAYMENT BUTTON */}
                 <button 
-                  onClick={() => initializePayment({ onSuccess, onClose })}
-                  className={`w-full max-w-md mx-auto py-4 rounded-xl font-bold text-lg text-white shadow-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition ${getThemeClass(themeColor)}`}
+                  onClick={() => initializePayment({ onSuccess: () => alert('Paid!'), onClose: () => {} })}
+                  className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] flex items-center justify-center gap-2 ${getThemeClass(themeColor)}`}
                 >
                     Buy Now <CreditCard size={20} />
                 </button>

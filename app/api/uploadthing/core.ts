@@ -4,9 +4,10 @@ import { currentUser } from "@clerk/nextjs/server";
 const f = createUploadthing();
  
 export const ourFileRouter = {
-  // Define a route for "imageUploader"
-  imageUploader: f({ image: { maxFileSize: "4MB" } })
+  // Define "imageUploader" endpoint
+  imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     .middleware(async () => {
+      // Check if user is logged in
       const user = await currentUser();
       if (!user) throw new Error("Unauthorized");
       return { userId: user.id };
