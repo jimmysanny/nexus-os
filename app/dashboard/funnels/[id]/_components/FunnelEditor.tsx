@@ -1,13 +1,14 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Save, Monitor, Smartphone, Settings, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard } from "lucide-react";
+import { Save, Monitor, Smartphone, Layout, Type, Image as ImageIcon, Code, Palette, Loader2, CheckCircle, CreditCard, ExternalLink } from "lucide-react";
 import { saveFunnel } from "@/app/actions/saveFunnel";
 import { usePaystackPayment } from "react-paystack";
-import { FileUpload } from "@/components/FileUpload"; // IMPORT THE NEW UPLOADER
+import { FileUpload } from "@/components/FileUpload";
 
-// Mock ID for now
+// Mock ID and Subdomain for now
 const MOCK_FUNNEL_ID = "test-funnel-id"; 
+const MOCK_SUBDOMAIN = "test"; // This matches the public URL
 
 export default function FunnelEditor() {
   // --- CONTENT STATE ---
@@ -19,7 +20,7 @@ export default function FunnelEditor() {
   const [themeColor, setThemeColor] = useState("blue");
   const [font, setFont] = useState("sans");
   const [logoUrl, setLogoUrl] = useState("");
-  const [heroImageUrl, setHeroImageUrl] = useState("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1632&q=80");
+  const [heroImageUrl, setHeroImageUrl] = useState("https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3");
   const [customHtml, setCustomHtml] = useState("");
 
   const [activeTab, setActiveTab] = useState("content");
@@ -36,13 +37,8 @@ export default function FunnelEditor() {
 
   const initializePayment = usePaystackPayment(config);
 
-  const onSuccess = (reference: any) => {
-      alert("Payment Successful! Reference: " + reference.reference);
-  };
-
-  const onClose = () => {
-      alert("Payment cancelled.");
-  };
+  const onSuccess = (reference: any) => { alert("Payment Successful! Ref: " + reference.reference); };
+  const onClose = () => { alert("Payment cancelled."); };
 
   const getThemeClass = (color: string) => {
     switch(color) {
@@ -72,9 +68,9 @@ export default function FunnelEditor() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] text-white">
+    <div className="flex h-[calc(100vh-4rem)] text-white overflow-hidden">
       {/* LEFT: SIDEBAR CONTROLS */}
-      <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col">
+      <div className="w-80 border-r border-gray-800 bg-gray-900 flex flex-col z-20 shadow-xl">
         <div className="flex border-b border-gray-800">
             <button onClick={() => setActiveTab("content")} className={`flex-1 py-4 font-bold text-sm flex items-center justify-center gap-2 ${activeTab === "content" ? "text-blue-400 bg-gray-800" : "text-gray-400 hover:text-white"}`}>
                 <Layout size={16} /> Content
@@ -121,7 +117,7 @@ export default function FunnelEditor() {
                         </select>
                     </div>
                     
-                    {/* NEW IMAGE UPLOADERS */}
+                    {/* IMAGE UPLOADERS */}
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2"><ImageIcon size={14}/> Hero Image</label>
                         <FileUpload 
@@ -147,8 +143,8 @@ export default function FunnelEditor() {
             )}
         </div>
 
-        {/* SAVE BUTTON */}
-        <div className="p-4 border-t border-gray-800">
+        {/* SAVE & VIEW BUTTONS */}
+        <div className="p-4 border-t border-gray-800 space-y-3">
             <button 
                 onClick={handleSave}
                 disabled={status === "saving"}
@@ -156,21 +152,29 @@ export default function FunnelEditor() {
             >
                 {status === "saving" ? <><Loader2 className="animate-spin" size={18} /> Saving...</> : status === "success" ? <><CheckCircle size={18} /> Saved!</> : <><Save size={18} /> Publish Changes</>}
             </button>
+            
+            <a 
+                href={`/f/${MOCK_SUBDOMAIN}`} 
+                target="_blank"
+                className="w-full py-3 rounded-lg flex items-center justify-center gap-2 text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-700 transition text-sm font-medium"
+            >
+                <ExternalLink size={16} /> View Live Page
+            </a>
         </div>
       </div>
 
-      {/* RIGHT: LIVE PREVIEW AREA */}
-      <div className="flex-1 bg-black p-8 flex flex-col items-center justify-center relative overflow-hidden">
+      {/* RIGHT: LIVE PREVIEW AREA (Hidden on small mobile) */}
+      <div className="flex-1 bg-black p-4 md:p-8 flex flex-col items-center justify-center relative overflow-hidden hidden md:flex">
         <div className="absolute top-6 flex bg-gray-900 rounded-lg p-1 border border-gray-800 z-10">
             <button className="p-2 text-white bg-gray-800 rounded"><Monitor size={18} /></button>
             <button className="p-2 text-gray-500 hover:text-white"><Smartphone size={18} /></button>
         </div>
-        <div className={`w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative ${getFontClass(font)}`}>
+        <div className={`w-full max-w-md bg-white text-black rounded-3xl overflow-hidden shadow-2xl min-h-[600px] flex flex-col relative ${getFontClass(font)} transform transition-all duration-500`}>
             <div className="absolute top-0 w-full p-6 flex justify-between items-center z-10">
                 {logoUrl ? <img src={logoUrl} alt="Logo" className="h-8 object-contain" /> : <span className="font-bold text-white/80">BrandName</span>}
             </div>
             <div className="h-64 relative flex items-end p-6">
-                <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
+                <img src={heroImageUrl} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500" alt="Hero" />
                 <div className={`absolute inset-0 opacity-80 ${themeColor === 'blue' ? 'bg-blue-900/60' : themeColor === 'purple' ? 'bg-purple-900/60' : themeColor === 'green' ? 'bg-green-900/60' : 'bg-red-900/60'}`}></div>
                 <h1 className="text-3xl font-extrabold text-white relative z-10 leading-tight">{headline}</h1>
             </div>
@@ -182,10 +186,9 @@ export default function FunnelEditor() {
                     <span className={`text-3xl font-bold ${themeColor === 'blue' ? 'text-blue-600' : themeColor === 'purple' ? 'text-purple-600' : themeColor === 'green' ? 'text-green-600' : 'text-red-600'}`}>${price}</span>
                 </div>
                 
-                {/* REAL PAYMENT BUTTON */}
                 <button 
                   onClick={() => initializePayment({ onSuccess, onClose })}
-                  className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transform transition hover:scale-[1.02] flex items-center justify-center gap-2 ${getThemeClass(themeColor)}`}
+                  className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg flex items-center justify-center gap-2 ${getThemeClass(themeColor)}`}
                 >
                     Buy Now <CreditCard size={20} />
                 </button>
