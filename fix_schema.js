@@ -1,4 +1,5 @@
-generator client {
+const fs = require("fs");
+const content = `generator client {
   provider = "prisma-client-js"
 }
 
@@ -48,3 +49,7 @@ model Order {
   reference     String   @unique
   createdAt     DateTime @default(now())
 }
+`;
+
+fs.writeFileSync("prisma/schema.prisma", content.trim());
+console.log(" CLEAN SCHEMA WRITTEN SUCCESSFULLY");
