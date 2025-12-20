@@ -19,12 +19,16 @@ model Funnel {
   price              Float    @default(0)
   headline           String?
   subheadline        String?
+  themeColor         String?  @default("blue")
+  font               String?  @default("sans")
+  logoUrl            String?
+  heroImageUrl       String?
   category           String   @default("Software")
   digitalProductUrl  String?
   published          Boolean  @default(false)
   orders             Order[]
   createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt // <--- FIXED: Added this for the build
+  updatedAt          DateTime @updatedAt
 }
 model Order {
   id            String   @id @default(cuid())
