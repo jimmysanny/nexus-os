@@ -7,9 +7,10 @@ export default function MarketSearch() {
   const searchParams = useSearchParams();
   const [text, setText] = useState(searchParams.get("q") || "");
   
+  // Custom debounce logic using standard React - No external packages needed
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(searchParams.toString());
       if (text) {
         params.set("q", text);
       } else {
