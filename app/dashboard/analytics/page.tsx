@@ -46,7 +46,7 @@ export default async function AnalyticsPage() {
               <tbody className="divide-y divide-slate-50">
                 {realOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-10 py-6 font-bold text-slate-900">{order.email}</td>
+                    <td className="px-10 py-6 font-bold text-slate-900">{order.customerEmail}</td>
                     <td className="px-10 py-6 text-slate-500 font-medium">{order.funnel?.name}</td>
                     <td className="px-10 py-6 font-black text-slate-900">{order.amount.toLocaleString()}</td>
                     <td className="px-10 py-6 text-right text-slate-400 text-xs font-medium">{new Date(order.createdAt).toLocaleDateString()}</td>
