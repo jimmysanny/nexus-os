@@ -1,46 +1,49 @@
 ﻿"use server";
-
-import { db } from "@/lib/db";
-import { currentUser } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 export async function saveFunnel(funnelId: string, data: any) {
-  const user = await currentUser();
-  if (!user) return { success: false, error: "Unauthorized" };
-
   try {
-    // 1. SELF-HEAL: Ensure the User exists in our DB (in case of reset)
-    await db.user.upsert({
-      where: { clerkId: user.id },
-      update: {},
-      create: {
-        clerkId: user.id,
-        email: user.emailAddresses[0].emailAddress,
-      }
-    });
+    console.log(" Saving Funnel:", funnelId);
+    console.log(" Data:", JSON.stringify(data, null, 2));
 
-    // 2. SAVE THE FUNNEL (Force subdomain to "test" so the button works)
-    await db.funnel.upsert({
+    const funnel = await prisma.funnel.upsert({
       where: { id: funnelId },
       update: {
-        ...data,
-        subdomain: "test", // Ensures /f/test always works
-        published: true,
-        price: parseFloat(data.price),
+        name: data.headline || "Untitled Funnel",
+        description: data.description || "",
+        price: parseFloat(data.price) || 0,
+        headline: data.headline || "",
+        subheadline: data.description || "",
+        themeColor: data.themeColor || "blue",
+        font: data.font || "sans",
+        logoUrl: data.logoUrl || "",
+        heroImageUrl: data.heroImageUrl || "",
+        digitalProductUrl: data.digitalProductUrl || "",
+        productName: data.productName || "Digital Download"
       },
       create: {
         id: funnelId,
-        userId: user.id,
-        name: "My First Funnel",
-        subdomain: "test",
+        userId: "user_123",
+        name: data.headline || "Untitled Funnel",
+        description: data.description || "",
+        price: parseFloat(data.price) || 0,
+        headline: data.headline || "",
+        subheadline: data.description || "",
         published: true,
-        ...data,
-        price: parseFloat(data.price),
+        themeColor: data.themeColor || "blue",
+        font: data.font || "sans",
+        logoUrl: data.logoUrl || "",
+        heroImageUrl: data.heroImageUrl || "",
+        digitalProductUrl: data.digitalProductUrl || "",
+        productName: data.productName || "Digital Download"
       },
     });
 
-    return { success: true };
-  } catch (error) {
-    console.error("Save Error:", error);
-    return { success: false, error: "Failed to save" };
+    revalidatePath("/dashboard");
+    return { success: true, funnel };
+  } catch (error: any) {
+    console.error(" SAVE FAILED:", error);
+    throw new Error(error.message);
   }
 }

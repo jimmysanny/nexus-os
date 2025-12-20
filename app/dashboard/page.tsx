@@ -1,120 +1,153 @@
-﻿import { currentUser } from "@clerk/nextjs/server";
+import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
-import { DollarSign, ShoppingBag, Activity, Users } from "lucide-react";
+import DashboardNav from "@/components/DashboardNav";
+import RevenueChart from "@/components/RevenueChart";
 
-export default async function DashboardPage() {
+export default async function Dashboard() {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
-  // 1. Fetch Real Data
-  const funnels = await db.funnel.findMany({
-    where: { userId: user.id },
-    include: { 
-      orders: { orderBy: { createdAt: "desc" }, take: 5 } 
-    }
+  // 1. FETCH REAL DATA
+  const products = await prisma.funnel.findMany({ where: { userId: user.id } });
+  
+  // Get all orders for this user (products they own)
+  const productIds = products.map(p => p.id);
+  const orders = await prisma.order.findMany({
+    where: { 
+      funnelId: { in: productIds },
+      status: "SUCCESS"
+    },
+    orderBy: { createdAt: "desc" }
   });
 
-  // 2. Calculate Stats
-  const totalFunnels = funnels.length;
-  const activeFunnels = funnels.filter(f => f.published).length;
+  // 2. CALCULATE TOTALS
+  const totalRevenue = orders.reduce((acc, order) => acc + order.amount, 0);
+  const totalSales = orders.length;
   
-  // Flatten orders to get totals
-  const allOrders = funnels.flatMap(f => f.orders);
-  const totalRevenue = allOrders.reduce((acc, order) => acc + order.amount, 0);
-  const totalSales = allOrders.length;
+  // 3. GENERATE 7-DAY CHART DATA
+  const today = new Date();
+  const chartData = [];
   
-  // Get recent sales across all funnels
-  // (We sort again just to be safe if multiple funnels have orders)
-  const recentSales = allOrders
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = d.toLocaleDateString("en-US", { weekday: "short" }); // "Mon", "Tue"
+    
+    // Sum orders for this specific day
+    const dayTotal = orders
+      .filter(o => o.createdAt.toLocaleDateString() === d.toLocaleDateString())
+      .reduce((acc, o) => acc + o.amount, 0);
+      
+    chartData.push({ day: dateStr, amount: dayTotal });
+  }
 
   return (
-    <div className="p-8 text-white max-w-6xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard Overview</h1>
-        <p className="text-gray-400">Welcome back, {user.firstName || "User"}. Here is what is happening today.</p>
-      </div>
-
-      {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* REVENUE CARD */}
-        <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <p className="text-gray-400 text-sm font-medium">Total Revenue</p>
-                    <h3 className="text-3xl font-bold text-white mt-1">${totalRevenue.toFixed(2)}</h3>
-                </div>
-                <div className="p-3 bg-green-500/10 text-green-500 rounded-lg">
-                    <DollarSign size={24} />
-                </div>
-            </div>
-        </div>
-
-        {/* SALES CARD */}
-        <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <p className="text-gray-400 text-sm font-medium">Total Sales</p>
-                    <h3 className="text-3xl font-bold text-white mt-1">{totalSales}</h3>
-                </div>
-                <div className="p-3 bg-blue-500/10 text-blue-500 rounded-lg">
-                    <ShoppingBag size={24} />
-                </div>
-            </div>
-        </div>
-
-        {/* FUNNELS CARD */}
-        <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <p className="text-gray-400 text-sm font-medium">Active Funnels</p>
-                    <h3 className="text-3xl font-bold text-white mt-1">{activeFunnels} <span className="text-gray-500 text-lg font-normal">/ {totalFunnels}</span></h3>
-                </div>
-                <div className="p-3 bg-purple-500/10 text-purple-500 rounded-lg">
-                    <Activity size={24} />
-                </div>
-            </div>
-        </div>
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-blue-200">
+      <DashboardNav />
+      
+      <div className="max-w-5xl mx-auto px-6 py-10">
         
-        {/* CUSTOMERS CARD */}
-        <div className="bg-gray-900 border border-gray-800 p-6 rounded-2xl">
-            <div className="flex justify-between items-start mb-4">
-                <div>
-                    <p className="text-gray-400 text-sm font-medium">Unique Customers</p>
-                    <h3 className="text-3xl font-bold text-white mt-1">{new Set(allOrders.map(o => o.customerEmail)).size}</h3>
-                </div>
-                <div className="p-3 bg-orange-500/10 text-orange-500 rounded-lg">
-                    <Users size={24} />
-                </div>
-            </div>
+        {/* WELCOME HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+           <div>
+             <h1 className="text-3xl font-black text-slate-900">Command Center</h1>
+             <p className="text-slate-500 font-medium">Welcome back, {user.firstName}. Here is your empire at a glance.</p>
+           </div>
+           <div className="flex gap-3">
+             <Link href="/dashboard/funnels/new" className="px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/20 transition-all">
+               + New Product
+             </Link>
+             <Link href="/market" className="px-6 py-3 bg-white text-slate-900 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+               View Store
+             </Link>
+           </div>
         </div>
-      </div>
 
-      {/* RECENT ACTIVITY */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-        <h3 className="text-xl font-bold mb-6">Recent Transactions</h3>
-        {recentSales.length === 0 ? (
-            <p className="text-gray-500">No recent sales. Time to launch a new funnel!</p>
-        ) : (
-            <div className="space-y-4">
-                {recentSales.map((sale) => (
-                    <div key={sale.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl border border-gray-800">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-green-900/50 text-green-400 flex items-center justify-center font-bold">
-                                $
-                            </div>
-                            <div>
-                                <p className="font-bold text-white">{sale.customerEmail}</p>
-                                <p className="text-xs text-gray-400">{new Date(sale.createdAt).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        <span className="font-mono font-bold text-green-400">+${sale.amount}</span>
-                    </div>
-                ))}
-            </div>
-        )}
+        {/* STATS GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+           {/* REVENUE CARD */}
+           <div className="bg-blue-600 text-white p-8 rounded-[32px] shadow-2xl shadow-blue-900/20 relative overflow-hidden group">
+              <div className="relative z-10">
+                <p className="text-blue-200 text-[10px] font-black uppercase tracking-widest mb-1">Total Revenue</p>
+                <h2 className="text-4xl font-black">KES {totalRevenue.toLocaleString()}</h2>
+              </div>
+              <div className="absolute right-[-20px] bottom-[-20px] text-9xl text-blue-500 opacity-20 group-hover:scale-110 transition-transform"></div>
+           </div>
+
+           {/* SALES CARD */}
+           <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden group">
+              <div className="relative z-10">
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Total Sales</p>
+                <h2 className="text-4xl font-black text-slate-900">{totalSales}</h2>
+              </div>
+              <div className="absolute right-[-20px] bottom-[-20px] text-9xl text-slate-100 group-hover:scale-110 transition-transform"></div>
+           </div>
+
+           {/* PRODUCTS CARD */}
+           <div className="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden group">
+              <div className="relative z-10">
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Active Products</p>
+                <h2 className="text-4xl font-black text-slate-900">{products.length}</h2>
+              </div>
+              <div className="absolute right-[-20px] bottom-[-20px] text-9xl text-slate-100 group-hover:scale-110 transition-transform"></div>
+           </div>
+        </div>
+
+        {/* THE NEW VISUAL CHART */}
+        <div className="mb-10">
+           <RevenueChart data={chartData} />
+        </div>
+
+        {/* RECENT ORDERS TABLE */}
+        <div className="bg-white rounded-[40px] border border-slate-100 overflow-hidden">
+           <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+             <h3 className="font-black text-slate-900">Recent Transactions</h3>
+             <Link href="/dashboard/payouts" className="text-blue-600 text-xs font-bold hover:underline">View All</Link>
+           </div>
+           
+           {orders.length === 0 ? (
+             <div className="p-12 text-center">
+               <p className="text-slate-400 font-bold mb-4">No sales yet.</p>
+               <p className="text-sm text-slate-500">Share your product links to start seeing data here!</p>
+             </div>
+           ) : (
+             <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-slate-500">
+                  <thead className="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <tr>
+                      <th className="px-8 py-4">Customer</th>
+                      <th className="px-8 py-4">Amount</th>
+                      <th className="px-8 py-4">Status</th>
+                      <th className="px-8 py-4">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {orders.slice(0, 5).map((order) => (
+                      <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-8 py-4 font-bold text-slate-900">
+                           {order.customerEmail || "Anonymous"}
+                        </td>
+                        <td className="px-8 py-4 font-black text-slate-900">
+                           KES {order.amount.toLocaleString()}
+                        </td>
+                        <td className="px-8 py-4">
+                           <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                             {order.status}
+                           </span>
+                        </td>
+                        <td className="px-8 py-4 font-mono text-xs">
+                           {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+             </div>
+           )}
+        </div>
+
       </div>
     </div>
   );

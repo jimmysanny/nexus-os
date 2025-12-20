@@ -1,69 +1,68 @@
-﻿import { db } from "@/lib/db";
-// FIXED: Added "/server" to the import path below
-import { currentUser } from "@clerk/nextjs/server"; 
+﻿import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
 
 export default async function CustomersPage() {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
 
-  // 1. Get all funnels owned by this user
-  const funnels = await db.funnel.findMany({
-    where: { userId: user.id },
-    include: { 
-      orders: {
-        orderBy: { createdAt: 'desc' }
-      } 
-    }
+  // Fetch all orders, sorted by newest first
+  const orders = await prisma.order.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { funnel: true }, // Include funnel name
   });
 
-  // 2. Flatten the list (Combine orders from all funnels)
-  const allOrders = funnels.flatMap(f => f.orders.map(o => ({ ...o, funnelName: f.name })));
-
   return (
-    <div className="p-8 text-white max-w-6xl mx-auto">
+    <div className="p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <div>
-            <h1 className="text-3xl font-bold">Customer Transactions</h1>
-            <p className="text-gray-400">Real-time tracking of your revenue.</p>
-        </div>
-        <div className="bg-green-900/30 border border-green-900 text-green-400 px-4 py-2 rounded-lg font-mono">
-            Total Sales: ${allOrders.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2)}
+        <h1 className="text-3xl font-bold text-gray-900">My Customers</h1>
+        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium text-sm">
+          {orders.length} Total Orders
         </div>
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        {allOrders.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-                <p>No sales yet. Share your funnel to start making money!</p>
-            </div>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {orders.length === 0 ? (
+          <div className="p-12 text-center text-gray-500">
+            No customers yet. Share your funnel link to get started!
+          </div>
         ) : (
-            <table className="w-full text-left">
-                <thead className="bg-gray-800 text-gray-400 uppercase text-xs">
-                    <tr>
-                        <th className="p-4">Date</th>
-                        <th className="p-4">Customer Email</th>
-                        <th className="p-4">Funnel</th>
-                        <th className="p-4 text-right">Amount</th>
-                        <th className="p-4 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                    {allOrders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-800/50 transition">
-                            <td className="p-4 text-gray-400">{new Date(order.createdAt).toLocaleDateString()}</td>
-                            <td className="p-4 font-medium">{order.customerEmail}</td>
-                            <td className="p-4 text-blue-400 text-sm">{order.funnelName}</td>
-                            <td className="p-4 text-right font-mono">${order.amount.toFixed(2)}</td>
-                            <td className="p-4 text-center">
-                                <span className="bg-green-900/50 text-green-400 text-xs px-2 py-1 rounded-full border border-green-900">
-                                    {order.status}
-                                </span>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-gray-600">
+              <thead className="bg-gray-50 text-gray-900 font-semibold uppercase text-xs">
+                <tr>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Product Purchased</th>
+                  <th className="px-6 py-4">Amount</th>
+                  <th className="px-6 py-4">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {orders.map((order) => (
+                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-gray-900">
+                      {order.email || "Anonymous"}
+                    </td>
+                    <td className="px-6 py-4">
+                      {order.funnel?.name || "Unknown Funnel"}
+                    </td>
+                    <td className="px-6 py-4 font-bold text-green-600">
+                      ${order.amount.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
+          </div>
         )}
       </div>
     </div>

@@ -1,26 +1,27 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+﻿import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// 1. Define Public Routes (No Login Required)
+// Define routes that do NOT require a password
 const isPublicRoute = createRouteMatcher([
-  '/sign-in(.*)', 
-  '/sign-up(.*)', 
-  '/f/(.*)',      // <--- Crucial: Allows public access to your funnels
-  '/api/webhooks(.*)'
-])
+  "/sign-in(.*)", 
+  "/sign-up(.*)",
+  "/api/uploadthing(.*)", // <--- THIS IS THE KEY FIX
+  "/thank-you(.*)"        // Allow users to see the Thank You page
+]);
 
-// 2. Protect Everything Else
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect()
+export default clerkMiddleware(async (auth, req) => {
+  // If it is a public route, let them pass
+  if (isPublicRoute(req)) {
+    return;
   }
-})
+  // Otherwise, protect the route
+  await auth.protect();
+});
 
-// 3. The Matcher (Must copy exactly)
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes
-    '/(api|trpc)(.*)',
+    "/(api|trpc)(.*)",
   ],
-}
+};

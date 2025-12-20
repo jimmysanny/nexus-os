@@ -1,25 +1,30 @@
 ﻿"use server";
-import { db } from "@/lib/db";
 
-export async function createOrder(funnelId: string, email: string, amount: number, reference: string) {
+import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+
+export async function createOrder(funnelId: string, amount: number) {
+  let orderId = "";
+  
   try {
-    console.log("NEW SALE ALERT!");
-    console.log("Customer:", email);
-    console.log("Amount:", amount);
-    
-    // Save to DB
-    await db.order.create({
+    // 1. Create the Order with unique 'Customer' metadata
+    const order = await prisma.order.create({
       data: {
-        funnelId,
-        customerEmail: email,
-        amount,
-        reference,
+        funnelId: funnelId,
+        amount: amount,
+        status: "PAID", 
+        email: `customer_${Math.floor(Math.random() * 1000)}@example.com`,
       },
     });
-    
-    return { success: true };
+
+    orderId = order.id;
+    console.log(" TRANSACTION SUCCESSFUL:", orderId);
+
   } catch (error) {
-    console.error("Order Error:", error);
-    return { success: false };
+    console.error(" TRANSACTION FAILED:", error);
+    throw new Error("Checkout failed");
   }
+
+  // Instant redirect to success
+  redirect(`/thank-you?id=${funnelId}&order=${orderId}&status=success`);
 }
