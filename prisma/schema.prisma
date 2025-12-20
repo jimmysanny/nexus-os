@@ -27,6 +27,7 @@ model Funnel {
   digitalProductUrl  String?
   published          Boolean  @default(false)
   orders             Order[]
+  coupons            Coupon[] // <--- Added relation
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -45,5 +46,7 @@ model Coupon {
   id        String   @id @default(cuid())
   code      String   @unique
   percent   Int
+  funnelId  String?  // <--- FIXED: Added funnelId field
+  funnel    Funnel?  @relation(fields: [funnelId], references: [id])
   createdAt DateTime @default(now())
 }
