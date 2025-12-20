@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -45,7 +45,7 @@ export default async function CustomersPage() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      {order.email || "Anonymous"}
+                      {order.customerEmail || "Anonymous"}
                     </td>
                     <td className="px-6 py-4">
                       {order.funnel?.name || "Unknown Funnel"}
