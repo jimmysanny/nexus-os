@@ -18,7 +18,7 @@ export default async function ContactsPage() {
     orderBy: { createdAt: "desc" }
   });
 
-  const uniqueEmails = Array.from(new Set(orders.map(o => o.email)));
+  const uniqueEmails = Array.from(new Set(orders.map(o => o.customerEmail)));
   const emailString = uniqueEmails.join(", ");
 
   return (
@@ -32,7 +32,7 @@ export default async function ContactsPage() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {uniqueEmails.map((email, i) => {
-                const total = orders.filter(o => o.email === email).reduce((s, o) => s + o.amount, 0);
+                const total = orders.filter(o => o.customerEmail === email).reduce((s, o) => s + o.amount, 0);
                 return (
                   <tr key={i}><td className="px-10 py-8 font-bold text-slate-900">{email}</td><td className="px-10 py-8 text-right font-black italic">KES {total.toLocaleString()}</td></tr>
                 );
