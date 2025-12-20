@@ -38,7 +38,7 @@ model Order {
   funnelId      String
   funnel        Funnel   @relation(fields: [funnelId], references: [id])
   amount        Float
-  currency      String   @default("KES") // <--- FIXED: Added missing field
+  currency      String   @default("KES")
   status        String   @default("PENDING")
   customerEmail String?
   paymentId     String?  @unique

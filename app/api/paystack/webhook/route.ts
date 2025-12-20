@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         data: {
           funnelId: metadata.funnel_id,
           amount: amount / 100,
-          currency: currency, // FIXED: Now matches schema
+          currency: currency || "KES",
           status: "SUCCESS",
           customerEmail: customer.email,
           paymentId: reference,
@@ -17,5 +17,5 @@ export async function POST(req: Request) {
       });
     }
     return new NextResponse("OK", { status: 200 });
-  } catch (e) { return new NextResponse("Webhook Error", { status: 500 }); }
+  } catch (e) { return new NextResponse("Error", { status: 500 }); }
 }
