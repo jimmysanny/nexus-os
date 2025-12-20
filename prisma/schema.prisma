@@ -7,61 +7,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Merchant {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  username  String?  @unique
+  createdAt DateTime @default(now())
+}
+
 model Funnel {
-  category String @default("Other")
-  coverImage String? @default("https://placehold.co/1280x720")
-  ctaText String @default("Download Now")
-  coupons Coupon[]
-  id                String   @id @default(cuid())
-  userId            String
-  name              String
-  description       String?
-  price             Float    @default(0)
-  brandColor        String   @default("#2563eb") // <--- THIS WAS MISSING
-  digitalProductUrl String?
-  published         Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  orders            Order[]
+  id                 String   @id @default(cuid())
+  userId             String
+  name               String
+  description        String?
+  price              Float    @default(0)
+  headline           String?  // <--- ADDING THIS
+  subheadline        String?  // <--- ADDING THIS
+  category           String   @default("Software")
+  digitalProductUrl  String?
+  published          Boolean  @default(false)
+  orders             Order[]
+  createdAt          DateTime @default(now())
 }
 
 model Order {
-  affiliateId String? // Tracker for who referred the sale
-  
-
-  
-  id        String   @id @default(cuid())
-  amount    Float
-  email     String
-  status    String   @default("PENDING")
-  funnelId  String
-  funnel    Funnel   @relation(fields: [funnelId], references: [id])
-  createdAt DateTime @default(now())
-}
-model Coupon {
-  id        String   @id @default(cuid())
-  code      String   // e.g., 'SAVE20'
-  percent   Int      // e.g., 20
-  funnelId  String
-  funnel    Funnel   @relation(fields: [funnelId], references: [id])
-  createdAt DateTime @default(now())
-}
-model Affiliate {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  code      String   @unique // e.g., 'JANE20'
-  commission Int     @default(20) // Percentage
-  sales     Int      @default(0)
-  earnings  Int      @default(0)
-  userId    String   // The Admin who owns this affiliate
-  createdAt DateTime @default(now())
-}
-model Merchant {
-  id        String   @id @default(cuid())
-  userId    String   @unique // The ugly Clerk ID
-  username  String   @unique // The clean name (e.g. "james")
-  name      String?  // Display Name
-  bio       String?
-  createdAt DateTime @default(now())
+  id            String   @id @default(cuid())
+  funnelId      String
+  funnel        Funnel   @relation(fields: [funnelId], references: [id])
+  amount        Float
+  status        String   @default("PENDING")
+  customerEmail String?
+  paymentId     String?  @unique
+  affiliateCode String?
+  createdAt     DateTime @default(now())
 }
