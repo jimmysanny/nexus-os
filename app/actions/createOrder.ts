@@ -6,8 +6,8 @@ export async function createOrder(funnelId: string, amount: number) {
     data: {
       funnelId: funnelId,
       amount: amount,
-      status: "PAID",
-      customerEmail: `customer_${Math.floor(Math.random() * 1000)}@example.com`,
+      status: "SUCCESS",
+      customerEmail: "verified_customer@nexus.os", // FIXED: Matches schema
     },
   });
 }
