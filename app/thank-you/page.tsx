@@ -53,7 +53,7 @@ export default async function ThankYouPage({ searchParams }: { searchParams: Pro
            )}
         </div>
 
-        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">A receipt has been sent to {orderRecord.email}</p>
+        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">A receipt has been sent to {orderRecord.customerEmail}</p>
       </div>
     </div>
   );
