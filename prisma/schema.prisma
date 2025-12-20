@@ -1,34 +1,31 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model Merchant {
   id        String   @id @default(cuid())
   userId    String   @unique
   username  String?  @unique
   createdAt DateTime @default(now())
 }
-
 model Funnel {
   id                 String   @id @default(cuid())
   userId             String
   name               String
   description        String?
   price              Float    @default(0)
-  headline           String?  // <--- ADDING THIS
-  subheadline        String?  // <--- ADDING THIS
+  headline           String?
+  subheadline        String?
   category           String   @default("Software")
   digitalProductUrl  String?
   published          Boolean  @default(false)
   orders             Order[]
   createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt // <--- FIXED: Added this for the build
 }
-
 model Order {
   id            String   @id @default(cuid())
   funnelId      String
