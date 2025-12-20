@@ -9,6 +9,8 @@ model Merchant {
   id        String   @id @default(cuid())
   userId    String   @unique
   username  String?  @unique
+  name      String?
+  bio       String?
   createdAt DateTime @default(now())
 }
 model Funnel {
@@ -27,7 +29,7 @@ model Funnel {
   digitalProductUrl  String?
   published          Boolean  @default(false)
   orders             Order[]
-  coupons            Coupon[] // <--- Added relation
+  coupons            Coupon[]
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -46,7 +48,7 @@ model Coupon {
   id        String   @id @default(cuid())
   code      String   @unique
   percent   Int
-  funnelId  String?  // <--- FIXED: Added funnelId field
+  funnelId  String?
   funnel    Funnel?  @relation(fields: [funnelId], references: [id])
   createdAt DateTime @default(now())
 }
