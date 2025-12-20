@@ -41,3 +41,9 @@ model Order {
   affiliateCode String?
   createdAt     DateTime @default(now())
 }
+model Coupon {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  percent   Int
+  createdAt DateTime @default(now())
+}
