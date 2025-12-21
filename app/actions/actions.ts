@@ -20,25 +20,22 @@ export async function createFunnel(formData: FormData) {
 export async function updateFunnel(id: string, data: any) {
   await prisma.funnel.update({
     where: { id },
-    data: { 
-        name: data.name,
-        description: data.description,
-        price: Number(data.price),
-        headline: data.headline,
-        subheadline: data.subheadline,
-        themeColor: data.themeColor,
-        font: data.font,
-        logoUrl: data.logoUrl,
-        heroImageUrl: data.heroImageUrl,
-        published: data.published,
-        digitalProductUrl: data.digitalProductUrl
-    }
+    data: { ...data, updatedAt: new Date() }
   });
   revalidatePath(`/dashboard/funnels/${id}`);
 }
 
-export async function recordOrder(funnelId: string, amount: number, reference: string, email: string) {
+// FIXED: Now accepts affiliateCode
+export async function recordOrder(funnelId: string, amount: number, reference: string, email: string, affiliateCode?: string) {
   return await prisma.order.create({
-    data: { funnelId, amount, paymentId: reference, status: "SUCCESS", customerEmail: email },
+    data: {
+      funnelId,
+      amount,
+      paymentId: reference,
+      status: "SUCCESS",
+      customerEmail: email,
+      currency: "KES",
+      affiliateCode: affiliateCode || null
+    },
   });
 }

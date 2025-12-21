@@ -2,10 +2,17 @@
 import dynamic from "next/dynamic";
 import { recordOrder } from "@/app/actions/actions";
 
-// We use require to bypass strict type checking for now
 const PaystackPop = dynamic(() => import("@paystack/inline-js"), { ssr: false });
 
-export default function PaystackButton({ amount, funnelId, currency, email }: { amount: number, funnelId: string, currency: string, email: string }) {
+interface PaystackProps {
+  amount: number;
+  funnelId: string;
+  currency: string;
+  email: string;
+  affiliateCode?: string; // <--- FIXED: Added this prop
+}
+
+export default function PaystackButton({ amount, funnelId, currency, email, affiliateCode }: PaystackProps) {
   const handlePayment = () => {
     // @ts-ignore
     const paystack = new PaystackPop();
@@ -15,8 +22,9 @@ export default function PaystackButton({ amount, funnelId, currency, email }: { 
       amount: amount * 100,
       currency: currency,
       onSuccess: async (transaction: any) => {
-        await recordOrder(funnelId, amount, transaction.reference, email);
-        alert("Payment Successful!");
+        // We pass the affiliate code to the server action
+        await recordOrder(funnelId, amount, transaction.reference, email, affiliateCode);
+        alert("Payment Successful! Check your email.");
         window.location.reload();
       },
       onCancel: () => {
@@ -26,7 +34,7 @@ export default function PaystackButton({ amount, funnelId, currency, email }: { 
   };
 
   return (
-    <button onClick={handlePayment} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all">
+    <button onClick={handlePayment} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/25">
       Pay {currency} {amount.toLocaleString()}
     </button>
   );
