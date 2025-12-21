@@ -2,7 +2,7 @@
 import { useState } from "react";
 import PaystackButton from "@/components/PaystackButton";
 
-// FIXED: Added 'coupons' to the interface so the build stops crashing
+// FIXED: Interface now includes coupons
 interface CheckoutProps {
   funnel: any;
   affiliateCode?: string;
@@ -12,8 +12,7 @@ interface CheckoutProps {
 export default function SmartCheckout({ funnel, affiliateCode, coupons }: CheckoutProps) {
   const [email, setEmail] = useState("");
   
-  // Logic to handle currency conversion
-  const isKenyan = true; 
+  // Simple currency logic
   const chargeAmount = funnel.price; 
   const chargeCurrency = "KES";
 
@@ -34,14 +33,14 @@ export default function SmartCheckout({ funnel, affiliateCode, coupons }: Checko
            <input 
              type="email" 
              required
-             placeholder="where.to.send@receipt.com"
+             placeholder="receipt@email.com"
              value={email}
              onChange={(e) => setEmail(e.target.value)}
              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:border-blue-500 transition-all font-medium"
            />
         </div>
 
-        {/* Pass the email and affiliateCode correctly to the button */}
+        {/* Button is disabled until email is typed */}
         <div className={!email ? "opacity-50 pointer-events-none grayscale" : ""}>
            <PaystackButton 
               amount={chargeAmount} 
@@ -53,7 +52,7 @@ export default function SmartCheckout({ funnel, affiliateCode, coupons }: Checko
         </div>
         
         <p className="text-center text-[10px] text-slate-400 font-medium">
-            256-bit Encrypted Payment via Paystack
+            Secured by Paystack
         </p>
       </div>
     </div>
