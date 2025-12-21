@@ -35,6 +35,8 @@ export async function updateMerchantProfile(formData: FormData) {
       name: formData.get("name") as string,
       username: formData.get("username") as string,
       bio: formData.get("bio") as string,
+      logoUrl: formData.get("logoUrl") as string,     // <-- Added
+      bannerUrl: formData.get("bannerUrl") as string, // <-- Added
       twitter: formData.get("twitter") as string,
       instagram: formData.get("instagram") as string,
     },

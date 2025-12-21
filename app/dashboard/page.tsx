@@ -22,11 +22,11 @@ export default async function DashboardPage() {
              <p className="text-slate-400">You have {funnels.length} active assets generating revenue.</p>
           </div>
           <div className="relative z-10 mt-4 md:mt-0">
-             <Link href="/dashboard/create" className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform inline-flex items-center gap-2">
-                <span>+</span> Create New Asset
+             {/* THE PROMINENT ADD BUTTON */}
+             <Link href="/dashboard/create" className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-500 hover:scale-105 transition-all inline-flex items-center gap-2 shadow-lg shadow-blue-900/50">
+                <span className="text-xl">+</span> Add New Product
              </Link>
           </div>
-          {/* Decorative Blob */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-3xl opacity-20 -mr-16 -mt-16"></div>
        </div>
 
@@ -52,10 +52,20 @@ export default async function DashboardPage() {
 
        {/* Funnel Grid */}
        <div className="space-y-4">
-          <h3 className="font-bold text-xl text-slate-900 px-2">Your Assets</h3>
+          <div className="flex justify-between items-center px-2">
+             <h3 className="font-bold text-xl text-slate-900">Your Assets</h3>
+             {funnels.length > 0 && (
+                <Link href="/dashboard/create" className="text-sm font-bold text-blue-600 hover:underline">
+                   + Create Another
+                </Link>
+             )}
+          </div>
           {funnels.length === 0 ? (
              <div className="text-center py-20 bg-white rounded-[32px] border border-dashed border-slate-200">
-                <p className="text-slate-400 font-medium">No assets created yet.</p>
+                <p className="text-slate-400 font-medium mb-4">No assets created yet.</p>
+                <Link href="/dashboard/create" className="text-blue-600 font-bold hover:underline">
+                   Create your first product 
+                </Link>
              </div>
           ) : (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -64,7 +74,8 @@ export default async function DashboardPage() {
                    return (
                       <Link key={funnel.id} href={`/dashboard/funnels/${funnel.id}`} className="group bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all hover:-translate-y-1">
                          <div className={`h-32 rounded-2xl ${theme.secondary} mb-6 flex items-center justify-center text-4xl group-hover:scale-105 transition-transform`}>
-                            
+                            {/* Uses logo if available, else box */}
+                            {funnel.logoUrl ? <img src={funnel.logoUrl} className="w-full h-full object-cover rounded-2xl" /> : ""}
                          </div>
                          <h4 className="font-bold text-lg text-slate-900 mb-1">{funnel.name}</h4>
                          <div className="flex justify-between items-center text-sm text-slate-500">
@@ -74,6 +85,11 @@ export default async function DashboardPage() {
                       </Link>
                    );
                 })}
+                {/* Mini "Add New" Card in Grid */}
+                <Link href="/dashboard/create" className="group bg-slate-50 p-6 rounded-[32px] border-2 border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all flex flex-col items-center justify-center text-slate-400 hover:text-blue-600">
+                   <span className="text-4xl mb-2">+</span>
+                   <span className="font-bold">Add New</span>
+                </Link>
              </div>
           )}
        </div>
