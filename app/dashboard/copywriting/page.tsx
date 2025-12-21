@@ -2,7 +2,6 @@
 import PageHeader from "@/components/PageHeader";
 import { useState } from "react";
 
-// --- CONFIGURATION ---
 const TONES = [
   { id: "viral", label: " Viral", desc: "Short, punchy, high-energy hooks." },
   { id: "professional", label: " Professional", desc: "Trustworthy, clear, B2B focused." },
@@ -20,92 +19,101 @@ export default function CopywritingPage() {
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  // --- THE BUSINESS LOGIC ENGINE ---
+  // --- SMART CONTEXT ENGINE ---
+  const getContextKeywords = (text: string) => {
+    const t = text.toLowerCase();
+    // Detect Niche to swap power words
+    if (t.includes("lead") || t.includes("exec") || t.includes("business") || t.includes("ceo")) {
+      return { benefit: "Authority", action: "Scale", result: "Market Dominance", pain: "stagnation" };
+    }
+    if (t.includes("fit") || t.includes("weight") || t.includes("health") || t.includes("diet")) {
+      return { benefit: "Vitality", action: "Transform", result: "Peak Performance", pain: "fatigue" };
+    }
+    if (t.includes("money") || t.includes("finance") || t.includes("invest") || t.includes("crypto")) {
+      return { benefit: "Wealth", action: "Multiply", result: "Financial Freedom", pain: "uncertainty" };
+    }
+    if (t.includes("soft") || t.includes("app") || t.includes("code") || t.includes("market")) {
+      return { benefit: "Efficiency", action: "Automate", result: "Maximum ROI", pain: "manual work" };
+    }
+    // Default
+    return { benefit: "Results", action: "Upgrade", result: "Success", pain: "mediocrity" };
+  };
+
+  const cleanInput = (str: string) => {
+     // Remove "a", "the" from start to make it fit sentences better
+     return str.replace(/^(a |the )/i, "").trim();
+  };
+
   const generate = () => {
     if (!input) return;
     setLoading(true);
     setResults([]);
 
     setTimeout(() => {
-      const product = input.trim();
-      const who = audience.trim() || "you"; // Default to "you" if empty
+      const rawProduct = input.trim();
+      const product = cleanInput(rawProduct);
+      const who = audience.trim() || "you";
+      const ctx = getContextKeywords(rawProduct + " " + who); // Detect context from both fields
+      
       let outputs: string[] = [];
-
-      // HELPER: Capitalize for headlines
-      const titleCase = (str: string) => str.replace(/\b\w/g, s => s.toUpperCase());
 
       // --- 1. HEADLINE ALGORITHMS ---
       if (tool === "headline") {
-        if (tone === "urgent") {
+        if (tone === "professional") {
           outputs = [
-            ` FINAL CALL: Get ${titleCase(product)} Before The Price Increases`,
-            `Stop Wasting Time: The ${titleCase(product)} Shortcut You Need NOW`,
-            `Why ${who} Are Rushing to Buy ${titleCase(product)} (Limited Access)`,
-            `Do Not Buy Another Asset Until You Read This Guide on ${titleCase(product)}`,
-            `URGENT: 3 Reasons You Are Failing at Your Goals (And How ${titleCase(product)} Fixes It)`
+            `The Strategic Framework for ${ctx.benefit}: Why ${product} Works`,
+            `How ${product} is Redefining ${ctx.result} for ${who}`,
+            `A CEO's Guide to ${ctx.benefit}: Implementing ${product}`,
+            `Stop Accepting ${ctx.pain}. Start Achieving ${ctx.result} with ${product}.`,
+            `${product}: The Competitive Advantage for Modern ${who}`
           ];
-        } else if (tone === "professional") {
-          outputs = [
-            `The Strategic Guide to ${titleCase(product)} for Serious Professionals`,
-            `Optimize Your Workflow: Introducing ${titleCase(product)}`,
-            `How ${titleCase(product)} Is Redefining Standards for ${titleCase(who)}`,
-            `A Comprehensive Analysis: Why ${titleCase(product)} Drives ROI`,
-            `Mastering ${titleCase(product)}: The Executive Handbook`
-          ];
-        } else { // Viral/Story
-          outputs = [
-            `I Tried ${titleCase(product)} for 30 Days... Here is What Happened`,
-            `The "Lazy" Way to Master ${titleCase(product)} (That Actually Works)`,
-            `Why 99% of ${titleCase(who)} Fail (And How ${titleCase(product)} Saves Them)`,
-            `How to Get Elite Results with ${titleCase(product)} Without the Stress`,
-            `The ${titleCase(product)} Secret That Industry Gurus Are Hiding`
-          ];
-        }
-      }
-
-      // --- 2. EMAIL SEQUENCES (AIDA & PAS Frameworks) ---
-      else if (tool === "email") {
-        if (tone === "story") {
-           outputs = [
-             `Subject: I have a confession to make...\n\nHi there,\n\nIdeally, I wouldn't admit this.\n\nBut a few months ago, I was completely stuck. I tried everything to solve my problem, but nothing worked.\n\nThen I discovered ${product}.\n\nIt wasn't an overnight miracle, but it changed everything for me. I realized that the old way of doing things was broken.\n\nI documented exactly how I used it to get results in this new guide.\n\n[Link: Get the full story here]`,
-             
-             `Subject: The day everything changed for ${who}\n\nHey,\n\nImagine waking up tomorrow and realized your biggest headache was gone.\n\nFor most ${who}, that sounds like a fantasy.\n\nBut with ${product}, it is becoming a reality. We stripped away the complexity and focused on what actually works.\n\nAre you ready to write a new chapter?\n\n[Link: Start your journey]`
-           ];
         } else if (tone === "urgent") {
+          outputs = [
+            ` STOP: Do Not Buy Another Asset Until You See ${product}`,
+            `Why ${who} Are Rushing to Secure ${product} Before Midnight`,
+            `The Cost of ${ctx.pain} is Rising. Fix it NOW with ${product}.`,
+            `Final Call: Unlock ${ctx.result} with ${product} (Closing Soon)`,
+            `3 Signs You Are Failing at ${ctx.benefit} (And How to Fix It Today)`
+          ];
+        } else { // Viral
+          outputs = [
+            `I Used ${product} for 30 Days to ${ctx.action} My Results... Look at This.`,
+            `The ${ctx.benefit} Secret That Gurus Are Hiding From ${who}`,
+            `How to Get ${ctx.result} Without The Stress of ${ctx.pain}`,
+            `Why 99% of ${who} Fail at ${ctx.benefit} (And How ${product} Saves You)`,
+            `Forget the Old Way. ${product} is the New Standard.`
+          ];
+        }
+      }
+
+      // --- 2. EMAIL SEQUENCES ---
+      else if (tool === "email") {
+        if (tone === "professional") {
            outputs = [
-             `Subject:  24 Hours Left (Don't miss out)\n\nHi,\n\nI don't want to be the bearer of bad news, but time is running out.\n\nWe are closing access to the special offer for ${product} very soon.\n\nIf you want to transform your results and finally stop struggling, you need to act now.\n\nClick the link below to secure your copy before the price goes up.\n\n[Link: Secure Your Access Now]`,
+             `Subject: Is ${ctx.pain} costing you money?\n\nHi,\n\nWe analyzed the market and found a common trend among ${who}: the struggle with ${ctx.pain}.\n\nThat is why we engineered ${product}.\n\nIt is not just a tool; it is a system designed to help you ${ctx.action} your output and achieve ${ctx.result}.\n\nReview the case study here: [Link]`,
              
-             `Subject: LAST CHANCE: Is this goodbye?\n\nHi,\n\nThis is your final reminder.\n\nThe opportunity to get ${product} at this level is disappearing.\n\nDon't let this chance slip through your fingers. Join the hundreds of ${who} who are already winning.\n\n[Link: Get Instant Access]`
+             `Subject: Proposal: Upgrade your ${ctx.benefit} strategy\n\nHi,\n\nTo achieve ${ctx.result} in today's market, you need more than hard work. You need leverage.\n\n${product} provides that leverage.\n\nSee how it integrates with your goals: [Link]`
            ];
-        } else { // Professional
+        } else {
            outputs = [
-             `Subject: A more efficient way to handle your workflow\n\nHello,\n\nAs a professional, you know that time is your most valuable asset.\n\nThat is why we developed ${product}. It is designed specifically to help ${who} streamline operations and maximize output.\n\nNo fluff. No wasted steps. Just a proven system.\n\nExplore the details here:\n[Link: View Product Specification]`,
+             `Subject: I found the cheat code for ${ctx.benefit}\n\nHi,\n\nI used to hate ${ctx.pain}. It kept me up at night.\n\nThen I found ${product}, and everything changed.\n\nIt is the fastest way to ${ctx.action} your life and finally reach ${ctx.result}.\n\nDon't waitgrab it here: [Link]`,
              
-             `Subject: Invitation: Upgrade your toolkit\n\nHi,\n\nWe have identified a key bottleneck for most ${who}: efficiency.\n\n${titleCase(product)} solves this by automating the heavy lifting, allowing you to focus on strategy.\n\nIt is time to work smarter, not harder.\n\n[Link: See how it works]`
+             `Subject: You are doing it wrong (sorry)\n\nHi,\n\nMost ${who} think the key to success is working harder.\n\nThey are wrong. The key is ${product}.\n\nStop the ${ctx.pain} cycle. Start winning.\n\n[Link: Get Instant Access]`
            ];
         }
       }
 
-      // --- 3. AD COPY (Hooks & Value Props) ---
+      // --- 3. AD COPY ---
       else {
-         // Defaulting to Ad/Description logic
-         if (tone === "viral") {
-            outputs = [
-              ` STOP SCROLLING!\n\nIf you are a ${who} who wants to win, you need to see this.\n\n${product} is the unfair advantage you have been looking for. \n\n Save Time\n Save Money\n Get Results\n\nClick below to steal our secret strategy! `,
-              
-              `They laughed when I said I used ${product}...\n\nBut when they saw my results? Silence.\n\nDon't let the competition beat you. Grab ${product} and start dominating today.\n\n Link in bio!`
-            ];
-         } else {
-            outputs = [
-              `ATTENTION ${who.toUpperCase()}:\n\nAre you tired of the old way of doing things? It is time for an upgrade.\n\nIntroducing ${product}the premium solution for serious results.\n\nJoin thousands of happy customers who have switched. 100% Satisfaction Guaranteed.`,
-              
-              `Unlock your full potential with ${product}.\n\nDesigned for ${who}, built for speed, and proven to convert.\n\nStop guessing and start winning.\n\nShop now  [Link]`
-            ];
-         }
+         outputs = [
+           ` STOP SCROLLING if you want ${ctx.result.toUpperCase()}!\n\n${product} is the unfair advantage for ${who}.\n\n 10x Your ${ctx.benefit}\n Eliminate ${ctx.pain}\n Proven System\n\nClick below to ${ctx.action} your results! `,
+           
+           `They laughed when I bought ${product}...\n\nBut when they saw my ${ctx.result}? Silence.\n\nDon't let the competition beat you. Master ${ctx.benefit} today.\n\n Link in bio!`
+         ];
       }
 
       setResults(outputs);
-      setHistory(prev => [product, ...prev].slice(0, 5));
+      setHistory(prev => [rawProduct, ...prev].slice(0, 5));
       setLoading(false);
     }, 1000);
   };
@@ -121,8 +129,6 @@ export default function CopywritingPage() {
        <PageHeader title="AI Copywriting Studio" subtitle="Generate professional, revenue-driving sales copy." />
        
        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 pb-8">
-          
-          {/* --- LEFT SIDEBAR: CONTROLS --- */}
           <div className="lg:col-span-3 bg-white rounded-[32px] border border-slate-100 shadow-sm p-6 overflow-y-auto space-y-8">
              <div>
                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">1. Asset Type</p>
@@ -142,7 +148,6 @@ export default function CopywritingPage() {
                   ))}
                </div>
              </div>
-
              <div>
                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">2. Voice & Tone</p>
                <div className="space-y-2">
@@ -159,18 +164,14 @@ export default function CopywritingPage() {
                </div>
              </div>
           </div>
-   
-          {/* --- RIGHT AREA: WORKSPACE --- */}
           <div className="lg:col-span-9 flex flex-col gap-6 h-full">
-             
-             {/* INPUT SECTION */}
              <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-end">
                 <div className="flex-1 w-full space-y-2">
                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Product / Topic</label>
                    <input 
                      value={input}
                      onChange={(e) => setInput(e.target.value)}
-                     placeholder="e.g. A Masterclass on Photography..." 
+                     placeholder="e.g. Masterclass for Leadership..." 
                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm outline-none focus:border-blue-500 font-bold focus:bg-white transition-all"
                      onKeyDown={(e) => e.key === "Enter" && generate()}
                    />
@@ -180,7 +181,7 @@ export default function CopywritingPage() {
                    <input 
                      value={audience}
                      onChange={(e) => setAudience(e.target.value)}
-                     placeholder="e.g. Beginners, Small Business Owners..." 
+                     placeholder="e.g. Executives, Startups..." 
                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm outline-none focus:border-blue-500 font-medium focus:bg-white transition-all"
                    />
                 </div>
@@ -189,45 +190,27 @@ export default function CopywritingPage() {
                   disabled={!input || loading}
                   className="h-[46px] bg-blue-600 text-white px-8 rounded-xl font-bold text-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-200 whitespace-nowrap flex items-center gap-2"
                 >
-                  {loading ? (
-                    <>
-                       <span className="animate-spin text-lg"></span> Processing...
-                    </>
-                  ) : (
-                    <>
-                       <span></span> Generate
-                    </>
-                  )}
+                  {loading ? (<><span className="animate-spin text-lg"></span> Processing...</>) : (<><span></span> Generate</>)}
                 </button>
              </div>
-
-             {/* OUTPUT SECTION */}
              <div className="flex-1 bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 overflow-y-auto">
                 {results.length === 0 && !loading && (
                    <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
                       <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4"></div>
                       <h3 className="text-lg font-bold text-slate-900">Ready to Write</h3>
-                      <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2">Enter your product details above and let our engine draft your copy.</p>
+                      <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2">Enter your product details above. I will analyze the context and generate tailored copy.</p>
                    </div>
                 )}
-
                 {loading && (
                    <div className="space-y-6 animate-pulse">
-                      {[1,2,3].map(i => (
-                        <div key={i} className="h-24 bg-slate-50 rounded-2xl border border-slate-100"></div>
-                      ))}
+                      {[1,2,3].map(i => (<div key={i} className="h-24 bg-slate-50 rounded-2xl border border-slate-100"></div>))}
                    </div>
                 )}
-
                 {results.length > 0 && !loading && (
                    <div className="space-y-6">
                       <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                         <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                           <span></span> Generated Options
-                         </h3>
-                         <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
-                           {TONES.find(t => t.id === tone)?.label}
-                         </span>
+                         <h3 className="font-bold text-slate-900 flex items-center gap-2"><span></span> Generated Options</h3>
+                         <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">{TONES.find(t => t.id === tone)?.label}</span>
                       </div>
                       <div className="grid gap-4">
                         {results.map((res, i) => (
@@ -236,11 +219,7 @@ export default function CopywritingPage() {
                               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button 
                                    onClick={() => handleCopy(res, i)}
-                                   className={`text-xs font-bold px-4 py-2 rounded-full shadow-sm border transition-all flex items-center gap-2 ${
-                                     copiedIndex === i 
-                                     ? "bg-green-500 text-white border-green-500" 
-                                     : "bg-white text-slate-600 border-slate-200 hover:text-blue-600 hover:border-blue-500"
-                                   }`}
+                                   className={`text-xs font-bold px-4 py-2 rounded-full shadow-sm border transition-all flex items-center gap-2 ${copiedIndex === i ? "bg-green-500 text-white border-green-500" : "bg-white text-slate-600 border-slate-200 hover:text-blue-600 hover:border-blue-500"}`}
                                 >
                                    {copiedIndex === i ? (<span> Copied</span>) : (<span> Copy</span>)}
                                 </button>
