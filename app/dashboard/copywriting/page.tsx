@@ -9,17 +9,11 @@ const TONES = [
   { id: "story", label: " Storyteller", desc: "Emotional narrative." },
 ];
 
-// Fixed naming consistency (Plurals)
+// FIXED: Consistent Plural Naming & Added Hints
 const TOOLS = [
   { id: "headline", label: "Viral Headlines", icon: "", hint: "Generates bold, punchy hooks." },
   { id: "email", label: "Email Sequences", icon: "", hint: "Writes subject lines and body copy." },
   { id: "ad", label: "Ad Creatives", icon: "", hint: "Creates social media hooks & captions." },
-];
-
-const QUICK_STARTS = [
-  { label: "Leadership Course", audience: "Managers" },
-  { label: "Keto Diet Plan", audience: "New Moms" },
-  { label: "SaaS Analytics Tool", audience: "Founders" },
 ];
 
 interface ResultItem {
@@ -130,8 +124,6 @@ export default function CopywritingPage() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const loadQuickStart = (p: string, a: string) => { setInput(p); setAudience(a); };
-
   const RenderCard = ({ item }: { item: ResultItem }) => {
     const isSaved = saved.some(s => s.id === item.id);
     const fullText = item.type === "email" ? `Subject: ${item.content.subject}\n\n${item.content.body}` : `${item.content.head}\n${item.content.body || ""}`;
@@ -193,7 +185,6 @@ export default function CopywritingPage() {
        
        {activeTab === "generator" ? (
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 pb-4">
-            {/* SIDEBAR */}
             <div className="lg:col-span-3 space-y-6 overflow-y-auto pr-2">
                <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-2">
                   {TOOLS.map((t) => (
@@ -218,7 +209,6 @@ export default function CopywritingPage() {
                </div>
             </div>
             
-            {/* WORKSPACE */}
             <div className="lg:col-span-9 flex flex-col gap-6 h-full">
                <div className="bg-white p-1 rounded-[24px] border border-slate-200 shadow-sm flex flex-col md:flex-row">
                   <div className="flex-1 p-3">
@@ -239,9 +229,10 @@ export default function CopywritingPage() {
                <div className="flex-1 bg-white rounded-[32px] border border-slate-100 shadow-sm p-6 overflow-y-auto relative">
                   {results.length === 0 && !loading && (
                      <div className="h-full flex flex-col items-center justify-center text-center">
+                        {/* DYNAMIC EMPTY STATE FIX */}
                         <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-sm">{currentTool?.icon}</div>
                         <h3 className="text-lg font-black text-slate-900">Ready to Write {currentTool?.label}</h3>
-                        <p className="text-xs text-slate-500 max-w-xs mx-auto mt-2 mb-6 font-medium">{currentTool?.hint} Enter details above to start.</p>
+                        <p className="text-xs text-slate-500 max-w-xs mx-auto mt-2 mb-6 font-medium">{currentTool?.hint}</p>
                      </div>
                   )}
                   {loading && (
