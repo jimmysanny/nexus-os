@@ -8,7 +8,7 @@ export default function DashboardNav() {
   const isActive = (path: string) => pathname === path || (path !== "/dashboard" && pathname.startsWith(path));
 
   const navItems = [
-    { name: "Overview", path: "/dashboard", icon: "" },
+    { name: "Overview", path: "/dashboard", icon: "📊" },
     { name: "Analytics", path: "/dashboard/analytics", icon: "" },
     { name: "Brand Studio", path: "/dashboard/settings", icon: "" },
     { name: "Wallet", path: "/dashboard/wallet", icon: "" },
