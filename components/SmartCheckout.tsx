@@ -2,17 +2,17 @@
 import { useState } from "react";
 import PaystackButton from "@/components/PaystackButton";
 
-// FIXED: Interface now includes coupons
+// Fix: Explicitly define every prop the page might send
 interface CheckoutProps {
   funnel: any;
   affiliateCode?: string;
-  coupons?: any[];
+  coupons?: any[]; 
 }
 
 export default function SmartCheckout({ funnel, affiliateCode, coupons }: CheckoutProps) {
   const [email, setEmail] = useState("");
   
-  // Simple currency logic
+  // Logic: Use funnel price by default
   const chargeAmount = funnel.price; 
   const chargeCurrency = "KES";
 
@@ -40,7 +40,7 @@ export default function SmartCheckout({ funnel, affiliateCode, coupons }: Checko
            />
         </div>
 
-        {/* Button is disabled until email is typed */}
+        {/* Fix: Only show button when email is present to prevent 'missing email' errors */}
         <div className={!email ? "opacity-50 pointer-events-none grayscale" : ""}>
            <PaystackButton 
               amount={chargeAmount} 
