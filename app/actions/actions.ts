@@ -25,7 +25,6 @@ export async function updateFunnel(id: string, data: any) {
   revalidatePath(`/dashboard/funnels/${id}`);
 }
 
-// FIXED: Now accepts affiliateCode
 export async function recordOrder(funnelId: string, amount: number, reference: string, email: string, affiliateCode?: string) {
   return await prisma.order.create({
     data: {
@@ -33,7 +32,7 @@ export async function recordOrder(funnelId: string, amount: number, reference: s
       amount,
       paymentId: reference,
       status: "SUCCESS",
-      customerEmail: email,
+      customerEmail: email, // Fixed: Matches Schema
       currency: "KES",
       affiliateCode: affiliateCode || null
     },

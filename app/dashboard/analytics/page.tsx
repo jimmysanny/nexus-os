@@ -18,33 +18,19 @@ export default async function AnalyticsPage() {
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8 bg-slate-50 min-h-screen">
       <DashboardNav title="Analytics" subtitle="Deep dive into your performance" />
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 gap-6">
          <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Total Sales</p>
-            <p className="text-4xl font-black mt-2">{allOrders.length}</p>
-         </div>
-         <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Total Revenue</p>
-            <p className="text-4xl font-black mt-2 text-green-600">KES {totalRevenue.toLocaleString()}</p>
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Revenue</p>
+            <p className="text-4xl font-black mt-2">KES {totalRevenue.toLocaleString()}</p>
          </div>
       </div>
       <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden">
          <table className="w-full text-left">
-            <thead className="bg-slate-50 border-b border-slate-100">
-              <tr>
-                <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Customer</th>
-                <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Amount</th>
-                <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Affiliate</th>
-                <th className="p-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Date</th>
-              </tr>
-            </thead>
             <tbody className="divide-y divide-slate-100">
               {allOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-slate-50">
                   <td className="p-6 font-medium text-slate-900">{order.customerEmail || "Anonymous"}</td>
                   <td className="p-6 font-bold">KES {order.amount.toLocaleString()}</td>
-                  <td className="p-6 text-slate-500 font-mono text-xs">{order.affiliateCode || "-"}</td>
-                  <td className="p-6 text-slate-400 text-sm">{new Date(order.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>

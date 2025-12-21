@@ -41,7 +41,7 @@ model Order {
   amount        Float
   currency      String   @default("KES")
   status        String   @default("PENDING")
-  customerEmail String?
+  customerEmail String?  // STANDARDIZED: We use customerEmail everywhere
   paymentId     String?  @unique
   affiliateCode String?
   createdAt     DateTime @default(now())
