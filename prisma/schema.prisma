@@ -6,13 +6,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 model Merchant {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  username  String?  @unique
-  name      String?
-  bio       String?
-  wallet    Float    @default(0)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  username    String?  @unique
+  name        String?
+  bio         String?
+  logoUrl     String?
+  bannerUrl   String?
+  twitter     String?
+  instagram   String?
+  website     String?
+  wallet      Float    @default(0)
+  createdAt   DateTime @default(now())
 }
 model Funnel {
   id                 String   @id @default(cuid())
@@ -41,7 +46,7 @@ model Order {
   amount        Float
   currency      String   @default("KES")
   status        String   @default("PENDING")
-  customerEmail String?  // STANDARDIZED: We use customerEmail everywhere
+  customerEmail String? 
   paymentId     String?  @unique
   affiliateCode String?
   createdAt     DateTime @default(now())
