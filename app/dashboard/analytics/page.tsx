@@ -1,4 +1,4 @@
-import DashboardNav from "@/components/DashboardNav";
+import PageHeader from "@/components/PageHeader";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -16,23 +16,35 @@ export default async function AnalyticsPage() {
   const totalRevenue = allOrders.reduce((acc, order) => acc + order.amount, 0);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8 bg-slate-50 min-h-screen">
-      <DashboardNav title="Analytics" subtitle="Deep dive into your performance" />
-      <div className="grid grid-cols-2 gap-6">
-         <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Revenue</p>
-            <p className="text-4xl font-black mt-2">KES {totalRevenue.toLocaleString()}</p>
+    <div className="space-y-8">
+      <PageHeader title="Analytics" subtitle="Deep dive into your performance metrics" />
+      
+      {/* Revenue Card */}
+      <div className="bg-white p-10 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between">
+         <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Total Revenue</p>
+            <h2 className="text-5xl font-black text-slate-900 tracking-tighter">KES {totalRevenue.toLocaleString()}</h2>
          </div>
+         <div className="h-16 w-16 bg-green-50 rounded-full flex items-center justify-center text-3xl"></div>
       </div>
-      <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden">
+
+      <div className="bg-white rounded-[32px] border border-slate-100 overflow-hidden shadow-sm">
+         <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+            <h3 className="font-bold text-slate-900">Recent Transactions</h3>
+         </div>
          <table className="w-full text-left">
             <tbody className="divide-y divide-slate-100">
-              {allOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-slate-50">
-                  <td className="p-6 font-medium text-slate-900">{order.customerEmail || "Anonymous"}</td>
-                  <td className="p-6 font-bold">KES {order.amount.toLocaleString()}</td>
-                </tr>
-              ))}
+              {allOrders.length === 0 ? (
+                 <tr><td className="p-8 text-center text-slate-400">No sales yet.</td></tr>
+              ) : (
+                allOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-6 font-medium text-slate-900">{order.customerEmail || "Anonymous"}</td>
+                    <td className="p-6 font-bold text-green-600">+ KES {order.amount.toLocaleString()}</td>
+                    <td className="p-6 text-right text-slate-400 text-xs">{new Date(order.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
          </table>
       </div>

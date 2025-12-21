@@ -15,22 +15,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-       {/* Welcome Section */}
-       <div className="flex flex-col md:flex-row justify-between items-center bg-slate-900 text-white p-8 rounded-[32px] shadow-2xl shadow-slate-200 relative overflow-hidden">
+       {/* Welcome Banner (Replaces Nav in visual importance) */}
+       <div className="bg-slate-900 text-white p-8 rounded-[32px] shadow-xl relative overflow-hidden flex justify-between items-center">
           <div className="relative z-10">
              <h1 className="text-3xl font-black mb-2">Command Center</h1>
-             <p className="text-slate-400">You have {funnels.length} active assets generating revenue.</p>
+             <p className="text-slate-400 font-medium">Overview of your digital empire.</p>
           </div>
-          <div className="relative z-10 mt-4 md:mt-0">
-             {/* THE PROMINENT ADD BUTTON */}
-             <Link href="/dashboard/create" className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-500 hover:scale-105 transition-all inline-flex items-center gap-2 shadow-lg shadow-blue-900/50">
-                <span className="text-xl">+</span> Add New Product
-             </Link>
-          </div>
+          <Link href="/dashboard/create" className="relative z-10 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/50 flex items-center gap-2">
+             <span className="text-xl">+</span> New Product
+          </Link>
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-3xl opacity-20 -mr-16 -mt-16"></div>
        </div>
 
-       {/* Quick Stats */}
+       {/* Stats Grid */}
        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Revenue</p>
@@ -41,8 +38,8 @@ export default async function DashboardPage() {
              <p className="text-2xl font-black text-slate-900 mt-1">{funnels.reduce((acc, f) => acc + f.orders.length, 0)}</p>
           </div>
           <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Conv. Rate</p>
-             <p className="text-2xl font-black text-slate-900 mt-1">2.4%</p>
+             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Active</p>
+             <p className="text-2xl font-black text-slate-900 mt-1">{funnels.length}</p>
           </div>
           <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Plan</p>
@@ -50,34 +47,26 @@ export default async function DashboardPage() {
           </div>
        </div>
 
-       {/* Funnel Grid */}
-       <div className="space-y-4">
-          <div className="flex justify-between items-center px-2">
-             <h3 className="font-bold text-xl text-slate-900">Your Assets</h3>
-             {funnels.length > 0 && (
-                <Link href="/dashboard/create" className="text-sm font-bold text-blue-600 hover:underline">
-                   + Create Another
-                </Link>
-             )}
+       {/* Products List */}
+       <div className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+             <h3 className="font-bold text-xl text-slate-900">Your Products</h3>
           </div>
+          
           {funnels.length === 0 ? (
              <div className="text-center py-20 bg-white rounded-[32px] border border-dashed border-slate-200">
                 <p className="text-slate-400 font-medium mb-4">No assets created yet.</p>
-                <Link href="/dashboard/create" className="text-blue-600 font-bold hover:underline">
-                   Create your first product 
-                </Link>
              </div>
           ) : (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {funnels.map((funnel) => {
                    const theme = getTheme(funnel.themeColor);
                    return (
-                      <Link key={funnel.id} href={`/dashboard/funnels/${funnel.id}`} className="group bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all hover:-translate-y-1">
-                         <div className={`h-32 rounded-2xl ${theme.secondary} mb-6 flex items-center justify-center text-4xl group-hover:scale-105 transition-transform`}>
-                            {/* Uses logo if available, else box */}
-                            {funnel.logoUrl ? <img src={funnel.logoUrl} className="w-full h-full object-cover rounded-2xl" /> : ""}
+                      <Link key={funnel.id} href={`/dashboard/funnels/${funnel.id}`} className="group bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
+                         <div className={`h-40 rounded-2xl ${theme.secondary} mb-6 flex items-center justify-center text-4xl overflow-hidden`}>
+                            {funnel.logoUrl ? <img src={funnel.logoUrl} className="w-full h-full object-cover" /> : ""}
                          </div>
-                         <h4 className="font-bold text-lg text-slate-900 mb-1">{funnel.name}</h4>
+                         <h4 className="font-bold text-lg text-slate-900 mb-1 line-clamp-1">{funnel.name}</h4>
                          <div className="flex justify-between items-center text-sm text-slate-500">
                             <span>{funnel.orders.length} Sales</span>
                             <span className={`font-bold ${theme.accent}`}>KES {funnel.price}</span>
@@ -85,11 +74,6 @@ export default async function DashboardPage() {
                       </Link>
                    );
                 })}
-                {/* Mini "Add New" Card in Grid */}
-                <Link href="/dashboard/create" className="group bg-slate-50 p-6 rounded-[32px] border-2 border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all flex flex-col items-center justify-center text-slate-400 hover:text-blue-600">
-                   <span className="text-4xl mb-2">+</span>
-                   <span className="font-bold">Add New</span>
-                </Link>
              </div>
           )}
        </div>
