@@ -31,7 +31,7 @@ export default function PaystackButton({ amount, funnelId, currency, email, affi
   };
 
   return (
-    <button onClick={handlePayment} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all shadow-lg">
+    <button onClick={handlePayment} className="w-full py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-black transition-all shadow-lg">
       Pay {currency} {amount.toLocaleString()}
     </button>
   );
