@@ -11,6 +11,7 @@ model Merchant {
   username  String?  @unique
   name      String?
   bio       String?
+  wallet    Float    @default(0)
   createdAt DateTime @default(now())
 }
 model Funnel {

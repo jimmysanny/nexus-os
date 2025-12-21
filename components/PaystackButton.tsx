@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { recordOrder } from "@/app/actions/actions";
 
+// We use require to bypass strict type checking for now
 const PaystackPop = dynamic(() => import("@paystack/inline-js"), { ssr: false });
 
 export default function PaystackButton({ amount, funnelId, currency, email }: { amount: number, funnelId: string, currency: string, email: string }) {
@@ -15,14 +16,17 @@ export default function PaystackButton({ amount, funnelId, currency, email }: { 
       currency: currency,
       onSuccess: async (transaction: any) => {
         await recordOrder(funnelId, amount, transaction.reference, email);
-        alert("Success!");
+        alert("Payment Successful!");
         window.location.reload();
       },
+      onCancel: () => {
+        alert("Transaction cancelled.");
+      }
     });
   };
 
   return (
-    <button onClick={handlePayment} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase text-xs tracking-widest">
+    <button onClick={handlePayment} className="w-full py-4 bg-blue-600 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all">
       Pay {currency} {amount.toLocaleString()}
     </button>
   );
