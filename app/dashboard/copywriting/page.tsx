@@ -27,39 +27,66 @@ export default function CopywritingPage() {
   const [activeTab, setActiveTab] = useState("generator");
   const [tool, setTool] = useState("headline"); 
   const [tone, setTone] = useState("viral");
+  
+  // State
   const [input, setInput] = useState("");
   const [audience, setAudience] = useState("");
   const [results, setResults] = useState<ResultItem[]>([]);
   const [saved, setSaved] = useState<ResultItem[]>([]);
+  
+  // UI State
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Initializing...");
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // --- 1. LOAD EVERYTHING ON MOUNT ---
   useEffect(() => {
+    // Load Library
     const localSaved = localStorage.getItem("nexus_saved_copy");
     if (localSaved) setSaved(JSON.parse(localSaved));
+
+    // Load Session (Inputs & Results)
+    const sessionInput = localStorage.getItem("nexus_session_input");
+    const sessionAudience = localStorage.getItem("nexus_session_audience");
+    const sessionResults = localStorage.getItem("nexus_session_results");
+    
+    if (sessionInput) setInput(sessionInput);
+    if (sessionAudience) setAudience(sessionAudience);
+    if (sessionResults) setResults(JSON.parse(sessionResults));
+    
+    setIsLoaded(true);
   }, []);
 
-  // --- SMART GRAMMAR ENGINE ---
+  // --- 2. AUTO-SAVE INPUTS & RESULTS ---
+  useEffect(() => {
+    if (!isLoaded) return; // Don't save empty state on initial load
+    localStorage.setItem("nexus_session_input", input);
+  }, [input, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem("nexus_session_audience", audience);
+  }, [audience, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem("nexus_session_results", JSON.stringify(results));
+  }, [results, isLoaded]);
+
+
+  // --- LOGIC ENGINE ---
   const sanitizeInput = (text: string) => {
      let clean = text;
-     
-     // 1. FUZZY TYPO CORRECTION (Regex patterns)
      const corrections = [
         { pattern: /lead[a-z]*ship/gi, fix: "Leadership" },
         { pattern: /mast[a-z]*class/gi, fix: "Masterclass" },
         { pattern: /manag[a-z]*ment/gi, fix: "Management" },
         { pattern: /entr[a-z]*pr[a-z]*/gi, fix: "Entrepreneur" },
         { pattern: /busin[a-z]*/gi, fix: "Business" },
-        { pattern: /strat[a-z]*/gi, fix: "Strategy" },
-        { pattern: /mark[a-z]*ting/gi, fix: "Marketing" },
-        { pattern: /freelanc[a-z]*/gi, fix: "Freelance" }
+        { pattern: /mark[a-z]*ting/gi, fix: "Marketing" }
      ];
-     
-     corrections.forEach(c => {
-        clean = clean.replace(c.pattern, c.fix);
-     });
-     
+     corrections.forEach(c => { clean = clean.replace(c.pattern, c.fix); });
      return clean;
   };
 
@@ -72,50 +99,34 @@ export default function CopywritingPage() {
 
   const getGrammarRules = (noun: string) => {
      const lower = noun.toLowerCase();
-     // Detect Plural (ends in 's' but not 'ss' like class/business)
      const isPlural = lower.endsWith("s") && !lower.endsWith("ss"); 
-     
-     return {
-        verb_work: isPlural ? "Work" : "Works",
-        verb_is: isPlural ? "Are" : "Is",
-        verb_fix: isPlural ? "Fix" : "Fixes",
-        pronoun: isPlural ? "Them" : "It"
-     };
+     return { verb_work: isPlural ? "Work" : "Works", verb_is: isPlural ? "Are" : "Is", verb_fix: isPlural ? "Fix" : "Fixes" };
   };
 
-  // --- GENERATION LOGIC ---
   const generate = () => {
     if (!input) return;
     setLoading(true);
-    setResults([]);
     setLoadingText("Fixing Typos & Grammar...");
 
     setTimeout(() => {
-      // 1. Sanitize & Format
       const cleanRaw = sanitizeInput(input.trim());
       const product = toTitleCase(cleanRaw);
       const who = toTitleCase(audience.trim() || "Everyone");
-      
-      // 2. Determine Grammar Rules
       const grammar = getGrammarRules(cleanRaw);
-      
-      // 3. Context & Mechanism
       const t = cleanRaw.toLowerCase();
+      
       let outputs: ResultItem[] = [];
       const create = (type: any, content: any, tag: string) => ({ id: Math.random().toString(36).substr(2, 9), type, content, tag, timestamp: Date.now() });
 
-      // LOGIC BRANCHING
       if (tool === "headline") {
          if (t.match(/lead|exec|biz/)) {
             outputs.push(create("headline", { head: `Stop Learning, Start Becoming: The ${product} Protocol.` }, "Identity Shift"));
-            outputs.push(create("headline", { head: `I Deconstructed Fortune 500 CEOs. Here is the System They Use.` }, "Insider Secret")); 
-            // Note: Removed variable from generic template to avoid grammar awkwardness if user types weird nouns
+            outputs.push(create("headline", { head: `I Deconstructed Fortune 500 CEOs. Here is the System They Use.` }, "Insider Secret"));
             outputs.push(create("headline", { head: `Why Businesses Are Rejecting Traditional Education for ${product}.` }, "Market Shift"));
          } else if (t.match(/fit|weight|health/)) {
             outputs.push(create("headline", { head: `Your Trainer is Lying to You: Why ${product} ${grammar.verb_work} Better.` }, "Contrarian"));
             outputs.push(create("headline", { head: `How to Sculpt Your Dream Physique Without Giving Up Carbs.` }, "Benefit"));
          } else {
-            // GENERIC FALLBACKS WITH GRAMMAR AWARENESS
             outputs.push(create("headline", { head: `The Strategic Framework for Excellence: Why ${product} ${grammar.verb_work}.` }, "Logic"));
             outputs.push(create("headline", { head: `How to Get Elite Results Without The Usual Stress (Using ${product}).` }, "Simplicity"));
             outputs.push(create("headline", { head: `Why 99% of ${who} Fail (And How ${product} ${grammar.verb_fix} It).` }, "Statistic"));
@@ -139,7 +150,7 @@ export default function CopywritingPage() {
          }, "Pattern Interrupt"));
       }
 
-      setResults(outputs);
+      setResults(outputs); // This will auto-save via useEffect
       setLoading(false);
     }, 1200);
   };
@@ -201,6 +212,19 @@ export default function CopywritingPage() {
                       <span className="text-xs font-bold">{t.label}</span>
                     </button>
                   ))}
+               </div>
+               <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2 block">Voice & Tone</label>
+                  <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-4 space-y-2">
+                    {TONES.map((t) => (
+                      <button key={t.id} onClick={() => setTone(t.id)} className={`w-full text-left px-3 py-2 rounded-lg border-2 transition-all ${tone === t.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-transparent hover:bg-slate-50 text-slate-500"}`}>
+                        <div className="flex justify-between items-center">
+                           <span className="font-bold text-xs">{t.label}</span>
+                           {tone === t.id && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                </div>
             </div>
             
