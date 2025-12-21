@@ -22,7 +22,6 @@ export default function CopywritingPage() {
   const [tone, setTone] = useState("viral");
   const [input, setInput] = useState("");
   const [audience, setAudience] = useState("");
-  
   const [results, setResults] = useState<ResultItem[]>([]);
   const [saved, setSaved] = useState<ResultItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,74 +32,63 @@ export default function CopywritingPage() {
     if (localSaved) setSaved(JSON.parse(localSaved));
   }, []);
 
-  // --- 1. SMART CAPITALIZATION ---
+  // --- SMART GRAMMAR UTILITIES ---
+  
+  const autoCorrect = (text: string) => {
+     // Basic typo fixer for common biz terms
+     let clean = text;
+     const typos: Record<string, string> = {
+       "leadeship": "Leadership", "laedership": "Leadership",
+       "managment": "Management", "mangament": "Management",
+       "busines": "Business", "buisness": "Business",
+       "freelance": "Freelancing", "frelance": "Freelance",
+       "entreprenuer": "Entrepreneur", "marketing": "Marketing"
+     };
+     Object.keys(typos).forEach(k => {
+        const regex = new RegExp(`\\b${k}\\b`, "gi");
+        clean = clean.replace(regex, typos[k]);
+     });
+     return clean;
+  };
+
   const toTitleCase = (str: string) => {
     return str.replace(/\w\S*/g, (txt) => {
-      if (["a", "an", "the", "for", "and", "nor", "but", "or", "yet", "so", "in", "on", "at", "to"].includes(txt.toLowerCase()) && txt !== str.split(" ")[0]) {
+      if (["a", "an", "the", "for", "and", "nor", "but", "or", "yet", "so", "in", "on", "at", "to", "of"].includes(txt.toLowerCase()) && txt !== str.split(" ")[0]) {
          return txt.toLowerCase();
       }
       return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
   };
 
-  // --- 2. DEEP CONTEXT ENGINE (The "Brain") ---
+  const smartInsert = (sentence: string, product: string) => {
+     // 1. Insert product
+     let final = sentence.replace("{product}", product);
+     
+     // 2. Fix "the The" double words
+     final = final.replace(/\b(the|a|an)\s+\1\b/gi, "$1");
+     
+     // 3. Ensure "The" exists if grammar requires it (Heuristic)
+     // If sentence says "How {product} Works" -> "How The Leadership Program Works"
+     // But avoids "How The Facebook Works" (Proper nouns hard to detect perfectly locally, but we try)
+     if (final.match(/How\s+[A-Z]/) && !final.match(/How\s+(The|A|My|Your|This)/)) {
+        final = final.replace("How ", "How the ");
+     }
+     
+     return final;
+  };
+
   const getDeepContext = (text: string) => {
     const t = text.toLowerCase();
-    
-    // Niche: WEALTH & BIZ
     if (t.match(/lead|exec|biz|money|finance|invest|crypto|scale|grow|ceo/)) {
-      return { 
-        verb: "Dominate", 
-        outcome: "Market Authority", 
-        enemy: "Stagnation", 
-        dream: "Uncapped Growth", 
-        adj: "Strategic",
-        trigger: "The '3-Step' Framework"
-      };
+      return { verb: "Dominate", outcome: "Market Authority", enemy: "Stagnation", dream: "Uncapped Growth", adj: "Strategic", trigger: "3-Step Framework" };
     }
-    // Niche: HEALTH & FITNESS
     if (t.match(/fit|weight|health|diet|muscle|gym|yoga|body/)) {
-      return { 
-        verb: "Sculpt", 
-        outcome: "Peak Vitality", 
-        enemy: "Fatigue", 
-        dream: "Your Dream Physique", 
-        adj: "Metabolic",
-        trigger: "The 'Bio-Hack' Protocol"
-      };
+      return { verb: "Sculpt", outcome: "Peak Vitality", enemy: "Fatigue", dream: "Your Dream Physique", adj: "Metabolic", trigger: "Bio-Hack Protocol" };
     }
-    // Niche: TECH & CODING
     if (t.match(/code|app|soft|dev|tech|data|ai|web/)) {
-      return { 
-        verb: "Architect", 
-        outcome: "Flawless Systems", 
-        enemy: "Spaghetti Code", 
-        dream: "Scalable Infrastructure", 
-        adj: "High-Performance",
-        trigger: "The 'Full-Stack' Secret"
-      };
+      return { verb: "Architect", outcome: "Flawless Systems", enemy: "Spaghetti Code", dream: "Scalable Infrastructure", adj: "High-Performance", trigger: "Full-Stack Secret" };
     }
-    // Niche: CREATIVE & DESIGN
-    if (t.match(/design|art|photo|write|create|content/)) {
-      return { 
-        verb: "Unlock", 
-        outcome: "Creative Genius", 
-        enemy: "Creative Block", 
-        dream: "Viral Recognition", 
-        adj: "Aesthetic",
-        trigger: "The 'Flow-State' Method"
-      };
-    }
-    
-    // Default (Generic but strong)
-    return { 
-      verb: "Accelerate", 
-      outcome: "Elite Results", 
-      enemy: "Mediocrity", 
-      dream: "Total Freedom", 
-      adj: "Proven",
-      trigger: "The 'Missing Link'"
-    };
+    return { verb: "Accelerate", outcome: "Elite Results", enemy: "Mediocrity", dream: "Total Freedom", adj: "Proven", trigger: "Missing Link" };
   };
 
   const generate = () => {
@@ -109,64 +97,57 @@ export default function CopywritingPage() {
     setResults([]);
 
     setTimeout(() => {
-      const rawProduct = input.trim();
-      const product = toTitleCase(rawProduct);
+      // 1. Clean Inputs
+      const rawProduct = autoCorrect(input.trim());
+      const productTitle = toTitleCase(rawProduct);
+      
       const rawWho = audience.trim() || "you";
-      const who = toTitleCase(rawWho);
+      const whoTitle = toTitleCase(rawWho);
       
       const ctx = getDeepContext(rawProduct + " " + rawWho);
       
+      // 2. Generate
       let outputs: ResultItem[] = [];
-      const createItem = (text: string, tag: string) => ({ id: Math.random().toString(36).substr(2, 9), text, tag, timestamp: Date.now() });
+      const createItem = (text: string, tag: string) => ({ id: Math.random().toString(36).substr(2, 9), text: smartInsert(text, productTitle), tag, timestamp: Date.now() });
 
-      // --- 3. HIGH-LEVEL COPYWRITING TEMPLATES ---
-      
       if (tool === "headline") {
         if (tone === "professional") {
           outputs = [
-            createItem(`The ${ctx.adj} Playbook: How to ${ctx.verb} Your Sector With ${product}`, "Authority Frame"),
-            createItem(`Why ${who} Are Pivoting to ${product} to Escape ${ctx.enemy}`, "Market Shift"),
-            createItem(`Beyond ${ctx.outcome}: A Comprehensive Analysis of ${product}`, "Deep Dive"),
-            createItem(`${product}: The ${ctx.adj} Infrastructure for Modern ${who}`, "Value Proposition")
+            createItem(`The ${ctx.adj} Playbook: How to ${ctx.verb} Your Sector With {product}`, "Authority Frame"),
+            createItem(`Why ${whoTitle} Are Pivoting to {product} to Escape ${ctx.enemy}`, "Market Shift"),
+            createItem(`Beyond ${ctx.outcome}: A Comprehensive Analysis of {product}`, "Deep Dive")
           ];
         } else if (tone === "urgent") {
           outputs = [
-            createItem(` RED ALERT: ${ctx.enemy} is Costing You Money. ${product} Stops the Bleeding.`, "Pain Agitation"),
-            createItem(`The Window is Closing: Secure Your ${ctx.dream} Before Competitors Catch On`, "Competitive Fear"),
-            createItem(`Do Not Buy Another Tool Until You Benchmark It Against ${product}`, "Comparison Anchor")
+            createItem(` RED ALERT: ${ctx.enemy} is Costing You Money. {product} Stops the Bleeding.`, "Pain Agitation"),
+            createItem(`The Window is Closing: Secure Your ${ctx.dream} Before Competitors Catch On`, "Competitive Fear")
           ];
-        } else { // Viral / Story
+        } else { 
           outputs = [
-            createItem(`I Deconstructed ${product} for 30 Days. Here is the ${ctx.trigger} I Found.`, "Insider Secret"),
-            createItem(`Why 99% of ${who} Never Achieve ${ctx.outcome} (And How ${product} Fixes It)`, "The 'One Thing'"),
-            createItem(`The 'Boring' Secret Behind ${ctx.dream}? It's Actually ${product}.`, "Contrarian Hook"),
-            createItem(`Stop Trying to ${ctx.verb} Harder. Use ${product} to Cheat the System.`, "Work Smart")
+            // Fixes "the The" by not hardcoding 'The' in template if variable has it, 
+            // but here we removed 'The' from variable in 'smartInsert' to be safe.
+            createItem(`I Deconstructed {product} for 30 Days. Here is the ${ctx.trigger} I Found.`, "Insider Secret"),
+            createItem(`Why 99% of ${whoTitle} Never Achieve ${ctx.outcome} (And How {product} Fixes It)`, "The 'One Thing'"),
+            createItem(`The 'Boring' Secret Behind ${ctx.dream}? It's Actually {product}.`, "Contrarian Hook")
           ];
         }
-      } 
-      
-      else if (tool === "email") {
+      } else if (tool === "email") {
          outputs = [
-             createItem(`Subject: The uncomfortable truth about ${ctx.enemy}\n\nHi,\n\nMost ${who} are lying to themselves.\n\nThey think if they just work harder, they will finally achieve ${ctx.outcome}.\n\nBut you and I know that is not true. The system is rigged against you.\n\nThat is why I built ${product}.\n\nIt is not a "tool." It is a ${ctx.adj} weapon designed to destroy ${ctx.enemy} and force ${ctx.dream} to happen.\n\nSee the proof here: [Link]`, "The 'Hard Truth' Angle"),
-             
-             createItem(`Subject: I found the ${ctx.trigger} for ${ctx.outcome}\n\nHi,\n\nI used to be obsessed with complex strategies. I thought complexity meant value.\n\nI was wrong.\n\nReal power comes from simplicity. And ${product} is the simplest way to ${ctx.verb} your results.\n\nIf you want ${ctx.dream} without the headache, this is for you.\n\n[Link: Get Access]`, "Epiphany Bridge")
+             createItem(`Subject: The uncomfortable truth about ${ctx.enemy}\n\nHi,\n\nMost ${whoTitle} think if they work harder, they will achieve ${ctx.outcome}.\n\nBut the system is rigged. That is why I built {product}.\n\nIt is the ${ctx.adj} weapon designed to destroy ${ctx.enemy}.\n\n[Link]`, "Hard Truth"),
+             createItem(`Subject: I found the ${ctx.trigger} for ${ctx.outcome}\n\nHi,\n\nReal power comes from simplicity. And {product} is the simplest way to ${ctx.verb} your results.\n\n[Link: Get Access]`, "Epiphany Bridge")
          ];
-      } 
-      
-      else { // Ad Copy
+      } else {
          outputs = [
-           createItem(` STOP SCROLLING.\n\nYou are chasing ${ctx.outcome} the wrong way.\n\nThe old way? Struggle, burnout, and ${ctx.enemy}.\n\nThe new way? ${product}.\n\nIt is the ${ctx.adj} shortcut used by the top 1% of ${who}.\n\n Click to steal their strategy!`, "Pattern Interrupt"),
-           
-           createItem(`They laughed when I said I could ${ctx.verb} my results in 30 days...\n\nBut when I showed them my ${ctx.dream}? Silence.\n\nThe secret wasn't luck. It was ${product}.\n\nDon't let ${ctx.enemy} win. Level up today.\n\n Link in bio!`, "Hero's Journey")
+           createItem(` STOP SCROLLING.\n\nYou are chasing ${ctx.outcome} the wrong way.\n\nThe new way? {product}.\n\nIt is the ${ctx.adj} shortcut used by the top 1% of ${whoTitle}.\n\n Click to steal their strategy!`, "Pattern Interrupt"),
+           createItem(`They laughed when I said I could ${ctx.verb} my results...\n\nBut when I showed them my ${ctx.dream}? Silence.\n\nThe secret was {product}.\n\n Link in bio!`, "Hero's Journey")
          ];
       }
 
       setResults(outputs);
       setLoading(false);
-    }, 1000); // Thinking time
+    }, 1000);
   };
 
-  // --- UI HANDLERS ---
   const toggleSave = (item: ResultItem) => {
     const exists = saved.find(s => s.id === item.id);
     let newSaved = exists ? saved.filter(s => s.id !== item.id) : [item, ...saved];
@@ -216,7 +197,7 @@ export default function CopywritingPage() {
                <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-end">
                   <div className="flex-1 w-full space-y-2">
                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Product / Topic</label>
-                     <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="e.g. leadership masterclass" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm outline-none focus:border-blue-500 font-bold focus:bg-white transition-all" onKeyDown={(e) => e.key === "Enter" && generate()} />
+                     <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="e.g. leadership program" className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm outline-none focus:border-blue-500 font-bold focus:bg-white transition-all" onKeyDown={(e) => e.key === "Enter" && generate()} />
                   </div>
                   <div className="flex-1 w-full space-y-2">
                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Target Audience</label>
@@ -232,7 +213,7 @@ export default function CopywritingPage() {
                      <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
                         <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-4 grayscale"></div>
                         <h3 className="text-lg font-bold text-slate-900">Deep Learning Engine Ready</h3>
-                        <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2">Enter your topic. I will analyze 50+ semantic data points to craft the perfect hook.</p>
+                        <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2">Enter your topic. I will sanitize grammar and optimize for conversion.</p>
                      </div>
                   )}
                   {loading && (
@@ -271,9 +252,7 @@ export default function CopywritingPage() {
          </div>
        ) : (
          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 flex-1 overflow-y-auto text-center">
-            {saved.length === 0 ? <p className="text-slate-400 mt-20">No saved assets yet.</p> : 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{saved.map(res => <div key={res.id} className="p-6 bg-slate-50 rounded-2xl border text-left"><p className="text-sm font-bold mb-2">{res.tag}</p><pre className="whitespace-pre-wrap text-sm">{res.text}</pre></div>)}</div>
-            }
+            {saved.length === 0 ? <p className="text-slate-400 mt-20">No saved assets yet.</p> : <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{saved.map(res => <div key={res.id} className="p-6 bg-slate-50 rounded-2xl border text-left"><p className="text-sm font-bold mb-2">{res.tag}</p><pre className="whitespace-pre-wrap text-sm">{res.text}</pre></div>)}</div>}
          </div>
        )}
     </div>
