@@ -9,10 +9,11 @@ const TONES = [
   { id: "story", label: " Storyteller", desc: "Emotional narrative." },
 ];
 
+// Fixed naming consistency (Plurals)
 const TOOLS = [
-  { id: "headline", label: "Headline Generator", icon: "" },
-  { id: "email", label: "Email Sequence", icon: "" },
-  { id: "ad", label: "Ad Creative", icon: "" },
+  { id: "headline", label: "Viral Headlines", icon: "", hint: "Generates bold, punchy hooks." },
+  { id: "email", label: "Email Sequences", icon: "", hint: "Writes subject lines and body copy." },
+  { id: "ad", label: "Ad Creatives", icon: "", hint: "Creates social media hooks & captions." },
 ];
 
 const QUICK_STARTS = [
@@ -21,15 +22,10 @@ const QUICK_STARTS = [
   { label: "SaaS Analytics Tool", audience: "Founders" },
 ];
 
-// New Interface to support different formats
 interface ResultItem {
   id: string;
-  type: "headline" | "email" | "ad"; // <--- Tracks format
-  content: {
-    head?: string;   // For headlines OR ad hooks
-    subject?: string; // For emails
-    body?: string;    // For emails/ads
-  };
+  type: "headline" | "email" | "ad";
+  content: { head?: string; subject?: string; body?: string; };
   tag: string;
   timestamp: number;
 }
@@ -40,7 +36,6 @@ export default function CopywritingPage() {
   const [tone, setTone] = useState("viral");
   const [input, setInput] = useState("");
   const [audience, setAudience] = useState("");
-  
   const [results, setResults] = useState<ResultItem[]>([]);
   const [saved, setSaved] = useState<ResultItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -82,38 +77,30 @@ export default function CopywritingPage() {
       let outputs: ResultItem[] = [];
       const create = (type: any, content: any, tag: string) => ({ id: Math.random().toString(36).substr(2, 9), type, content, tag, timestamp: Date.now() });
 
-      // --- LOGIC BRANCHING BASED ON TOOL ---
-      
       if (tool === "headline") {
-         // HEADLINES: Single bold lines
          if (t.match(/lead|exec|biz/)) {
             outputs.push(create("headline", { head: `Stop Managing, Start Leading: Why ${product} is the Standard.` }, "Authority"));
             outputs.push(create("headline", { head: `The "Silent Killer" of Careers is Stagnation. ${product} is the Cure.` }, "Fear/Solution"));
-            outputs.push(create("headline", { head: `Why Top ${who} Are Quietly Switching to ${product}.` }, "Social Proof"));
          } else if (t.match(/fit|weight|health/)) {
             outputs.push(create("headline", { head: `Your Trainer is Lying to You: Why ${product} Works Better.` }, "Contrarian"));
             outputs.push(create("headline", { head: `How to Sculpt Your Dream Physique Without Giving Up Carbs.` }, "Benefit"));
-            outputs.push(create("headline", { head: `The "Biology Hack" That Makes ${product} Unfairly Effective.` }, "Curiosity"));
          } else {
             outputs.push(create("headline", { head: `The Strategic Framework for Excellence: Why ${product} Works.` }, "Logic"));
             outputs.push(create("headline", { head: `How to Get Elite Results Without The Usual Stress (Using ${product}).` }, "Simplicity"));
-            outputs.push(create("headline", { head: `Why 99% of ${who} Fail at this (And How ${product} Fixes It).` }, "Statistic"));
          }
       } 
       else if (tool === "email") {
-         // EMAILS: Subject + Body
          outputs.push(create("email", { 
             subject: `The uncomfortable truth about your results...`,
             body: `Hi,\n\nMost ${who} are lying to themselves.\n\nThey think if they just work harder, they will finally achieve success.\n\nBut the system is rigged against you.\n\nThat is why I built ${product}.\n\nIt is not just a "tool." It is a weapon designed to destroy stagnation and force growth.\n\nSee the proof here: [Link]`
-         }, "The 'Hard Truth'"));
+         }, "Hard Truth"));
 
          outputs.push(create("email", { 
             subject: `I found the cheat code for ${rawProduct}...`,
             body: `Hi,\n\nI used to be obsessed with complex strategies. I thought complexity meant value.\n\nI was wrong.\n\nReal power comes from simplicity. And ${product} is the simplest way to upgrade your results.\n\nIf you want success without the headache, this is for you.\n\n[Link: Get Access]`
-         }, "Epiphany Bridge"));
+         }, "Epiphany"));
       } 
       else {
-         // ADS: Hook + Caption
          outputs.push(create("ad", { 
             head: ` STOP SCROLLING.`,
             body: `You are chasing success the wrong way.\n\nThe old way? Struggle and burnout.\nThe new way? ${product}.\n\nIt is the shortcut used by the top 1% of ${who}.\n\n Click to steal their strategy!`
@@ -145,14 +132,12 @@ export default function CopywritingPage() {
 
   const loadQuickStart = (p: string, a: string) => { setInput(p); setAudience(a); };
 
-  // --- RENDERERS FOR DIFFERENT TYPES ---
   const RenderCard = ({ item }: { item: ResultItem }) => {
     const isSaved = saved.some(s => s.id === item.id);
     const fullText = item.type === "email" ? `Subject: ${item.content.subject}\n\n${item.content.body}` : `${item.content.head}\n${item.content.body || ""}`;
 
     return (
       <div className="group bg-white hover:bg-slate-50 rounded-2xl border border-slate-200 p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200 relative mb-4">
-        {/* HEADER: Tag & Actions */}
         <div className="flex justify-between items-start mb-4 border-b border-slate-100 pb-3">
            <span className="px-2 py-1 bg-slate-100 rounded-md text-[9px] font-black uppercase tracking-wider text-slate-500">{item.tag}</span>
            <div className="flex gap-2">
@@ -162,14 +147,11 @@ export default function CopywritingPage() {
               </button>
            </div>
         </div>
-
-        {/* CONTENT RENDERER */}
         {item.type === "headline" && (
            <div contentEditable suppressContentEditableWarning className="text-2xl font-black text-slate-900 leading-tight outline-none focus:bg-white focus:ring-2 focus:ring-blue-100 rounded p-1">
              {item.content.head}
            </div>
         )}
-
         {item.type === "email" && (
            <div className="space-y-3">
               <div className="flex gap-2 items-center">
@@ -183,7 +165,6 @@ export default function CopywritingPage() {
               </div>
            </div>
         )}
-
         {item.type === "ad" && (
            <div className="space-y-2">
               <div contentEditable suppressContentEditableWarning className="font-bold text-slate-900 bg-yellow-50 p-2 rounded-lg text-sm inline-block">
@@ -198,6 +179,8 @@ export default function CopywritingPage() {
     );
   };
 
+  const currentTool = TOOLS.find(t => t.id === tool);
+
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col space-y-6">
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -210,6 +193,7 @@ export default function CopywritingPage() {
        
        {activeTab === "generator" ? (
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 pb-4">
+            {/* SIDEBAR */}
             <div className="lg:col-span-3 space-y-6 overflow-y-auto pr-2">
                <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-2">
                   {TOOLS.map((t) => (
@@ -219,7 +203,22 @@ export default function CopywritingPage() {
                     </button>
                   ))}
                </div>
+               <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2 block">Voice & Tone</label>
+                  <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-4 space-y-2">
+                    {TONES.map((t) => (
+                      <button key={t.id} onClick={() => setTone(t.id)} className={`w-full text-left px-3 py-2 rounded-lg border-2 transition-all ${tone === t.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-transparent hover:bg-slate-50 text-slate-500"}`}>
+                        <div className="flex justify-between items-center">
+                           <span className="font-bold text-xs">{t.label}</span>
+                           {tone === t.id && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+               </div>
             </div>
+            
+            {/* WORKSPACE */}
             <div className="lg:col-span-9 flex flex-col gap-6 h-full">
                <div className="bg-white p-1 rounded-[24px] border border-slate-200 shadow-sm flex flex-col md:flex-row">
                   <div className="flex-1 p-3">
@@ -236,12 +235,13 @@ export default function CopywritingPage() {
                      </button>
                   </div>
                </div>
+               
                <div className="flex-1 bg-white rounded-[32px] border border-slate-100 shadow-sm p-6 overflow-y-auto relative">
                   {results.length === 0 && !loading && (
                      <div className="h-full flex flex-col items-center justify-center text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-sm"></div>
-                        <h3 className="text-lg font-black text-slate-900">Select a Format</h3>
-                        <p className="text-xs text-slate-500 max-w-xs mx-auto mt-2 mb-6 font-medium">Headlines appear bold. Emails have subjects. Ads look like social posts.</p>
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-sm">{currentTool?.icon}</div>
+                        <h3 className="text-lg font-black text-slate-900">Ready to Write {currentTool?.label}</h3>
+                        <p className="text-xs text-slate-500 max-w-xs mx-auto mt-2 mb-6 font-medium">{currentTool?.hint} Enter details above to start.</p>
                      </div>
                   )}
                   {loading && (
@@ -262,13 +262,7 @@ export default function CopywritingPage() {
          </div>
        ) : (
          <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-8 flex-1 overflow-y-auto">
-            {saved.length === 0 ? (
-               <div className="flex flex-col items-center justify-center h-full opacity-50"><span className="text-4xl mb-2"></span><p className="font-bold text-slate-400">Library Empty</p></div>
-            ) : (
-               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                  {saved.map(res => <RenderCard key={res.id} item={res} />)}
-               </div>
-            )}
+            {saved.length === 0 ? <div className="flex flex-col items-center justify-center h-full opacity-50"><span className="text-4xl mb-2"></span><p className="font-bold text-slate-400">Library Empty</p></div> : <div className="grid grid-cols-1 gap-4">{saved.map(res => <RenderCard key={res.id} item={res} />)}</div>}
          </div>
        )}
     </div>
