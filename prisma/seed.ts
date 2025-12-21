@@ -1,40 +1,36 @@
-﻿import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log(" STARTING SEED...");
+  // Safe upsert ensuring we match the current schema
+  const funnelId = "cm50aaaaaaaaaaaaa00000000"; // Dummy ID
   
-  const funnelId = "test-funnel-id";
-
-  // Force-create the funnel
   await prisma.funnel.upsert({
     where: { id: funnelId },
     update: {
-      digitalProductUrl: "https://files.edgestore.dev/sample-pdf.pdf",
-      productName: "The Ultimate Guide (Seeded)",
+      name: "The Ultimate Guide (Seeded)", // Fixed: Was productName
+      price: 1000,
+      description: "A sample product to test the flow.",
+      published: true
     },
     create: {
       id: funnelId,
-      userId: "user_123",
-      name: "Test Funnel",
-      description: "This is a seeded test funnel.",
-      price: 49.99,
-      headline: "Seeded Headline",
-      subheadline: "Seeded Subheadline",
+      userId: "user_2q...", // Placeholder user
+      name: "The Ultimate Guide (Seeded)", // Fixed: Was productName
+      price: 1000,
+      description: "A sample product to test the flow.",
       published: true,
-      digitalProductUrl: "https://files.edgestore.dev/sample-pdf.pdf",
-      productName: "The Ultimate Guide (Seeded)",
-    },
+      category: "E-book"
+    }
   });
-
-  console.log("✅ DATABASE SEEDED SUCCESSFULLY!");
 }
 
 main()
-  .catch((e) => {
-    console.error("❌ SEED FAILED:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
   });

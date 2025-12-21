@@ -2,7 +2,6 @@
 import { useState } from "react";
 import PaystackButton from "@/components/PaystackButton";
 
-// Fix: Explicitly define every prop the page might send
 interface CheckoutProps {
   funnel: any;
   affiliateCode?: string;
@@ -11,8 +10,6 @@ interface CheckoutProps {
 
 export default function SmartCheckout({ funnel, affiliateCode, coupons }: CheckoutProps) {
   const [email, setEmail] = useState("");
-  
-  // Logic: Use funnel price by default
   const chargeAmount = funnel.price; 
   const chargeCurrency = "KES";
 
@@ -26,7 +23,6 @@ export default function SmartCheckout({ funnel, affiliateCode, coupons }: Checko
            {chargeAmount.toLocaleString()}
         </p>
       </div>
-
       <div className="space-y-6">
         <div>
            <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">Email Address</label>
@@ -39,8 +35,6 @@ export default function SmartCheckout({ funnel, affiliateCode, coupons }: Checko
              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:border-blue-500 transition-all font-medium"
            />
         </div>
-
-        {/* Fix: Only show button when email is present to prevent 'missing email' errors */}
         <div className={!email ? "opacity-50 pointer-events-none grayscale" : ""}>
            <PaystackButton 
               amount={chargeAmount} 
@@ -50,10 +44,7 @@ export default function SmartCheckout({ funnel, affiliateCode, coupons }: Checko
               affiliateCode={affiliateCode} 
            />
         </div>
-        
-        <p className="text-center text-[10px] text-slate-400 font-medium">
-            Secured by Paystack
-        </p>
+        <p className="text-center text-[10px] text-slate-400 font-medium"> Secured by Paystack</p>
       </div>
     </div>
   );
