@@ -9,11 +9,16 @@ const TONES = [
   { id: "story", label: " Storyteller", desc: "Emotional narrative." },
 ];
 
-// FIXED: Consistent Plural Naming & Added Hints
 const TOOLS = [
   { id: "headline", label: "Viral Headlines", icon: "", hint: "Generates bold, punchy hooks." },
   { id: "email", label: "Email Sequences", icon: "", hint: "Writes subject lines and body copy." },
   { id: "ad", label: "Ad Creatives", icon: "", hint: "Creates social media hooks & captions." },
+];
+
+const QUICK_STARTS = [
+  { label: "Leadership Course", audience: "Managers" },
+  { label: "Keto Diet Plan", audience: "New Moms" },
+  { label: "SaaS Analytics Tool", audience: "Founders" },
 ];
 
 interface ResultItem {
@@ -55,54 +60,103 @@ export default function CopywritingPage() {
     });
   };
 
+  // --- THE NEW "MECHANISM" ENGINE ---
+  const getDeepContext = (text: string) => {
+    const t = text.toLowerCase();
+    
+    // 1. DETECT THE "MECHANISM" (What is it?)
+    const isCourse = t.match(/course|class|guide|book|program|coaching|masterclass/);
+    const isTool = t.match(/tool|app|soft|platform|system|kit|template/);
+    const isService = t.match(/service|agency|consult|audit/);
+    
+    // 2. DETECT THE NICHE (Who is it for?)
+    const isBiz = t.match(/lead|exec|biz|money|finance|invest|scale|ceo|manager/);
+    const isHealth = t.match(/fit|weight|health|diet|muscle|gym|yoga/);
+    const isTech = t.match(/code|app|soft|dev|data|ai|web/);
+
+    // 3. DEFINE VARIABLES BASED ON MATRIX
+    let vars = {
+       villain: "Mediocrity",
+       dream: "Success",
+       slang_verb: "Upgrade",
+       slang_adj: "Proven",
+       authority_proof: "Industry Leaders"
+    };
+
+    if (isBiz) {
+       vars = { villain: "Stagnation", dream: "Market Dominance", slang_verb: "Scale", slang_adj: "High-Leverage", authority_proof: "Fortune 500 CEOs" };
+    } else if (isHealth) {
+       vars = { villain: "The Plateau", dream: "Peak Vitality", slang_verb: "Sculpt", slang_adj: "Metabolic", authority_proof: "Elite Athletes" };
+    } else if (isTech) {
+       vars = { villain: "Tech Debt", dream: "Scalable Architecture", slang_verb: "Refactor", slang_adj: "Clean", authority_proof: "Senior Architects" };
+    }
+
+    // 4. REFINE OUTPUT BASED ON MECHANISM (The Missing Link)
+    let format = "Solution";
+    if (isCourse) format = "Transformation"; // Sell the result, not the info
+    if (isTool) format = "Speed"; // Sell time-saving
+    if (isService) format = "Relief"; // Sell "done for you"
+
+    return { ...vars, format };
+  };
+
   const generate = () => {
     if (!input) return;
     setLoading(true);
     setResults([]);
-    setLoadingText("Analyzing Structure...");
+    setLoadingText("Analyzing Mechanism...");
 
     setTimeout(() => {
       const rawProduct = autoCorrect(input.trim());
       const product = toTitleCase(rawProduct);
       const rawWho = audience.trim() || "Everyone";
       const who = toTitleCase(rawWho);
-      const t = rawProduct.toLowerCase();
+      
+      // Get the deep context variables
+      const ctx = getDeepContext(rawProduct + " " + rawWho);
       
       let outputs: ResultItem[] = [];
       const create = (type: any, content: any, tag: string) => ({ id: Math.random().toString(36).substr(2, 9), type, content, tag, timestamp: Date.now() });
 
+      // --- LOGIC BRANCHING ---
+      
       if (tool === "headline") {
-         if (t.match(/lead|exec|biz/)) {
-            outputs.push(create("headline", { head: `Stop Managing, Start Leading: Why ${product} is the Standard.` }, "Authority"));
-            outputs.push(create("headline", { head: `The "Silent Killer" of Careers is Stagnation. ${product} is the Cure.` }, "Fear/Solution"));
-         } else if (t.match(/fit|weight|health/)) {
-            outputs.push(create("headline", { head: `Your Trainer is Lying to You: Why ${product} Works Better.` }, "Contrarian"));
-            outputs.push(create("headline", { head: `How to Sculpt Your Dream Physique Without Giving Up Carbs.` }, "Benefit"));
-         } else {
-            outputs.push(create("headline", { head: `The Strategic Framework for Excellence: Why ${product} Works.` }, "Logic"));
-            outputs.push(create("headline", { head: `How to Get Elite Results Without The Usual Stress (Using ${product}).` }, "Simplicity"));
+         // MECHANISM-SPECIFIC HEADLINES
+         if (ctx.format === "Transformation") { // Selling Courses/Info
+            outputs.push(create("headline", { head: `Stop Learning, Start Becoming: The ${product} Protocol.` }, "Identity Shift"));
+            outputs.push(create("headline", { head: `I Deconstructed ${ctx.authority_proof}. Here is the '${ctx.slang_adj}' System They Use.` }, "Insider Secret"));
+            outputs.push(create("headline", { head: `Why ${who} Are Rejecting Traditional Education for ${product}.` }, "Market Shift"));
+         } 
+         else if (ctx.format === "Speed") { // Selling Tools/Apps
+            outputs.push(create("headline", { head: `Stop Doing It Manually. Let ${product} Do It in Seconds.` }, "Efficiency"));
+            outputs.push(create("headline", { head: `The Tool ${ctx.authority_proof} Use to Avoid ${ctx.villain}.` }, "Social Proof"));
+            outputs.push(create("headline", { head: `Your Stack is Missing One Thing: ${product}.` }, "The Missing Piece"));
+         }
+         else { // General / Service
+            outputs.push(create("headline", { head: `The Strategic Antidote to ${ctx.villain} for Modern ${who}.` }, "Problem/Solution"));
+            outputs.push(create("headline", { head: `How to ${ctx.slang_verb} Your Results Without the Usual Headaches.` }, "Benefit w/o Pain"));
          }
       } 
       else if (tool === "email") {
          outputs.push(create("email", { 
-            subject: `The uncomfortable truth about your results...`,
-            body: `Hi,\n\nMost ${who} are lying to themselves.\n\nThey think if they just work harder, they will finally achieve success.\n\nBut the system is rigged against you.\n\nThat is why I built ${product}.\n\nIt is not just a "tool." It is a weapon designed to destroy stagnation and force growth.\n\nSee the proof here: [Link]`
-         }, "Hard Truth"));
+            subject: `The truth about ${ctx.villain}...`,
+            body: `Hi,\n\nI see so many ${who} struggling with ${ctx.villain}. It keeps them stuck.\n\nThey think the answer is "more hard work."\n\nBut ${ctx.authority_proof} know that is false. The answer is Leverage.\n\n${product} is that leverage.\n\nIt was built to help you ${ctx.slang_verb} your results and finally achieve ${ctx.dream}.\n\n[Link: See the system]`
+         }, "The 'Hard Truth'"));
 
          outputs.push(create("email", { 
-            subject: `I found the cheat code for ${rawProduct}...`,
-            body: `Hi,\n\nI used to be obsessed with complex strategies. I thought complexity meant value.\n\nI was wrong.\n\nReal power comes from simplicity. And ${product} is the simplest way to upgrade your results.\n\nIf you want success without the headache, this is for you.\n\n[Link: Get Access]`
-         }, "Epiphany"));
+            subject: `You are overcomplicating it.`,
+            body: `Hi,\n\nReal power comes from simplicity. But ${ctx.villain} makes everything messy.\n\nI built ${product} to cut through the noise.\n\nIt is the exact ${ctx.slang_adj} framework needed to go from 'Stuck' to '${ctx.dream}'.\n\nStop guessing. Start winning.\n\n[Link: Get Access]`
+         }, "Simplicity Hook"));
       } 
       else {
          outputs.push(create("ad", { 
-            head: ` STOP SCROLLING.`,
-            body: `You are chasing success the wrong way.\n\nThe old way? Struggle and burnout.\nThe new way? ${product}.\n\nIt is the shortcut used by the top 1% of ${who}.\n\n Click to steal their strategy!`
-         }, "Pattern Interrupt"));
+            head: ` STOP ACCEPTING ${ctx.villain.toUpperCase()}.`,
+            body: `You deserve ${ctx.dream}.\n\nBut the old way of doing things is broken.\n\nEnter ${product}.\n\nThe ${ctx.slang_adj} shortcut used by the top 1% of ${who}.\n\n Click to ${ctx.slang_verb} your life!`
+         }, "Pain/Agitation"));
 
          outputs.push(create("ad", { 
-            head: `They laughed when I said I used ${product}...`,
-            body: `But when I showed them my results? Silence.\n\nThe secret wasn't luck. It was ${product}.\n\nDon't let the competition beat you. Level up today.\n\n Link in bio!`
+            head: `They laughed when I bought ${product}...`,
+            body: `But when they saw my ${ctx.dream}? Silence.\n\nDon't let ${ctx.villain} win. Get the unfair advantage.\n\n Link in bio!`
          }, "Hero Story"));
       }
 
@@ -123,6 +177,8 @@ export default function CopywritingPage() {
     setCopiedIndex(id);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
+
+  const loadQuickStart = (p: string, a: string) => { setInput(p); setAudience(a); };
 
   const RenderCard = ({ item }: { item: ResultItem }) => {
     const isSaved = saved.some(s => s.id === item.id);
@@ -194,19 +250,6 @@ export default function CopywritingPage() {
                     </button>
                   ))}
                </div>
-               <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2 block">Voice & Tone</label>
-                  <div className="bg-white rounded-[24px] border border-slate-100 shadow-sm p-4 space-y-2">
-                    {TONES.map((t) => (
-                      <button key={t.id} onClick={() => setTone(t.id)} className={`w-full text-left px-3 py-2 rounded-lg border-2 transition-all ${tone === t.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-transparent hover:bg-slate-50 text-slate-500"}`}>
-                        <div className="flex justify-between items-center">
-                           <span className="font-bold text-xs">{t.label}</span>
-                           {tone === t.id && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-               </div>
             </div>
             
             <div className="lg:col-span-9 flex flex-col gap-6 h-full">
@@ -229,10 +272,16 @@ export default function CopywritingPage() {
                <div className="flex-1 bg-white rounded-[32px] border border-slate-100 shadow-sm p-6 overflow-y-auto relative">
                   {results.length === 0 && !loading && (
                      <div className="h-full flex flex-col items-center justify-center text-center">
-                        {/* DYNAMIC EMPTY STATE FIX */}
                         <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-sm">{currentTool?.icon}</div>
                         <h3 className="text-lg font-black text-slate-900">Ready to Write {currentTool?.label}</h3>
                         <p className="text-xs text-slate-500 max-w-xs mx-auto mt-2 mb-6 font-medium">{currentTool?.hint}</p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                           {QUICK_STARTS.map((q, i) => (
+                              <button key={i} onClick={() => loadQuickStart(q.label, q.audience)} className="px-4 py-2 rounded-full bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-600 hover:border-blue-400 hover:text-blue-600 transition-all">
+                                 {q.label}
+                              </button>
+                           ))}
+                        </div>
                      </div>
                   )}
                   {loading && (
