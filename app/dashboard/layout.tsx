@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, Users, FileText, Settings, Menu, X, Receipt } from 'lucide-react';
@@ -16,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
       </div>
 
-      <aside className={ixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out shadow-2xl md:relative md:translate-x-0 md:z-0  mt-16 md:mt-0}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out shadow-2xl md:relative md:translate-x-0 md:z-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} mt-16 md:mt-0`}>
         <div className="h-full flex flex-col justify-between p-4 bg-white">
           <div>
             <div className="hidden md:flex items-center gap-2 mb-8 px-2">
