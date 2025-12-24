@@ -1,82 +1,166 @@
-import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
-import Link from "next/link";
-import { getTheme } from "@/lib/themes";
+import Link from 'next/link'
+import { db } from "@/lib/db"
+import { auth } from "@clerk/nextjs/server"
+import { DollarSign, Users, Briefcase, TrendingUp, ArrowRight, CreditCard, ShoppingBag } from 'lucide-react'
 
 export default async function DashboardPage() {
-  const user = await currentUser();
-  const funnels = await prisma.funnel.findMany({
-    where: { userId: user?.id },
-    include: { orders: true },
-    orderBy: { createdAt: "desc" }
-  });
+  const { userId } = await auth()
+  if (!userId) return <div>Not authenticated</div>
 
-  const totalRevenue = funnels.reduce((acc, f) => acc + f.orders.reduce((sum, o) => sum + o.amount, 0), 0);
+  // 1. FETCH DATA PARALLEL (Fast Loading)
+  const [clientCount, projectCount, invoices, funnels] = await Promise.all([
+    db.client.count({ where: { userId } }),
+    db.project.count({ where: { userId, status: "In Progress" } }),
+    db.invoice.findMany({ 
+      where: { userId }, 
+      orderBy: { createdAt: 'desc' }, 
+      take: 5,
+      include: { client: true }
+    }),
+    db.funnel.findMany({
+      where: { userId },
+      include: { orders: true }
+    })
+  ])
+
+  // 2. CALCULATE MONEY
+  // Sum of all Invoices
+  const totalInvoiced = invoices.reduce((acc, curr) => acc + curr.amount, 0)
+  
+  // Sum of all Store Orders
+  const totalStoreSales = funnels.reduce((acc, funnel) => {
+    return acc + funnel.orders.reduce((orderAcc, order) => orderAcc + order.amount, 0)
+  }, 0)
+
+  const totalRevenue = totalInvoiced + totalStoreSales
 
   return (
     <div className="space-y-8">
-       {/* Welcome Banner (Replaces Nav in visual importance) */}
-       <div className="bg-slate-900 text-white p-8 rounded-[32px] shadow-xl relative overflow-hidden flex justify-between items-center">
-          <div className="relative z-10">
-             <h1 className="text-3xl font-black mb-2">Command Center</h1>
-             <p className="text-slate-400 font-medium">Overview of your digital empire.</p>
-          </div>
-          <Link href="/dashboard/create" className="relative z-10 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/50 flex items-center gap-2">
-             <span className="text-xl">+</span> New Product
-          </Link>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-3xl opacity-20 -mr-16 -mt-16"></div>
-       </div>
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Command Center</h1>
+          <p className="text-gray-500">Welcome back. Here is what's happening today.</p>
+        </div>
+        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-medium text-sm">
+           {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+      </div>
 
-       {/* Stats Grid */}
-       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Revenue</p>
-             <p className="text-2xl font-black text-slate-900 mt-1">KES {totalRevenue.toLocaleString()}</p>
+      {/*  STATS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* REVENUE CARD */}
+        <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-green-100 text-green-600 rounded-lg">
+              <DollarSign size={24} />
+            </div>
+            <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
           </div>
-          <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Orders</p>
-             <p className="text-2xl font-black text-slate-900 mt-1">{funnels.reduce((acc, f) => acc + f.orders.length, 0)}</p>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Total Revenue</p>
+            <h3 className="text-3xl font-bold text-gray-900">${totalRevenue.toLocaleString()}</h3>
           </div>
-          <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Active</p>
-             <p className="text-2xl font-black text-slate-900 mt-1">{funnels.length}</p>
-          </div>
-          <div className="p-6 bg-white rounded-3xl border border-slate-100 shadow-sm">
-             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Plan</p>
-             <p className="text-2xl font-black text-slate-900 mt-1">Pro</p>
-          </div>
-       </div>
+        </div>
 
-       {/* Products List */}
-       <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-             <h3 className="font-bold text-xl text-slate-900">Your Products</h3>
+        {/* CLIENTS CARD */}
+        <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col justify-between">
+           <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+              <Users size={24} />
+            </div>
           </div>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Active Clients</p>
+            <h3 className="text-3xl font-bold text-gray-900">{clientCount}</h3>
+          </div>
+        </div>
+
+        {/* PROJECTS CARD */}
+        <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col justify-between">
+           <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+              <Briefcase size={24} />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Active Projects</p>
+            <h3 className="text-3xl font-bold text-gray-900">{projectCount}</h3>
+          </div>
+        </div>
+
+        {/* STORE SALES CARD */}
+         <div className="bg-white p-6 rounded-xl border shadow-sm flex flex-col justify-between">
+           <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-orange-100 text-orange-600 rounded-lg">
+              <ShoppingBag size={24} />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Store Sales</p>
+            <h3 className="text-3xl font-bold text-gray-900">${totalStoreSales.toLocaleString()}</h3>
+          </div>
+        </div>
+      </div>
+
+      {/* RECENT ACTIVITY SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* RECENT INVOICES */}
+        <div className="lg:col-span-2 bg-white border rounded-xl shadow-sm overflow-hidden">
+          <div className="p-6 border-b flex justify-between items-center">
+            <h3 className="font-bold text-lg text-gray-800">Recent Invoices</h3>
+            <Link href="/dashboard/invoices" className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1">
+              View All <ArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="divide-y">
+            {invoices.length === 0 ? (
+               <div className="p-8 text-center text-gray-500">No recent invoices found.</div>
+            ) : (
+              invoices.map((inv) => (
+                <div key={inv.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                   <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold">
+                        {inv.client.name.substring(0,2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{inv.client.name}</p>
+                        <p className="text-xs text-gray-500">Due: {inv.dueDate.toLocaleDateString()}</p>
+                      </div>
+                   </div>
+                   <div className="text-right">
+                      <p className="font-bold text-gray-900">${inv.amount.toLocaleString()}</p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${inv.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {inv.status}
+                      </span>
+                   </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* QUICK ACTIONS */}
+        <div className="bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl shadow-md p-6 text-white">
+          <h3 className="font-bold text-xl mb-2">Quick Actions</h3>
+          <p className="text-blue-100 mb-6 text-sm">What would you like to do next?</p>
           
-          {funnels.length === 0 ? (
-             <div className="text-center py-20 bg-white rounded-[32px] border border-dashed border-slate-200">
-                <p className="text-slate-400 font-medium mb-4">No assets created yet.</p>
-             </div>
-          ) : (
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {funnels.map((funnel) => {
-                   const theme = getTheme(funnel.themeColor);
-                   return (
-                      <Link key={funnel.id} href={`/dashboard/funnels/${funnel.id}`} className="group bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all">
-                         <div className={`h-40 rounded-2xl ${theme.secondary} mb-6 flex items-center justify-center text-4xl overflow-hidden`}>
-                            {funnel.logoUrl ? <img src={funnel.logoUrl} className="w-full h-full object-cover" /> : ""}
-                         </div>
-                         <h4 className="font-bold text-lg text-slate-900 mb-1 line-clamp-1">{funnel.name}</h4>
-                         <div className="flex justify-between items-center text-sm text-slate-500">
-                            <span>{funnel.orders.length} Sales</span>
-                            <span className={`font-bold ${theme.accent}`}>KES {funnel.price}</span>
-                         </div>
-                      </Link>
-                   );
-                })}
-             </div>
-          )}
-       </div>
+          <div className="space-y-3">
+            <Link href="/dashboard/invoices/new" className="block w-full bg-white/10 hover:bg-white/20 p-3 rounded-lg flex items-center gap-3 transition">
+               <CreditCard size={20} /> <span className="font-medium">Create Invoice</span>
+            </Link>
+            <Link href="/dashboard/clients/new" className="block w-full bg-white/10 hover:bg-white/20 p-3 rounded-lg flex items-center gap-3 transition">
+               <Users size={20} /> <span className="font-medium">Add New Client</span>
+            </Link>
+            <Link href="/dashboard/projects/new" className="block w-full bg-white/10 hover:bg-white/20 p-3 rounded-lg flex items-center gap-3 transition">
+               <Briefcase size={20} /> <span className="font-medium">Start Project</span>
+            </Link>
+          </div>
+        </div>
+
+      </div>
     </div>
-  );
+  )
 }
