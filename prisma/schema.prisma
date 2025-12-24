@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- 1. MERCHANT (Restored Socials) ---
 model Merchant {
   id          String   @id @default(cuid())
   userId      String   @unique
@@ -15,10 +16,14 @@ model Merchant {
   bio         String?
   logoUrl     String?
   bannerUrl   String?
+  twitter     String?  // <--- Restored
+  instagram   String?  // <--- Restored
+  website     String?  // <--- Restored
   wallet      Float    @default(0)
   createdAt   DateTime @default(now())
 }
 
+// --- 2. SERVICE BUSINESS (Clients, Projects, Invoices) ---
 model Client {
   id          String   @id @default(cuid())
   userId      String   
@@ -67,6 +72,7 @@ model Invoice {
   updatedAt   DateTime @updatedAt
 }
 
+// --- 3. DIGITAL PRODUCTS (Funnels, Orders) ---
 model Funnel {
   id                String   @id @default(cuid())
   userId            String
