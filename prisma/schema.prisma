@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- 1. MERCHANT (Restored Socials) ---
+// --- 1. MERCHANT (Profile & Socials) ---
 model Merchant {
   id          String   @id @default(cuid())
   userId      String   @unique
@@ -16,9 +16,9 @@ model Merchant {
   bio         String?
   logoUrl     String?
   bannerUrl   String?
-  twitter     String?  // <--- Restored
-  instagram   String?  // <--- Restored
-  website     String?  // <--- Restored
+  twitter     String?
+  instagram   String?
+  website     String?
   wallet      Float    @default(0)
   createdAt   DateTime @default(now())
 }
@@ -99,6 +99,11 @@ model Order {
   funnelId      String
   funnel        Funnel   @relation(fields: [funnelId], references: [id])
   amount        Float
+  currency      String   @default("KES")     // <--- RESTORED
+  status        String   @default("PENDING") // <--- RESTORED
+  customerEmail String?                      // <--- RESTORED
+  paymentId     String?  @unique             // <--- RESTORED (Fixes the error)
+  affiliateCode String?                      // <--- RESTORED
   createdAt     DateTime @default(now())
 }
 
