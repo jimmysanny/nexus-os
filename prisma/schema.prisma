@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- YOUR EXISTING MODELS (KEPT SAFE) ---
-
 model Merchant {
   id          String   @id @default(cuid())
   userId      String   @unique
@@ -67,16 +65,29 @@ model Coupon {
   createdAt DateTime @default(now())
 }
 
-// --- NEW MODEL FOR NEXUS OS ---
-
 model Client {
   id          String   @id @default(cuid())
-  userId      String   // Links to the Clerk User ID (same as Merchant)
+  userId      String   
   name        String
   email       String
   phone       String?
-  status      String   @default("Active") // Active, Lead, Closed
+  status      String   @default("Active")
   image       String?
+  projects    Project[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  status      String   @default("In Progress")
+  budget      Float?
+  deadline    DateTime?
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
