@@ -54,8 +54,8 @@ model Invoice {
   amount      Float
   status      String   @default("Pending")
   dueDate     DateTime
-  paymentLink String?  // Stores Paystack URL
-  paystackRef String?  // Stores Reference
+  paymentLink String?
+  paystackRef String?
   
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id])
@@ -72,8 +72,10 @@ model Funnel {
   userId      String
   name        String
   orders      Order[]
+  coupons     Coupon[]  // <--- FIXED: Added this missing link!
   createdAt   DateTime @default(now())
 }
+
 model Order {
   id          String   @id @default(cuid())
   funnelId    String
@@ -81,6 +83,7 @@ model Order {
   amount      Float
   createdAt   DateTime @default(now())
 }
+
 model Coupon {
   id        String   @id @default(cuid())
   code      String   @unique
