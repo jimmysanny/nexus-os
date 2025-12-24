@@ -99,11 +99,11 @@ model Order {
   funnelId      String
   funnel        Funnel   @relation(fields: [funnelId], references: [id])
   amount        Float
-  currency      String   @default("KES")     // <--- RESTORED
-  status        String   @default("PENDING") // <--- RESTORED
-  customerEmail String?                      // <--- RESTORED
-  paymentId     String?  @unique             // <--- RESTORED (Fixes the error)
-  affiliateCode String?                      // <--- RESTORED
+  currency      String   @default("KES")     
+  status        String   @default("PENDING") 
+  customerEmail String?                      
+  paymentId     String?  @unique             
+  affiliateCode String?                      
   createdAt     DateTime @default(now())
 }
 
