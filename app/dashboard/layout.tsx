@@ -1,50 +1,97 @@
-import DashboardNav from "@/components/DashboardNav";
-import { UserButton } from "@clerk/nextjs"; 
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+'use client';
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = await currentUser();
-  if (!user) redirect("/sign-in");
+import { useState } from 'react';
+import Link from 'next/link';
+import { LayoutDashboard, Users, FileText, Settings, Menu, X, LogOut } from 'lucide-react';
+import { UserButton } from '@clerk/nextjs';
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Top Navigation Bar - Sticky & Frosted Glass Effect */}
-      <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-           {/* Logo & Brand */}
-           <div className="flex items-center justify-between w-full md:w-auto">
-              <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-xs shadow-lg shadow-slate-300">N</div>
-                 <span className="font-bold text-slate-900 tracking-tight text-lg">Nexus OS</span>
-                 <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[10px] font-bold text-blue-600 uppercase tracking-wider border border-blue-100">Pro</span>
-              </div>
-              {/* Mobile Profile Menu (Visible only on mobile) */}
-              <div className="md:hidden">
-                 <UserButton afterSignOutUrl="/" />
-              </div>
-           </div>
-
-           {/* Navigation Tabs (Scrollable on Mobile) */}
-           <div className="w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
-              <DashboardNav />
-           </div>
-
-           {/* Desktop Profile Menu */}
-           <div className="hidden md:flex items-center gap-4 border-l border-slate-200 pl-6">
-              <div className="text-right">
-                 <p className="text-xs font-bold text-slate-900">{user.firstName} {user.lastName}</p>
-                 <p className="text-[10px] text-slate-400 font-medium">Merchant Account</p>
-              </div>
-              <UserButton afterSignOutUrl="/" />
-           </div>
-        </div>
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
+      
+      {/* 1. MOBILE HEADER (Only shows on phone) */}
+      <div className="md:hidden fixed top-0 w-full z-20 bg-white border-b px-4 h-16 flex items-center justify-between">
+        <span className="font-bold text-xl text-blue-700">Nexus OS</span>
+        <button 
+          onClick={() => setSidebarOpen(!isSidebarOpen)}
+          className="p-2 text-gray-600 hover:bg-gray-100 rounded-md"
+        >
+          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
 
-      {/* Main Content Area - Centered & Spacious */}
-      <main className="max-w-7xl mx-auto p-4 sm:p-8">
-        {children}
+      {/* 2. SIDEBAR (Sliding on Mobile, Fixed on Desktop) */}
+      <aside 
+        className={`
+          fixed inset-y-0 left-0 z-10 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+          md:relative md:translate-x-0 mt-16 md:mt-0
+        `}
+      >
+        <div className="h-full flex flex-col justify-between p-4">
+          
+          {/* Top Section */}
+          <div>
+            <div className="hidden md:flex items-center gap-2 mb-8 px-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">N</div>
+              <span className="text-xl font-bold text-gray-800">Nexus OS</span>
+            </div>
+
+            <nav className="space-y-2">
+              <SidebarItem icon={<LayoutDashboard size={20} />} label="Overview" href="/dashboard" />
+              <SidebarItem icon={<Users size={20} />} label="Clients" href="/dashboard/clients" />
+              <SidebarItem icon={<FileText size={20} />} label="Projects" href="/dashboard/projects" />
+              <SidebarItem icon={<Settings size={20} />} label="Settings" href="/dashboard/settings" />
+            </nav>
+          </div>
+
+          {/* Bottom Section (User Profile) */}
+          <div className="border-t pt-4">
+             <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
+                <UserButton afterSignOutUrl="/" />
+                <div className="text-sm">
+                  <p className="font-medium text-gray-700">My Account</p>
+                  <p className="text-xs text-gray-500">Manage Profile</p>
+                </div>
+             </div>
+          </div>
+
+        </div>
+      </aside>
+
+      {/* 3. MAIN CONTENT AREA */}
+      <main className="flex-1 overflow-y-auto h-full w-full pt-16 md:pt-0">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+          {children}
+        </div>
       </main>
+
+      {/* Overlay for mobile (closes menu when clicking outside) */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-0 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+// Helper Component for Sidebar Links
+function SidebarItem({ icon, label, href }: { icon: any, label: string, href: string }) {
+  return (
+    <Link 
+      href={href} 
+      className="flex items-center gap-3 px-4 py-3 text-gray-600 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors"
+    >
+      {icon}
+      <span className="font-medium">{label}</span>
+    </Link>
   );
 }
