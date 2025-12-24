@@ -68,20 +68,32 @@ model Invoice {
 }
 
 model Funnel {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  orders      Order[]
-  coupons     Coupon[]  // <--- FIXED: Added this missing link!
-  createdAt   DateTime @default(now())
+  id                String   @id @default(cuid())
+  userId            String
+  name              String
+  description       String?
+  price             Float    @default(0)
+  headline          String?
+  subheadline       String?
+  themeColor        String?  @default("blue")
+  font              String?  @default("sans")
+  logoUrl           String?
+  heroImageUrl      String?
+  category          String   @default("Software")
+  digitalProductUrl String?
+  published         Boolean  @default(false)
+  orders            Order[]
+  coupons           Coupon[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Order {
-  id          String   @id @default(cuid())
-  funnelId    String
-  funnel      Funnel   @relation(fields: [funnelId], references: [id])
-  amount      Float
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  funnelId      String
+  funnel        Funnel   @relation(fields: [funnelId], references: [id])
+  amount        Float
+  createdAt     DateTime @default(now())
 }
 
 model Coupon {
