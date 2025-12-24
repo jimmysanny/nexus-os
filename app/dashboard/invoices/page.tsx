@@ -32,14 +32,14 @@ export default async function InvoicesPage() {
                <div className="flex items-center gap-4">
                  <div className="p-2 bg-green-50 rounded-lg text-green-600"><Receipt size={24} /></div>
                  <div>
-                   <p className="font-bold text-gray-800"></p>
+                   <p className="font-bold text-gray-800">${inv.amount.toLocaleString()}</p>
                    <p className="text-sm text-gray-500">{inv.client.name}  {inv.project?.name || 'General'}</p>
                  </div>
                </div>
                
                <div className="flex items-center gap-3">
                   <div className="text-right mr-2">
-                     <span className={lock text-xs font-bold px-2 py-1 rounded-full mb-1 \}>
+                     <span className={`block text-xs font-bold px-2 py-1 rounded-full mb-1 ${inv.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                        {inv.status}
                      </span>
                      <p className="text-xs text-gray-400">Due: {inv.dueDate.toLocaleDateString()}</p>
