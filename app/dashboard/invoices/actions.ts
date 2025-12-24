@@ -24,7 +24,7 @@ export async function createInvoice(formData: FormData) {
     const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
       headers: {
-        Authorization: \Bearer \\,
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
