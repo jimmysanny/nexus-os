@@ -13,10 +13,10 @@ export default function DashboardLayout({
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-100 overflow-hidden relative">
       
-      {/* 1. MOBILE HEADER (Only shows on phone) */}
-      <div className="md:hidden fixed top-0 w-full z-20 bg-white border-b px-4 h-16 flex items-center justify-between">
+      {/* 1. MOBILE HEADER (High Z-Index) */}
+      <div className="md:hidden fixed top-0 w-full z-40 bg-white border-b px-4 h-16 flex items-center justify-between shadow-sm">
         <span className="font-bold text-xl text-blue-700">Nexus OS</span>
         <button 
           onClick={() => setSidebarOpen(!isSidebarOpen)}
@@ -26,15 +26,15 @@ export default function DashboardLayout({
         </button>
       </div>
 
-      {/* 2. SIDEBAR (Sliding on Mobile, Fixed on Desktop) */}
+      {/* 2. SIDEBAR (Highest Z-Index - z-50) */}
       <aside 
         className={`
-          fixed inset-y-0 left-0 z-10 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out shadow-2xl
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
-          md:relative md:translate-x-0 mt-16 md:mt-0
+          md:relative md:translate-x-0 md:z-0 mt-16 md:mt-0
         `}
       >
-        <div className="h-full flex flex-col justify-between p-4">
+        <div className="h-full flex flex-col justify-between p-4 bg-white">
           
           {/* Top Section */}
           <div>
@@ -66,16 +66,16 @@ export default function DashboardLayout({
       </aside>
 
       {/* 3. MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto h-full w-full pt-16 md:pt-0">
+      <main className="flex-1 overflow-y-auto h-full w-full pt-16 md:pt-0 z-0 relative">
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
           {children}
         </div>
       </main>
 
-      {/* Overlay for mobile (closes menu when clicking outside) */}
+      {/* Overlay (Dark background when menu is open) */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-0 md:hidden"
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
