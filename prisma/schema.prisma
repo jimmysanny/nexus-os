@@ -15,54 +15,8 @@ model Merchant {
   bio         String?
   logoUrl     String?
   bannerUrl   String?
-  twitter     String?
-  instagram   String?
-  website     String?
   wallet      Float    @default(0)
   createdAt   DateTime @default(now())
-}
-
-model Funnel {
-  id                String   @id @default(cuid())
-  userId            String
-  name              String
-  description       String?
-  price             Float    @default(0)
-  headline          String?
-  subheadline       String?
-  themeColor        String?  @default("blue")
-  font              String?  @default("sans")
-  logoUrl           String?
-  heroImageUrl      String?
-  category          String   @default("Software")
-  digitalProductUrl String?
-  published         Boolean  @default(false)
-  orders            Order[]
-  coupons           Coupon[]
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-}
-
-model Order {
-  id            String   @id @default(cuid())
-  funnelId      String
-  funnel        Funnel   @relation(fields: [funnelId], references: [id])
-  amount        Float
-  currency      String   @default("KES")
-  status        String   @default("PENDING")
-  customerEmail String? 
-  paymentId     String?  @unique
-  affiliateCode String?
-  createdAt     DateTime @default(now())
-}
-
-model Coupon {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  percent   Int
-  funnelId  String?
-  funnel    Funnel?  @relation(fields: [funnelId], references: [id])
-  createdAt DateTime @default(now())
 }
 
 model Client {
@@ -74,6 +28,7 @@ model Client {
   status      String   @default("Active")
   image       String?
   projects    Project[]
+  invoices    Invoice[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -88,6 +43,49 @@ model Project {
   deadline    DateTime?
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id])
+  invoices    Invoice[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float
+  status      String   @default("Pending")
+  dueDate     DateTime
+  paymentLink String?  // Stores Paystack URL
+  paystackRef String?  // Stores Reference
+  
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Funnel {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  orders      Order[]
+  createdAt   DateTime @default(now())
+}
+model Order {
+  id          String   @id @default(cuid())
+  funnelId    String
+  funnel      Funnel   @relation(fields: [funnelId], references: [id])
+  amount      Float
+  createdAt   DateTime @default(now())
+}
+model Coupon {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  percent   Int
+  funnelId  String?
+  funnel    Funnel?  @relation(fields: [funnelId], references: [id])
+  createdAt DateTime @default(now())
 }
