@@ -62,7 +62,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-sm text-gray-500 font-medium">Total Revenue</p>
-            <h3 className="text-3xl font-bold text-gray-900">${totalRevenue.toLocaleString()}</h3>
+            <h3 className="text-3xl font-bold text-gray-900">KES {totalRevenue.toLocaleString()}</h3>
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
           </div>
           <div>
             <p className="text-sm text-gray-500 font-medium">Store Sales</p>
-            <h3 className="text-3xl font-bold text-gray-900">${totalStoreSales.toLocaleString()}</h3>
+            <h3 className="text-3xl font-bold text-gray-900">KES {totalStoreSales.toLocaleString()}</h3>
           </div>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
                       </div>
                    </div>
                    <div className="text-right">
-                      <p className="font-bold text-gray-900">${inv.amount.toLocaleString()}</p>
+                      <p className="font-bold text-gray-900">KES {inv.amount.toLocaleString()}</p>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${inv.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {inv.status}
                       </span>
