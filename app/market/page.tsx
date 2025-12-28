@@ -1,98 +1,78 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import MarketSearch from "@/components/MarketSearch";
+import { Badge } from "@/components/ui/primitives";
+import { ArrowRight } from "lucide-react";
 
-// NEXT 15: params and searchParams are Promises
-export default async function MarketPage({ searchParams }: { searchParams: Promise<{ category?: string, q?: string }> }) {
-  const { category, q } = await searchParams;
-
-  // BUILD THE DATABASE QUERY
-  const whereClause: any = { published: true };
-  
-  // 1. Filter by Category (if clicked)
-  if (category && category !== "All") {
-    whereClause.category = category;
-  }
-
-  // 2. Filter by Search Text (if typed)
-  if (q) {
-    whereClause.OR = [
-      { name: { contains: q, mode: "insensitive" } }, // Search Name
-      { description: { contains: q, mode: "insensitive" } } // Search Description
-    ];
-  }
-
+export default async function MarketPage() {
   const products = await prisma.funnel.findMany({
-    where: whereClause,
-    orderBy: { createdAt: "desc" }
+    where: { published: true },
+    orderBy: { createdAt: 'desc' }
   });
 
-  const categories = ["All", "Software", "E-books", "Templates", "Courses", "Graphics"];
-
   return (
-    <div className="min-h-screen bg-[#0f172a] font-sans selection:bg-blue-500 selection:text-white pb-20">
-      {/* HEADER */}
-      <nav className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg shadow-blue-900/50">N</div>
-        <Link href="/dashboard" className="text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-colors">
-          Back to HQ
-        </Link>
-      </nav>
-
-      {/* HERO & SEARCH */}
-      <div className="text-center pt-10 pb-12 px-6">
-        <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-8">
-          Curated <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">Assets.</span>
-        </h1>
-        
-        {/* NEW: SEARCH BAR */}
-        <MarketSearch />
-
-        {/* CATEGORY PILLS */}
-        <div className="flex flex-wrap justify-center gap-3 max-w-3xl mx-auto">
-          {categories.map((c) => (
-            <Link 
-              key={c} 
-              href={c === "All" ? "/market" : `/market?category=${c}`}
-              className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                (category === c || (!category && c === "All"))
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-105" 
-                  : "bg-[#1e293b] text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
-              }`}
-            >
-              {c}
-            </Link>
-          ))}
+    <div className="min-h-screen bg-black text-white">
+      {/* Market Header */}
+      <div className="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+             NEXUS MARKET
+           </h1>
+           <div className="flex gap-4">
+              <Link href="/dashboard" className="text-sm font-medium hover:text-indigo-400 transition">Creator Login</Link>
+           </div>
         </div>
       </div>
 
-      {/* GRID */}
-      <div className="max-w-7xl mx-auto px-6">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden py-24 px-6 text-center">
+        <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
+          Discover Africa&apos;s Best <span className="text-indigo-500">Digital Assets</span>
+        </h2>
+        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10">
+          Courses, templates, and software built by top creators.
+          <br className="hidden md:block" />
+          <span className="text-white font-medium">Instant Access. Secure Payments via Mobile Money & Card.</span>
+        </p>
+      </div>
+
+      {/* Product Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((p) => (
-            <Link key={p.id} href={`/f/${p.id}`} className="group relative block bg-[#1e293b] rounded-[32px] overflow-hidden border border-slate-800 hover:border-blue-500/50 transition-all hover:shadow-2xl hover:shadow-blue-900/20 hover:-translate-y-1">
-              <div className="aspect-square bg-slate-800 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform duration-500">
-                
-              </div>
-              <div className="p-6">
-                 <div className="flex justify-between items-start mb-2">
-                   <h3 className="text-white font-bold text-lg leading-tight group-hover:text-blue-400 transition-colors line-clamp-2">{p.name}</h3>
-                 </div>
-                 <div className="flex items-center justify-between mt-4">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{p.category}</span>
-                    <span className="text-white font-black bg-slate-900 px-3 py-1 rounded-lg">KES {p.price.toLocaleString()}</span>
-                 </div>
+          {products.map((product) => (
+            <Link key={product.id} href={`/checkout/${product.id}`} className="group">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-indigo-500/50 transition duration-300 h-full flex flex-col">
+                <div className="h-48 bg-slate-800 relative group-hover:bg-slate-700 transition">
+                  {/* Placeholder for Product Image */}
+                  <div className="absolute inset-0 flex items-center justify-center text-slate-600 font-bold text-4xl opacity-20">
+                    {product.name.substring(0,2).toUpperCase()}
+                  </div>
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg leading-tight group-hover:text-indigo-400 transition">{product.name}</h3>
+                  </div>
+                  <p className="text-sm text-slate-400 line-clamp-2 mb-4 flex-1">{product.description || "No description provided."}</p>
+                  
+                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-800">
+                    <div className="font-bold text-xl text-green-400">
+                      {product.currency} {product.price}
+                    </div>
+                    <Badge variant="default">Buy Now <ArrowRight className="w-3 h-3 ml-1 inline" /></Badge>
+                  </div>
+                </div>
               </div>
             </Link>
           ))}
-        </div>
 
-        {products.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-slate-500 font-bold text-lg">No assets match your search.</p>
-            <Link href="/market" className="text-blue-500 text-sm font-bold mt-2 inline-block hover:underline">Clear Filters</Link>
-          </div>
-        )}
+          {products.length === 0 && (
+            <div className="col-span-full text-center py-20 text-slate-500">
+              <p className="text-xl">No products found in the marketplace yet.</p>
+              <Link href="/dashboard/funnels/new" className="text-indigo-400 hover:underline mt-2 inline-block">
+                Be the first to list one!
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

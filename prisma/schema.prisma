@@ -1,4 +1,4 @@
-generator client {
+﻿generator client {
   provider = "prisma-client-js"
 }
 
@@ -7,116 +7,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- 1. MERCHANT (Profile & Socials) ---
-model Merchant {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  username    String?  @unique
-  name        String?
-  bio         String?
-  logoUrl     String?
-  bannerUrl   String?
-  twitter     String?
-  instagram   String?
-  website     String?
-  wallet      Float    @default(0)
-  createdAt   DateTime @default(now())
-}
-
-// --- 2. SERVICE BUSINESS (Clients, Projects, Invoices) ---
-model Client {
-  id          String   @id @default(cuid())
-  userId      String   
-  name        String
-  email       String
-  phone       String?
-  status      String   @default("Active")
-  image       String?
-  projects    Project[]
-  invoices    Invoice[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Project {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  description String?
-  status      String   @default("In Progress")
-  budget      Float?
-  deadline    DateTime?
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  invoices    Invoice[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Invoice {
-  id          String   @id @default(cuid())
-  userId      String
-  clientId    String
-  amount      Float
-  status      String   @default("Pending")
-  description String
-  dueDate     DateTime
-  paymentLink String?  @db.Text
-  paystackRef String?
-  
-  // RELATIONS
-  projectId   String?
-  project     Project? @relation(fields: [projectId], references: [id])
-  
-  client      Client   @relation(fields: [clientId], references: [id])
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// --- 3. DIGITAL PRODUCTS (Funnels, Orders) ---
 model Funnel {
-  id                String   @id @default(cuid())
-  userId            String
-  name              String
-  description       String?
-  price             Float    @default(0)
-  headline          String?
-  subheadline       String?
-  themeColor        String?  @default("blue")
-  font              String?  @default("sans")
-  logoUrl           String?
-  heroImageUrl      String?
-  category          String   @default("Software")
-  digitalProductUrl String?
-  published         Boolean  @default(false)
-  orders            Order[]
-  coupons           Coupon[]
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String   // The Creator
+  name        String
+  headline    String[]
+  description String?
+  price       Float
+  currency    String   @default("KES")
+  published   Boolean  @default(true)
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relation: A funnel can have many orders
+  orders      Order[]
 }
 
 model Order {
-  id            String   @id @default(cuid())
-  funnelId      String
-  funnel        Funnel   @relation(fields: [funnelId], references: [id])
-  amount        Float
-  currency      String   @default("KES")     
-  status        String   @default("PENDING") 
-  customerEmail String?                      
-  paymentId     String?  @unique             
-  affiliateCode String?                      
-  createdAt     DateTime @default(now())
+  id          String   @id @default(cuid())
+  reference   String   @unique // The Paystack Reference (e.g. T12345...)
+  amount      Float    // Amount paid
+  currency    String
+  email       String   // Buyer's Email
+  status      String   @default("pending") // success, failed
+  
+  // Link to the Product
+  funnelId    String
+  funnel      Funnel   @relation(fields: [funnelId], references: [id])
+
+  createdAt   DateTime @default(now())
 }
-
-model Coupon {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  percent   Int
-  funnelId  String?
-  funnel    Funnel?  @relation(fields: [funnelId], references: [id])
-  createdAt DateTime @default(now())
-}
-
-
-

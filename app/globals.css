@@ -2,30 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 15, 23, 42;
-  --background-start-rgb: 248, 250, 252;
-  --background-end-rgb: 255, 255, 255;
-}
-
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
-  /* Using a modern system font stack that feels like Apple/Stripe */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  letter-spacing: -0.01em;
+  @apply bg-slate-950 text-white antialiased;
 }
 
-/* Custom utility for the "Command Center" look */
-.font-menu {
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-size: 0.65rem;
+h1, h2, h3, h4, h5, h6 {
+  @apply tracking-tight font-bold;
 }
 
-.font-money {
-  font-family: 'ui-monospace', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
-  font-weight: 900;
-  letter-spacing: -0.05em;
+.glass-panel {
+  @apply bg-slate-900 border border-slate-800 rounded-xl shadow-xl backdrop-blur-md;
 }

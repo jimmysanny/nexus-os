@@ -1,56 +1,63 @@
-import { NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.text();
-    const signature = req.headers.get("x-paystack-signature");
+    const body = await req.json();
     const secret = process.env.PAYSTACK_SECRET_KEY;
 
-    if (!secret || !signature) {
-      return new NextResponse("Missing secret or signature", { status: 400 });
+    if (!secret) {
+      console.error("Missing Paystack Secret Key");
+      return NextResponse.json({ message: "Configuration Error" }, { status: 500 });
     }
 
-    // 1. Verify the event comes from Paystack (Crypto Hash)
-    const hash = crypto.createHmac("sha512", secret).update(body).digest("hex");
+    // 1. Verify the Signature (Security Check)
+    // Paystack sends a hash in the header. We must match it to ensure the request is real.
+    const hash = crypto
+      .createHmac("sha512", secret)
+      .update(JSON.stringify(body))
+      .digest("hex");
+
+    const signature = req.headers.get("x-paystack-signature");
+
     if (hash !== signature) {
-      return new NextResponse("Invalid signature", { status: 400 });
+      return NextResponse.json({ message: "Invalid Signature" }, { status: 401 });
     }
 
-    const event = JSON.parse(body);
+    // 2. Handle the Event
+    const event = body.event;
+    const data = body.data;
 
-    // 2. Handle Successful Charge
-    if (event.event === "charge.success") {
-      const { reference, amount, metadata, customer } = event.data;
-      const { funnelId } = metadata || {};
+    if (event === "charge.success") {
+      console.log("💰 Payment Successful:", data.reference);
 
-      if (!funnelId) {
-        return new NextResponse("Missing funnelId in metadata", { status: 400 });
-      }
-
-      // 3. Record Order in Database (Idempotent: Check if exists first)
-      const existingOrder = await prisma.order.findUnique({
-        where: { id: reference }, // Assuming reference is used as ID or unique field
-      });
-
-      if (!existingOrder) {
-        await prisma.order.create({
-          data: {
-            id: reference, // Use Paystack reference as Order ID
-            amount: amount / 100, // Convert kobo/cents to main currency
-            customerEmail: customer.email,
-            funnelId: funnelId,
-            status: "PAID",
-          },
-        });
-        console.log(`✅ Order verified & recorded: ${reference}`);
+      // 3. Find the Product ID from Metadata
+      // When we initiate payment on the frontend, we must pass "funnelId" in metadata
+      const funnelId = data.metadata?.funnelId;
+      
+      if (funnelId) {
+         // 4. Save the Order to Database
+         await prisma.order.create({
+           data: {
+             reference: data.reference,
+             amount: data.amount / 100, // Paystack sends kobo/cents, we convert back
+             currency: data.currency,
+             email: data.customer.email,
+             status: "success",
+             funnelId: funnelId
+           }
+         });
+         console.log("✅ Order Saved to DB!");
+      } else {
+         console.warn("⚠️ Payment received but no Funnel ID found in metadata.");
       }
     }
 
-    return new NextResponse("Webhook received", { status: 200 });
+    return NextResponse.json({ message: "Webhook Received" }, { status: 200 });
+
   } catch (error) {
     console.error("Webhook Error:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return NextResponse.json({ message: "Server Error" }, { status: 500 });
   }
 }
