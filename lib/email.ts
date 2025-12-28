@@ -1,6 +1,5 @@
 import { Resend } from 'resend';
 
-// Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendReceiptEmail(customerEmail: string, amount: number, reference: string) {
@@ -8,8 +7,8 @@ export async function sendReceiptEmail(customerEmail: string, amount: number, re
 
   try {
     await resend.emails.send({
-      from: 'Nexus OS <info@nexusos.africa>',     // LOOKS Professional
-      reply_to: 'jimmysanny01@gmail.com',         // GOES to Gmail
+      from: 'Nexus OS <info@nexusos.africa>',     // LOOKS Corporate
+      reply_to: 'jimmysanny01@gmail.com',         // REPLIES go to Gmail
       to: customerEmail,
       subject: 'Payment Receipt - Nexus OS',
       html: `
