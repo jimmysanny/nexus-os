@@ -23,7 +23,6 @@ export default function NewFunnelPage() {
         description: description || "",
         price: 0,          // Default price
         currency: "KES",   // Default currency
-        headline: ["Welcome to my page"],
         published: true
       }
     });
