@@ -17,7 +17,7 @@ export default async function SalesPage({ params }: { params: Promise<{ id: stri
 
        <div className="max-w-5xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
          <div>
-            <h1 className="text-6xl font-black text-slate-900 mb-6 leading-none">{product.headline[0]}</h1>
+            <h1 className="text-6xl font-black text-slate-900 mb-6 leading-none">{product.name}</h1>
             <p className="text-xl text-slate-600 mb-8">{product.description || "Unlock immediate access to this verified digital asset."}</p>
          </div>
          <div className="bg-slate-50 p-10 rounded-3xl border border-slate-200 shadow-xl">
