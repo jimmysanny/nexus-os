@@ -1,4 +1,4 @@
-﻿'use server'
+'use server'
 
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
@@ -28,7 +28,6 @@ export async function createFunnel(formData: FormData) {
         name,
         description,
         price,
-        headline: headline ? [headline] : [],
         published: true,
         currency: "KES",
       },

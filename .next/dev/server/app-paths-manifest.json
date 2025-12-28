@@ -1,1 +1,4 @@
-{}
+{
+  "/checkout/[id]/page": "app/checkout/[id]/page.js",
+  "/dashboard/orders/page": "app/dashboard/orders/page.js"
+}
