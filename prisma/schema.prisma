@@ -7,29 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Funnel {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  headline    String[]
-  description String?
-  price       Float
-  currency    String   @default("KES")
-  published   Boolean  @default(true)
-  category    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orders      Order[]
+model Order {
+  id        String   @id @default(cuid())
+  reference String   @unique
+  amount    Float
+  currency  String   @default("KES") // NEW: Stores USD, KES, NGN
+  status    String
+  email     String
+  funnelId  String?
+  createdAt DateTime @default(now())
 }
 
-model Order {
+model Funnel {
   id          String   @id @default(cuid())
-  reference   String   @unique
-  amount      Float
-  currency    String
-  email       String
-  status      String   @default("pending")
-  funnelId    String
-  funnel      Funnel   @relation(fields: [funnelId], references: [id])
+  name        String
+  description String?
+  price       Float    @default(0)
+  currency    String   @default("KES") // NEW: Creator sets this
+  userId      String
+  published   Boolean  @default(false)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

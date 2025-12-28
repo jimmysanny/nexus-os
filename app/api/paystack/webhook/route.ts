@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { sendReceiptEmail } from "@/lib/email"; // IMPORT THE EMAIL FUNCTION
+import { sendReceiptEmail } from "@/lib/email"; 
 
 export async function POST(req: Request) {
   try {
@@ -10,21 +9,20 @@ export async function POST(req: Request) {
 
     if (!secret) return NextResponse.json({ message: "Secret missing" }, { status: 500 });
 
-    // Verify Event Type
     if (body.event === "charge.success") {
-      const { reference, amount, metadata, customer } = body.data;
+      const { reference, amount, metadata, customer, currency } = body.data; // GET CURRENCY FROM PAYSTACK
       const email = customer.email;
       const funnelId = metadata?.funnelId;
 
-      console.log(" Payment Recieved:", reference, amount);
+      console.log(` Payment: ${currency} ${amount/100}`);
 
-      // 1. RECORD SALE IN DATABASE
+      // 1. Record Sale with Correct Currency
       if (funnelId) {
         await prisma.order.create({
           data: {
             reference,
-            amount: amount / 100, // Convert Kobo to KES
-            currency: "KES",
+            amount: amount / 100,
+            currency: currency || "KES", // Save USD/KES/NGN
             email,
             funnelId,
             status: "success"
@@ -32,8 +30,8 @@ export async function POST(req: Request) {
         });
       }
 
-      // 2. SEND RECEIPT EMAIL (The part that was missing)
-      await sendReceiptEmail(email, amount / 100, reference);
+      // 2. Send Receipt with Correct Currency
+      await sendReceiptEmail(email, amount / 100, reference, currency);
       
       return NextResponse.json({ status: "success" });
     }
