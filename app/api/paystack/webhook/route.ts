@@ -1,63 +1,45 @@
-﻿import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendReceiptEmail } from "@/lib/email"; 
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
     const secret = process.env.PAYSTACK_SECRET_KEY;
 
-    if (!secret) {
-      console.error("Missing Paystack Secret Key");
-      return NextResponse.json({ message: "Configuration Error" }, { status: 500 });
-    }
+    // Basic security check
+    if (!secret) return NextResponse.json({ message: "Secret missing" }, { status: 500 });
 
-    // 1. Verify the Signature (Security Check)
-    // Paystack sends a hash in the header. We must match it to ensure the request is real.
-    const hash = crypto
-      .createHmac("sha512", secret)
-      .update(JSON.stringify(body))
-      .digest("hex");
+    if (body.event === "charge.success") {
+      const { reference, amount, metadata, customer } = body.data;
+      const email = customer.email;
+      const funnelId = metadata?.funnelId;
 
-    const signature = req.headers.get("x-paystack-signature");
+      console.log("?? Payment Recieved:", reference, amount);
 
-    if (hash !== signature) {
-      return NextResponse.json({ message: "Invalid Signature" }, { status: 401 });
-    }
-
-    // 2. Handle the Event
-    const event = body.event;
-    const data = body.data;
-
-    if (event === "charge.success") {
-      console.log("💰 Payment Successful:", data.reference);
-
-      // 3. Find the Product ID from Metadata
-      // When we initiate payment on the frontend, we must pass "funnelId" in metadata
-      const funnelId = data.metadata?.funnelId;
-      
+      // 1. Record Sale in Database
       if (funnelId) {
-         // 4. Save the Order to Database
-         await prisma.order.create({
-           data: {
-             reference: data.reference,
-             amount: data.amount / 100, // Paystack sends kobo/cents, we convert back
-             currency: data.currency,
-             email: data.customer.email,
-             status: "success",
-             funnelId: funnelId
-           }
-         });
-         console.log("✅ Order Saved to DB!");
-      } else {
-         console.warn("⚠️ Payment received but no Funnel ID found in metadata.");
+        await prisma.order.create({
+          data: {
+            reference,
+            amount: amount / 100, // Convert Kobo to KES
+            currency: "KES",
+            email,
+            funnelId,
+            status: "success"
+          }
+        });
       }
+
+      // 2. Send Receipt Email
+      await sendReceiptEmail(email, amount / 100, reference);
+      
+      return NextResponse.json({ status: "success" });
     }
 
-    return NextResponse.json({ message: "Webhook Received" }, { status: 200 });
-
+    return NextResponse.json({ status: "ignored" });
   } catch (error) {
     console.error("Webhook Error:", error);
-    return NextResponse.json({ message: "Server Error" }, { status: 500 });
+    return NextResponse.json({ message: "Error" }, { status: 500 });
   }
 }

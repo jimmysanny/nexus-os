@@ -1,26 +1,87 @@
-[00:00:00.981] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:01.130] Server  LOG     ✓ Ready in 786ms
-[00:00:04.243] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:04.283] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:04.389] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
-[00:00:04.389] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
-[00:00:04.614] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
-[00:00:04.614] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
-[00:00:05.259] Server  ERROR   ⨯ PrismaClientKnownRequestError: 
-Invalid `{imported module ./lib/prisma.ts}["prisma"].funnel.findMany()` invocation in
-C:\Users\jimmy\Desktop\nexus-os\.next\dev\server\chunks\ssr\[root-of-the-server]__6f935fc8._.js:117:154
+[00:00:02.112] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:02.384] Server  LOG     ✓ Ready in 1521ms
+[00:00:02.443] Browser ERROR   uncaughtError: TypeError: network error
+[00:00:02.443] Browser ERROR   uncaughtError: TypeError: network error
+[00:00:06.523] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.538] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.587] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.634] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:06.723] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
+[00:00:06.723] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
+[00:00:06.836] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:07.125] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
+[00:00:07.125] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
+[00:00:08.175] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
+[00:00:08.176] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
+[00:00:08.176] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
+[00:00:08.176] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
+[00:00:08.176] Browser ERROR   uncaughtError: Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
 
-  114     lineNumber: 10,
-  115     columnNumber: 23
-  116 }, this);
-→ 117 const funnels = await {imported module ./lib/prisma.ts}["prisma"].funnel.findMany(
-The column `Funnel.category` does not exist in the current database.
-[00:00:05.476] Browser ERROR   uncaughtError: PrismaClientKnownRequestError: 
-Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].funnel.findMany()` invocation in
-C:\Users\jimmy\Desktop\nexus-os\.next\dev\server\chunks\ssr\[root-of-the-server]__6f935fc8._.js:117:154
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
 
-  114     lineNumber: 10,
-  115     columnNumber: 23
-  116 }, this);
-→ 117 const funnels = await __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$prisma$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["prisma"].funnel.findMany(
-The column `Funnel.category` does not exist in the current database.
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerLayoutRouter url="/dashboard..." tree={[...]} params={{}} cacheNode={{...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="layout" pagePath="dashboard/...">
+        <SegmentTrieNode>
+        <script>
+        <script>
+        <DashboardLayout>
+          <div className="h-full rel...">
+            <div className="hidden h-f...">
+              <Sidebar>
+                <div className="space-y-4 ...">
+                  <div>
+                  <div className="px-3">
+                    <div className="p-4 bg-sla...">
+                      <p>
+                      <withClerk(UserButton) afterSignOutUrl="/">
+                        <UserButton afterSignOutUrl="/" component="UserButton" clerk={{clerkjs:{...}, ...}}>
+                          <ClerkHostRenderer component="UserButton" mount={function} unmount={function} ...>
++                           <div ref={{current:null}} data-clerk-component="UserButton">
+                            ...
+            ...
+
+[00:00:12.182] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
+[00:00:12.182] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
+[00:00:12.182] Browser ERROR   uncaughtError: Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerLayoutRouter url="/dashboard..." tree={[...]} params={{}} cacheNode={{...}} segmentPath={[...]} ...>
+      <SegmentViewNode type="layout" pagePath="dashboard/...">
+        <SegmentTrieNode>
+        <script>
+        <script>
+        <DashboardLayout>
+          <div className="h-full rel...">
+            <div className="hidden h-f...">
+              <Sidebar>
+                <div className="space-y-4 ...">
+                  <div>
+                  <div className="px-3">
+                    <div className="p-4 bg-sla...">
+                      <p>
+                      <withClerk(UserButton) afterSignOutUrl="/">
+                        <UserButton afterSignOutUrl="/" component="UserButton" clerk={{clerkjs:{...}, ...}}>
+                          <ClerkHostRenderer component="UserButton" mount={function} unmount={function} ...>
++                           <div ref={{current:null}} data-clerk-component="UserButton">
+                            ...
+            ...
+
