@@ -4,15 +4,12 @@ import { Resend } from 'resend';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendReceiptEmail(customerEmail: string, amount: number, reference: string) {
-  // Safety Check
-  if (!process.env.RESEND_API_KEY) {
-    console.log("Resend Key missing, skipping email.");
-    return;
-  }
+  if (!process.env.RESEND_API_KEY) return;
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'Nexus OS <info@nexusos.africa>',
+    await resend.emails.send({
+      from: 'Nexus OS <info@nexusos.africa>',     // LOOKS Professional
+      reply_to: 'jimmysanny01@gmail.com',         // GOES to Gmail
       to: customerEmail,
       subject: 'Payment Receipt - Nexus OS',
       html: `
@@ -23,13 +20,13 @@ export async function sendReceiptEmail(customerEmail: string, amount: number, re
           <br/>
           <p>Your digital assets are unlocked.</p>
           <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 20px 0;" />
-          <p style="color: #666; font-size: 12px;">Nexus OS Inc.</p>
+          <p style="color: #666; font-size: 12px;">
+            Need help? Just reply to this email.
+          </p>
         </div>
       `
     });
-
-    if (error) console.error("Resend Error:", error);
-    else console.log("Email sent successfully:", data);
+    console.log("Email sent with Reply-To configuration.");
 
   } catch (err) {
     console.error("Failed to send email:", err);
