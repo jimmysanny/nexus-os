@@ -1,13 +1,27 @@
-import { ClerkProvider } from "@clerk/nextjs";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
-export const metadata = { title: "Nexus OS", description: "Digital Marketplace" };
+const inter = Inter({ subsets: ["latin"] });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const metadata: Metadata = {
+  title: "Nexus OS - The Creator Operating System",
+  description: "Build funnels, sell products, and automate your business in Africa.",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <ClerkProvider>
       <html lang="en">
-        <body>{children}</body>
+        <body className={inter.className}>{children}</body>
       </html>
     </ClerkProvider>
   );
