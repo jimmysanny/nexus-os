@@ -1016,6 +1016,10 @@ img, video {
   letter-spacing: -.05em;
 }
 
+.tracking-wider {
+  letter-spacing: .05em;
+}
+
 .tracking-widest {
   letter-spacing: .1em;
 }

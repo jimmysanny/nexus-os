@@ -1,61 +1,74 @@
-﻿import { createFunnel } from "@/app/actions/funnels";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export default function NewFunnelPage() {
+  // SERVER ACTION: Defined inline to ensure perfect type compatibility
+  async function createFunnel(formData: FormData) {
+    "use server";
+    
+    const { userId } = await auth();
+    if (!userId) redirect("/sign-in");
+
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+
+    if (!name) return;
+
+    // Create the Funnel in DB
+    await prisma.funnel.create({
+      data: {
+        userId,
+        name,
+        description: description || "",
+        price: 0,          // Default price
+        currency: "KES",   // Default currency
+        headline: ["Welcome to my page"],
+        published: true
+      }
+    });
+
+    // Redirect back to dashboard
+    redirect("/dashboard");
+  }
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Create New Funnel</h1>
+    <div className="max-w-2xl mx-auto p-8">
+      <h1 className="text-2xl font-bold text-white mb-6">Create New Funnel</h1>
       
-      <form action={createFunnel} className="space-y-4">
-        
-        <div>
-          <label className="block text-sm font-medium mb-1">Product Name</label>
-          <input 
-            name="name" 
-            type="text" 
-            required 
-            className="w-full p-2 border rounded bg-slate-900 border-slate-700" 
-            placeholder="e.g., Digital Marketing Masterclass"
-          />
-        </div>
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+        <form action={createFunnel} className="space-y-4">
+          
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Funnel Name</label>
+            <input 
+              name="name"
+              type="text" 
+              required
+              placeholder="e.g. My Masterclass"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Headline</label>
-          <input 
-            name="headline" 
-            type="text" 
-            className="w-full p-2 border rounded bg-slate-900 border-slate-700" 
-            placeholder="Catchy tagline..."
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Description (Optional)</label>
+            <textarea 
+              name="description"
+              placeholder="What are you selling?"
+              rows={3}
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea 
-            name="description" 
-            className="w-full p-2 border rounded bg-slate-900 border-slate-700" 
-            placeholder="Product details..."
-          />
-        </div>
+          <button 
+            type="submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-lg transition-all"
+          >
+            Create Funnel
+          </button>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Price (KES)</label>
-          <input 
-            name="price" 
-            type="number" 
-            step="0.01" 
-            required 
-            className="w-full p-2 border rounded bg-slate-900 border-slate-700" 
-            placeholder="1000"
-          />
-        </div>
-
-        <button 
-          type="submit" 
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded"
-        >
-          Create Product
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
