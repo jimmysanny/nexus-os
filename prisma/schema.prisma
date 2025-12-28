@@ -9,7 +9,7 @@ datasource db {
 
 model Funnel {
   id          String   @id @default(cuid())
-  userId      String   // The Creator
+  userId      String
   name        String
   headline    String[]
   description String?
@@ -19,22 +19,17 @@ model Funnel {
   category    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  // Relation: A funnel can have many orders
   orders      Order[]
 }
 
 model Order {
   id          String   @id @default(cuid())
-  reference   String   @unique // The Paystack Reference (e.g. T12345...)
-  amount      Float    // Amount paid
+  reference   String   @unique
+  amount      Float
   currency    String
-  email       String   // Buyer's Email
-  status      String   @default("pending") // success, failed
-  
-  // Link to the Product
+  email       String
+  status      String   @default("pending")
   funnelId    String
   funnel      Funnel   @relation(fields: [funnelId], references: [id])
-
   createdAt   DateTime @default(now())
 }
