@@ -1,1 +1,4 @@
-{}
+{
+  "/dashboard/funnels/page": "app/dashboard/funnels/page.js",
+  "/page": "app/page.js"
+}
