@@ -1,7 +1,1 @@
-{
-  "/checkout/[id]/page": "app/checkout/[id]/page.js",
-  "/dashboard/funnels/page": "app/dashboard/funnels/page.js",
-  "/dashboard/orders/page": "app/dashboard/orders/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/market/page": "app/market/page.js"
-}
+{}
