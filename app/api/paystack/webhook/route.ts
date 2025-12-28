@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { sendReceiptEmail } from "@/lib/email"; 
+import { sendReceiptEmail } from "@/lib/email"; // IMPORT THE EMAIL FUNCTION
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const secret = process.env.PAYSTACK_SECRET_KEY;
 
-    // Basic security check
     if (!secret) return NextResponse.json({ message: "Secret missing" }, { status: 500 });
 
+    // Verify Event Type
     if (body.event === "charge.success") {
       const { reference, amount, metadata, customer } = body.data;
       const email = customer.email;
       const funnelId = metadata?.funnelId;
 
-      console.log("?? Payment Recieved:", reference, amount);
+      console.log(" Payment Recieved:", reference, amount);
 
-      // 1. Record Sale in Database
+      // 1. RECORD SALE IN DATABASE
       if (funnelId) {
         await prisma.order.create({
           data: {
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
         });
       }
 
-      // 2. Send Receipt Email
+      // 2. SEND RECEIPT EMAIL (The part that was missing)
       await sendReceiptEmail(email, amount / 100, reference);
       
       return NextResponse.json({ status: "success" });
