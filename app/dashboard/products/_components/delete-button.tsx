@@ -16,7 +16,7 @@ export const DeleteButton = ({ productId }: { productId: string }) => {
       if(!confirm("Are you sure? This will permanently delete this funnel.")) return;
       
       setIsLoading(true);
-      await axios.delete(\/api/products/\\);
+      await axios.delete("/api/products/" + productId);
       toast.success("Funnel deleted");
       router.refresh();
     } catch (error) {

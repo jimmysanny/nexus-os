@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server"; // <--- MOVED TO /server
+import { auth } from "@clerk/nextjs/server";
 import { Edit, Plus, FileText } from "lucide-react";
 
 import { db } from "@/lib/db";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DeleteButton } from "./_components/delete-button";
 
 export default async function ProductsPage() {
-  const { userId } = auth(); // Now this works
+  const { userId } = auth();
 
   if (!userId) {
     return redirect("/");
@@ -66,7 +66,7 @@ export default async function ProductsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600">
-                    {product.price === 0 ? "Free" : \KES \\}
+                    {product.price === 0 ? "Free" : "KES " + product.price}
                   </td>
                   <td className="px-6 py-4">
                     {product.isPublished ? (
@@ -81,7 +81,7 @@ export default async function ProductsPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Link href={\/dashboard/products/\\}>
+                      <Link href={"/dashboard/products/" + product.id}>
                         <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                           <Edit className="h-4 w-4 text-gray-500" />
                         </Button>

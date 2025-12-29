@@ -1,11 +1,11 @@
 ﻿import Link from "next/link";
 import { ArrowRight, Search, ShoppingBag } from "lucide-react";
-import { db } from "@/lib/db"; // <--- FIXED: Using 'db'
+import { db } from "@/lib/db";
 import { formatPrice } from "@/lib/format";
 
 async function getProducts() {
   try {
-    const products = await db.product.findMany({ // <--- FIXED: Using 'db'
+    const products = await db.product.findMany({
       where: {
         isPublished: true,
       },
@@ -53,7 +53,7 @@ export default async function MarketplacePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product) => (
-              <Link key={product.id} href={\/checkout/\\} className="group">
+              <Link key={product.id} href={"/checkout/" + product.id} className="group">
                 <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 h-full flex flex-col">
                   <div className="aspect-[16/9] bg-gray-100 relative">
                     <div className="flex items-center justify-center h-full text-gray-300 bg-indigo-50">
