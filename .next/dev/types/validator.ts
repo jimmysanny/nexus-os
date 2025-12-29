@@ -164,6 +164,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/api/edgestore/[...edgestore]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/edgestore/[...edgestore]">> = Specific
+  const handler = {} as typeof import("../../../app/api/edgestore/[...edgestore]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/api/paystack/webhook/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/paystack/webhook">> = Specific
