@@ -1,79 +1,87 @@
-﻿import { prisma } from "@/lib/prisma";
-import Link from "next/link";
-import { Badge } from "@/components/ui/primitives";
-import { ArrowRight } from "lucide-react";
+﻿import Link from "next/link";
+import { ArrowRight, Search, ShoppingBag } from "lucide-react";
+import { db } from "@/lib/db"; // <--- FIXED: Using 'db'
+import { formatPrice } from "@/lib/format";
 
-export default async function MarketPage() {
-  const products = await prisma.funnel.findMany({
-    where: { published: true },
-    orderBy: { createdAt: 'desc' }
-  });
+async function getProducts() {
+  try {
+    const products = await db.product.findMany({ // <--- FIXED: Using 'db'
+      where: {
+        isPublished: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return products;
+  } catch (error) {
+    return [];
+  }
+}
+
+export default async function MarketplacePage() {
+  const products = await getProducts();
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Market Header */}
-      <div className="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-             NEXUS MARKET
-           </h1>
-           <div className="flex gap-4">
-              <Link href="/dashboard" className="text-sm font-medium hover:text-indigo-400 transition">Creator Login</Link>
-           </div>
+          <div className="flex items-center gap-2">
+             <Link href="/" className="font-bold text-xl text-indigo-600">Nexus OS</Link>
+             <span className="text-gray-300">|</span>
+             <span className="font-semibold text-gray-700">Marketplace</span>
+          </div>
+          <div className="flex items-center gap-4">
+             <Link href="/sign-in" className="text-sm font-medium text-gray-600 hover:text-gray-900">Login</Link>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Hero Section */}
-      <div className="relative overflow-hidden py-24 px-6 text-center">
-        <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-          Discover Africa&apos;s Best <span className="text-indigo-500">Digital Assets</span>
-        </h2>
-        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10">
-          Courses, templates, and software built by top creators.
-          <br className="hidden md:block" />
-          <span className="text-white font-medium">Instant Access. Secure Payments via Mobile Money & Card.</span>
-        </p>
-      </div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-between mb-8">
+           <h1 className="text-3xl font-bold text-gray-900">Discover</h1>
+        </div>
 
-      {/* Product Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <Link key={product.id} href={`/checkout/${product.id}`} className="group">
-              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-indigo-500/50 transition duration-300 h-full flex flex-col">
-                <div className="h-48 bg-slate-800 relative group-hover:bg-slate-700 transition">
-                  {/* Placeholder for Product Image */}
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-600 font-bold text-4xl opacity-20">
-                    {product.name.substring(0,2).toUpperCase()}
-                  </div>
-                </div>
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg leading-tight group-hover:text-indigo-400 transition">{product.name}</h3>
-                  </div>
-                  <p className="text-sm text-slate-400 line-clamp-2 mb-4 flex-1">{product.description || "No description provided."}</p>
-                  
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-800">
-                    <div className="font-bold text-xl text-green-400">
-                      {product.currency} {product.price}
-                    </div>
-                    <Badge variant="default">Buy Now <ArrowRight className="w-3 h-3 ml-1 inline" /></Badge>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-
-          {products.length === 0 && (
-            <div className="col-span-full text-center py-20 text-slate-500">
-              <p className="text-xl">No products found in the marketplace yet.</p>
-              <Link href="/dashboard/funnels/new" className="text-indigo-400 hover:underline mt-2 inline-block">
-                Be the first to list one!
-              </Link>
+        {products.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="bg-white p-8 rounded-full inline-flex mb-4 shadow-sm">
+               <ShoppingBag className="w-12 h-12 text-gray-300" />
             </div>
-          )}
-        </div>
-      </div>
+            <h3 className="text-lg font-medium text-gray-900">Marketplace is empty</h3>
+            <p className="text-gray-500 mt-2">Be the first to list a product on Nexus OS.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <Link key={product.id} href={\/checkout/\\} className="group">
+                <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 h-full flex flex-col">
+                  <div className="aspect-[16/9] bg-gray-100 relative">
+                    <div className="flex items-center justify-center h-full text-gray-300 bg-indigo-50">
+                       <ShoppingBag className="w-10 h-10" />
+                    </div>
+                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-xs font-bold text-gray-900">
+                       {formatPrice(product.price)}
+                    </div>
+                  </div>
+                  
+                  <div className="p-5 flex flex-col flex-1">
+                    <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                      {product.description}
+                    </p>
+                    
+                    <div className="mt-auto pt-4 flex items-center text-indigo-600 text-sm font-medium">
+                       Buy Now <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 }
