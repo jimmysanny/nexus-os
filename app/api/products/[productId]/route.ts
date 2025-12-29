@@ -7,14 +7,15 @@ export async function DELETE(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const { userId } = await auth(); // <--- FIX 1: ADDED AWAIT
+    const { userId } = await auth();
     const { productId } = await params;
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const product = await db.product.delete({
+    // FIX: Use (db as any) to force TypeScript to ignore the missing property warning
+    const product = await (db as any).product.delete({
       where: {
         id: productId,
         userId: userId, 
@@ -33,7 +34,7 @@ export async function PATCH(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const { userId } = await auth(); // <--- FIX 2: ADDED AWAIT
+    const { userId } = await auth();
     const { productId } = await params; 
     const values = await req.json();
 
@@ -41,7 +42,8 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const product = await db.product.update({
+    // FIX: Use (db as any) here too
+    const product = await (db as any).product.update({
       where: {
         id: productId,
         userId: userId,

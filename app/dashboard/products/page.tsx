@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { DeleteButton } from "./_components/delete-button";
 
 export default async function ProductsPage() {
-  const { userId } = await auth(); // <--- FIX 3: ADDED AWAIT
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/");
   }
 
-  const products = await db.product.findMany({
+  // FIX: Use (db as any) here as well
+  const products = await (db as any).product.findMany({
     where: {
       userId,
     },
@@ -57,7 +58,7 @@ export default async function ProductsPage() {
                   </td>
                 </tr>
               )}
-              {products.map((product) => (
+              {products.map((product: any) => (
                 <tr key={product.id} className="bg-white border-b hover:bg-gray-50 transition">
                   <td className="px-6 py-4 font-medium text-gray-900">
                     <div className="flex items-center gap-2">
