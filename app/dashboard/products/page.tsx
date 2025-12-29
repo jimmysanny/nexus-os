@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { DeleteButton } from "./_components/delete-button";
 
 export default async function ProductsPage() {
-  const { userId } = auth();
+  const { userId } = await auth(); // <--- FIX 3: ADDED AWAIT
 
   if (!userId) {
     return redirect("/");

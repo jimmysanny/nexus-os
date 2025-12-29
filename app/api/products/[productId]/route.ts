@@ -2,14 +2,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 
-// FIX: Type 'params' as a Promise
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const { userId } = auth();
-    // FIX: Await the params to get the real ID
+    const { userId } = await auth(); // <--- FIX 1: ADDED AWAIT
     const { productId } = await params;
 
     if (!userId) {
@@ -35,8 +33,7 @@ export async function PATCH(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const { userId } = auth();
-    // FIX: Await the params here too
+    const { userId } = await auth(); // <--- FIX 2: ADDED AWAIT
     const { productId } = await params; 
     const values = await req.json();
 
