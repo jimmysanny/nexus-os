@@ -1,2 +1,14 @@
-[00:00:01.077] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:01.234] Server  LOG     ✓ Ready in 834ms
+[00:00:00.908] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.033] Server  LOG     ✓ Ready in 685ms
+[01:01:57.927] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[01:02:02.894] Browser ERROR   unhandledRejection: ClerkRuntimeError: Clerk: Failed to load Clerk, failed to load script: https://upward-giraffe-22.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js
+
+(code="failed_to_load_clerk_js")
+
+
+[01:02:13.083] Browser ERROR   ClerkRuntimeError: Clerk: Failed to load Clerk
+
+(code="failed_to_load_clerk_js_timeout")
+
+
+    at handleTimeout (http://localhost:3000/_next/static/chunks/node_modules_36d64b3e._.js:9466:50)
