@@ -1,18 +1,27 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle, Globe } from "lucide-react";
+import { ArrowRight, CheckCircle, Globe, ShoppingBag } from "lucide-react";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* HEADER / NAV */}
       <header className="px-6 lg:px-8 h-20 flex items-center justify-between border-b border-gray-100">
-        <div className="font-bold text-xl tracking-tight text-indigo-600">
-          Nexus OS
+        <div className="flex items-center gap-8">
+          <div className="font-bold text-xl tracking-tight text-indigo-600">
+            Nexus OS
+          </div>
+          {/* NAV LINKS */}
+          <nav className="hidden md:flex gap-6">
+            <Link href="/market" className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600">
+              Marketplace
+            </Link>
+          </nav>
         </div>
+        
         <div className="flex gap-4">
           <Link
             href="/sign-in"
-            className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600"
+            className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 self-center"
           >
             Log in
           </Link>
@@ -43,8 +52,8 @@ export default function Home() {
               >
                 Start Selling Free
               </Link>
-              <Link href="/sign-in" className="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-1">
-                Log in <ArrowRight className="h-4 w-4" />
+              <Link href="/market" className="text-sm font-semibold leading-6 text-gray-900 flex items-center gap-1">
+                Browse Marketplace <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -81,12 +90,12 @@ export default function Home() {
               <div className="relative pl-16">
                 <dt className="text-base font-semibold leading-7 text-gray-900">
                   <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
-                     <CheckCircle className="h-6 w-6 text-white" />
+                     <ShoppingBag className="h-6 w-6 text-white" />
                   </div>
-                  Automated Digital Delivery
+                  The Nexus Marketplace
                 </dt>
                 <dd className="mt-2 text-base leading-7 text-gray-600">
-                  Upload your ebook or course once. We securely email it to your customers instantly after purchase.
+                  Don't just sell to your audience—get discovered by ours. List your products in the Nexus Marketplace and reach thousands of new buyers.
                 </dd>
               </div>
 
@@ -95,10 +104,10 @@ export default function Home() {
                   <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
                      <CheckCircle className="h-6 w-6 text-white" />
                   </div>
-                  Smart Funnel Builder
+                  Automated Digital Delivery
                 </dt>
                 <dd className="mt-2 text-base leading-7 text-gray-600">
-                  Create high-converting landing pages that turn random visitors into loyal, paying fans.
+                  Upload your ebook or course once. We securely email it to your customers instantly after purchase.
                 </dd>
               </div>
 
