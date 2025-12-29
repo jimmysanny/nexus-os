@@ -25,21 +25,22 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$clerk$2f$n
 ;
 const isPublicRoute = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$clerk$2f$nextjs$2f$dist$2f$esm$2f$server$2f$routeMatcher$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["createRouteMatcher"])([
     "/",
+    "/market(.*)",
+    "/checkout/(.*)",
+    "/api/webhooks/paystack",
     "/sign-in(.*)",
-    "/sign-up(.*)",
-    "/api/uploadthing",
-    "/api/paystack/webhook",
-    "/checkout(.*)" // Important: Allow checkout without login
+    "/sign-up(.*)"
 ]);
-const __TURBOPACK__default__export__ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$clerk$2f$nextjs$2f$dist$2f$esm$2f$server$2f$clerkMiddleware$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["clerkMiddleware"])(async (auth, req)=>{
-    if (!isPublicRoute(req)) {
+const __TURBOPACK__default__export__ = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$clerk$2f$nextjs$2f$dist$2f$esm$2f$server$2f$clerkMiddleware$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["clerkMiddleware"])(async (auth, request)=>{
+    if (!isPublicRoute(request)) {
         await auth.protect();
     }
 });
 const config = {
     matcher: [
-        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-        '/(api|trpc)(.*)'
+        "/((?!.*\\..*|_next).*)",
+        "/",
+        "/(api|trpc)(.*)"
     ]
 };
 }),
