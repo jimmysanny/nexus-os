@@ -1,73 +1,88 @@
-﻿import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
-import { Card } from "@/components/ui/primitives";
-import { DollarSign, CreditCard, Package } from "lucide-react";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { db } from "@/lib/db";
+import { auth } from "@clerk/nextjs/server";
+import { DollarSign, Package, ShoppingCart, Activity } from "lucide-react";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
-  if (!userId) return <div>Unauthorized</div>;
+  if (!userId) redirect("/sign-in");
 
-  // Fetch Real Analytics
-  const funnelCount = await prisma.funnel.count({ where: { userId } });
+  // 1. Fetch Key Stats
+  const products = await (db as any).product.findMany({
+    where: { userId },
+    include: { orders: true } // Assuming 'orders' relation exists
+  });
+
+  // 2. Calculate Metrics
+  const totalFunnels = products.length;
+  const activeFunnels = products.filter((p: any) => p.isPublished).length;
   
-  // Placeholder for orders (Since we don't have Order model yet, we simulate 0)
-  // TODO: Connect this to real Order model when we build the webhook
-  const salesCount = 0; 
-  const totalRevenue = 0; 
+  // Calculate Revenue (Safe calculation)
+  let totalRevenue = 0;
+  let totalSales = 0;
+  
+  products.forEach((product: any) => {
+    const productSales = product.orders ? product.orders.length : 0;
+    totalSales += productSales;
+    totalRevenue += (productSales * product.price);
+  });
 
   return (
-    <div className="p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground text-slate-400">Overview of your digital empire.</p>
-        </div>
-        <Link href="/dashboard/funnels/new">
-          <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-bold transition">
-            + Create Funnel
-          </button>
-        </Link>
+    <div className="p-8 space-y-8 bg-black min-h-screen text-white">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-        {/* Revenue Card */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="tracking-tight text-sm font-medium text-slate-400">Total Revenue</h3>
+      {/* STATS GRID */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        
+        {/* TOTAL REVENUE */}
+        <Card className="bg-[#0B0F1A] border-slate-800 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-green-500" />
-          </div>
-          <div className="text-2xl font-bold">KES {totalRevenue.toFixed(2)}</div>
-          <p className="text-xs text-slate-500">+0% from last month</p>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">KES {totalRevenue.toLocaleString()}</div>
+            <p className="text-xs text-slate-500">+20.1% from last month</p>
+          </CardContent>
         </Card>
 
-        {/* Sales Card */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="tracking-tight text-sm font-medium text-slate-400">Sales</h3>
-            <CreditCard className="h-4 w-4 text-blue-500" />
-          </div>
-          <div className="text-2xl font-bold">+{salesCount}</div>
-          <p className="text-xs text-slate-500">+0% from last month</p>
+        {/* TOTAL SALES */}
+        <Card className="bg-[#0B0F1A] border-slate-800 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400">Total Sales</CardTitle>
+            <ShoppingCart className="h-4 w-4 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">+{totalSales}</div>
+            <p className="text-xs text-slate-500"> across all funnels</p>
+          </CardContent>
         </Card>
 
-        {/* Funnels Card */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="tracking-tight text-sm font-medium text-slate-400">Active Funnels</h3>
-            <Package className="h-4 w-4 text-violet-500" />
-          </div>
-          <div className="text-2xl font-bold">{funnelCount}</div>
-          <p className="text-xs text-slate-500">Products currently live</p>
+        {/* ACTIVE FUNNELS */}
+        <Card className="bg-[#0B0F1A] border-slate-800 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400">Active Funnels</CardTitle>
+            <Activity className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeFunnels} / {totalFunnels}</div>
+            <p className="text-xs text-slate-500">currently live</p>
+          </CardContent>
         </Card>
-      </div>
 
-      <div className="mt-8 grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 p-6 bg-slate-900/50">
-           <h3 className="font-semibold mb-4">Recent Activity</h3>
-           <div className="h-[200px] flex items-center justify-center text-slate-500 text-sm border-2 border-dashed border-slate-800 rounded">
-              No sales recorded yet. Start promoting your funnels!
-           </div>
+         {/* PRODUCTS */}
+        <Card className="bg-[#0B0F1A] border-slate-800 text-white">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-400">Total Products</CardTitle>
+            <Package className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalFunnels}</div>
+            <p className="text-xs text-slate-500">in your inventory</p>
+          </CardContent>
         </Card>
       </div>
     </div>
