@@ -164,6 +164,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/success/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/success">> = Specific
+  const handler = {} as typeof import("../../../app/success/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/.well-known/apple-developer-merchantid-domain-association/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/.well-known/apple-developer-merchantid-domain-association">> = Specific
