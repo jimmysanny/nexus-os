@@ -7,25 +7,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Order {
-  id        String   @id @default(cuid())
-  reference String   @unique
-  amount    Float
-  currency  String   @default("KES") // NEW: Stores USD, KES, NGN
-  status    String
-  email     String
-  funnelId  String?
-  createdAt DateTime @default(now())
-}
-
-model Funnel {
+model Product {
   id          String   @id @default(cuid())
+  userId      String
   name        String
   description String?
   price       Float    @default(0)
-  currency    String   @default("KES") // NEW: Creator sets this
-  userId      String
-  published   Boolean  @default(false)
+  fileUrl     String?  // <--- This is the field we need for your file link
+  isPublished Boolean  @default(false)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  orders      Order[]
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  email     String
+  amount    Float
+  reference String
+  createdAt DateTime @default(now())
 }
