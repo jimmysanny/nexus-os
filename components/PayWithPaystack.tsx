@@ -6,7 +6,7 @@ import { toast } from "sonner";
 interface PayWithPaystackProps {
   amount: number;
   email: string;
-  planId?: string; // <--- ADDED THIS LINE (The missing pocket)
+  planId?: string; // <--- FIX 1: Allows the build to pass
   onSuccess?: () => void;
 }
 
@@ -24,10 +24,10 @@ export default function PayWithPaystack({ amount, email, planId, onSuccess }: Pa
 
   const componentProps = {
     email,
-    amount: amount * 100,
+    amount: amount * 100, // Convert to cents
+    currency: "KES",      // <--- FIX 2: Forces Kenya Shillings (Fixes "Currency Not Supported")
     publicKey,
     text: "Pay Now (Secure)",
-    // We attach the ID here so you know WHICH product they bought
     metadata: {
       custom_fields: [
         {
