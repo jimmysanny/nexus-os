@@ -22,7 +22,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ product
       },
     });
     return NextResponse.json(duplicate);
-  } catch (error) {
-    return new NextResponse("Internal Error", { status: 500 });
-  }
+  } catch (error) { return new NextResponse("Error", { status: 500 }); }
 }
