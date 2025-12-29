@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ product
     const duplicate = await (db as any).product.create({
       data: {
         userId,
-        name: \\ (Copy)\,
+        name: product.name + " (Copy)",
         description: product.description,
         price: product.price,
         fileUrl: product.fileUrl,
