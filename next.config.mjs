@@ -1,6 +1,7 @@
 ﻿/** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
+    // Allows production builds to complete even with the 'product' type errors
     ignoreBuildErrors: true,
   },
   eslint: {
