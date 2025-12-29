@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Loader2, UploadCloud, DollarSign, File, Image as ImageIcon } from "lucide-react";
+import { Loader2, DollarSign, File, CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useEdgeStore } from "@/lib/edgestore";
+import { UploadDropzone } from "@/lib/uploadthing"; // USING UPLOADTHING NOW
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -32,11 +32,9 @@ const formSchema = z.object({
 
 export const ProductForm = () => {
   const router = useRouter();
-  const { edgestore } = useEdgeStore();
   const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
-    // THE FIX IS HERE: We added 'as any' to shut up the strict type checker
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
       name: "",
@@ -49,8 +47,7 @@ export const ProductForm = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Simulate API call
-      console.log("Saving:", values);
+      console.log("Saving Product:", values);
       // await axios.post('/api/products', values);
       toast.success("Product Ready! (Database save pending)");
       router.push("/dashboard/products");
@@ -105,34 +102,38 @@ export const ProductForm = () => {
               <FormItem>
                 <FormLabel>Digital File (Downloadable)</FormLabel>
                 <FormControl>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:bg-gray-50 transition">
                     {field.value ? (
-                       <div className="flex items-center justify-center gap-2 text-green-600 font-medium">
-                          <File className="w-5 h-5" /> File Uploaded!
+                       <div className="flex flex-col items-center justify-center gap-2 text-green-600 font-medium py-8">
+                          <CheckCircle2 className="w-10 h-10" /> 
+                          <p>File Uploaded Successfully!</p>
+                          <p className="text-xs text-gray-500 break-all px-4">{field.value}</p>
                        </div>
                     ) : (
-                      <div className="space-y-2">
-                        <UploadCloud className="w-8 h-8 mx-auto text-gray-400" />
-                        <Input
-                          type="file"
-                          disabled={isUploading}
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              setIsUploading(true);
-                              const res = await edgestore.publicFiles.upload({ file });
-                              field.onChange(res.url);
-                              setIsUploading(false);
-                              toast.success("File uploaded!");
-                            }
-                          }}
-                          className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                        />
-                        <p className="text-xs text-gray-500">PDF, Zip, Video (Max 50MB)</p>
-                      </div>
+                      <UploadDropzone
+                        endpoint="productFile"
+                        onClientUploadComplete={(res) => {
+                          // Do something with the response
+                          console.log("Files: ", res);
+                          if (res && res[0]) {
+                              field.onChange(res[0].url);
+                              toast.success("Upload Completed");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error("Upload failed: " + error.message);
+                        }}
+                        appearance={{
+                            button: "bg-indigo-600 text-white hover:bg-indigo-700",
+                            container: "border-none"
+                        }}
+                      />
                     )}
                   </div>
                 </FormControl>
+                <FormDescription>
+                  Upload your PDF, Zip, or Video here.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -152,8 +153,8 @@ export const ProductForm = () => {
             )}
           />
 
-          <Button type="submit" disabled={isUploading || form.formState.isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700">
-            {isUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          <Button type="submit" disabled={form.formState.isSubmitting} className="w-full bg-indigo-600 hover:bg-indigo-700">
+            {form.formState.isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             Save Product
           </Button>
         </form>
