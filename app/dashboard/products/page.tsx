@@ -1,20 +1,20 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server"; // <--- MOVED TO /server
 import { Edit, Plus, FileText } from "lucide-react";
 
-import { db } from "@/lib/db"; // <--- FIXED IMPORT
+import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "./_components/delete-button";
 
 export default async function ProductsPage() {
-  const { userId } = auth();
+  const { userId } = auth(); // Now this works
 
   if (!userId) {
     return redirect("/");
   }
 
-  const products = await db.product.findMany({ // <--- FIXED USAGE
+  const products = await db.product.findMany({
     where: {
       userId,
     },

@@ -1,19 +1,19 @@
 ﻿import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs";
-import { db } from "@/lib/db"; // <--- FIXED IMPORT
+import { auth } from "@clerk/nextjs/server"; // <--- MOVED TO /server
+import { db } from "@/lib/db";
 
 export async function DELETE(
   req: Request,
   { params }: { params: { productId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = auth(); // Now this works
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const product = await db.product.delete({ // <--- FIXED USAGE
+    const product = await db.product.delete({
       where: {
         id: params.productId,
         userId: userId, 
@@ -32,14 +32,14 @@ export async function PATCH(
   { params }: { params: { productId: string } }
 ) {
   try {
-    const { userId } = auth();
+    const { userId } = auth(); // Now this works
     const values = await req.json();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const product = await db.product.update({ // <--- FIXED USAGE
+    const product = await db.product.update({
       where: {
         id: params.productId,
         userId: userId,
