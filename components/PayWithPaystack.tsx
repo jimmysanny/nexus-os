@@ -6,29 +6,37 @@ import { toast } from "sonner";
 interface PayWithPaystackProps {
   amount: number;
   email: string;
+  planId?: string; // <--- ADDED THIS LINE (The missing pocket)
   onSuccess?: () => void;
 }
 
-export default function PayWithPaystack({ amount, email, onSuccess }: PayWithPaystackProps) {
-  // EXPLICITLY grab the key to ensure the browser sees it
+export default function PayWithPaystack({ amount, email, planId, onSuccess }: PayWithPaystackProps) {
   const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
 
-  // SAFETY CHECK: If the key is missing, show a red error button instead of crashing
   if (!publicKey) {
-    console.error("CRITICAL ERROR: Paystack Key is missing. Check Vercel Environment Variables.");
+    console.error("CRITICAL ERROR: Paystack Key is missing.");
     return (
       <div className="w-full p-4 bg-red-100 border border-red-400 text-red-700 rounded-md text-center">
         <p className="font-bold">System Error: Payment Key Missing</p>
-        <p className="text-sm">Please contact support.</p>
       </div>
     );
   }
 
   const componentProps = {
     email,
-    amount: amount * 100, // Convert KES to Cents
+    amount: amount * 100,
     publicKey,
     text: "Pay Now (Secure)",
+    // We attach the ID here so you know WHICH product they bought
+    metadata: {
+      custom_fields: [
+        {
+          display_name: "Product ID",
+          variable_name: "product_id",
+          value: planId || "unknown",
+        },
+      ],
+    },
     onSuccess: () => {
       toast.success("Payment Received!");
       if (onSuccess) onSuccess();
