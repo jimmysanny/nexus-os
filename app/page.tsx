@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowRight, CheckCircle, Globe } from "lucide-react";
 
 export default function Home() {
   return (
@@ -34,7 +34,7 @@ export default function Home() {
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600">
               Stop struggling with disjointed tools. Build funnels, sell digital products, 
-              and accept payments (M-Pesa & Card) in minutes. No coding required.
+              and accept payments (Mobile Money & Cards) in minutes. No coding required.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
@@ -55,12 +55,12 @@ export default function Home() {
       <div className="bg-gray-50 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-indigo-600">Monetize Faster</h2>
+            <h2 className="text-base font-semibold leading-7 text-indigo-600">Monetize Without Borders</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Everything you need to run your business
+              Everything you need to run a Global Business
             </p>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Nexus OS isn't just a website builder. It's your automated sales team.
+              Nexus OS isn't just a website builder. It's your automated sales team across the continent.
             </p>
           </div>
           <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
@@ -71,10 +71,10 @@ export default function Home() {
                   <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
                      <CheckCircle className="h-6 w-6 text-white" />
                   </div>
-                  Instant Local Payments
+                  Universal Payments
                 </dt>
                 <dd className="mt-2 text-base leading-7 text-gray-600">
-                  Accept M-Pesa, Mobile Money, and Cards instantly. We settle the funds to your local bank account.
+                  Accept Mobile Money, Bank Transfers, and Cards instantly. We settle the funds directly to your local account.
                 </dd>
               </div>
 
@@ -105,12 +105,12 @@ export default function Home() {
               <div className="relative pl-16">
                 <dt className="text-base font-semibold leading-7 text-gray-900">
                   <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600">
-                     <CheckCircle className="h-6 w-6 text-white" />
+                     <Globe className="h-6 w-6 text-white" />
                   </div>
-                  Global Currency Support
+                  Pan-African Currency Support
                 </dt>
                 <dd className="mt-2 text-base leading-7 text-gray-600">
-                  Sell in USD, NGN, or KES. Your customers pay in their currency; you get paid in yours.
+                  Sell seamlessly in Nigeria, South Africa, Kenya, Ghana, and beyond. We support all major currencies plus USD.
                 </dd>
               </div>
 
