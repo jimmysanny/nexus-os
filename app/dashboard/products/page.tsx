@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs";
 import { Edit, Plus, FileText } from "lucide-react";
 
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db"; // <--- FIXED IMPORT
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "./_components/delete-button";
 
@@ -14,7 +14,7 @@ export default async function ProductsPage() {
     return redirect("/");
   }
 
-  const products = await prisma.product.findMany({
+  const products = await db.product.findMany({ // <--- FIXED USAGE
     where: {
       userId,
     },

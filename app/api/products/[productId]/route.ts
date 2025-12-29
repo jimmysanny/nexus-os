@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs";
-import { prisma } from "@/lib/db";
+import { db } from "@/lib/db"; // <--- FIXED IMPORT
 
 export async function DELETE(
   req: Request,
@@ -13,7 +13,7 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const product = await prisma.product.delete({
+    const product = await db.product.delete({ // <--- FIXED USAGE
       where: {
         id: params.productId,
         userId: userId, 
@@ -39,7 +39,7 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const product = await prisma.product.update({
+    const product = await db.product.update({ // <--- FIXED USAGE
       where: {
         id: params.productId,
         userId: userId,
