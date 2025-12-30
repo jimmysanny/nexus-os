@@ -3,20 +3,16 @@
   "middleware": {
     "/": {
       "files": [
-        "server/edge/chunks/node_modules_e5c15865._.js",
+        "server/edge/chunks/node_modules_dd83ef22._.js",
         "server/edge/chunks/[root-of-the-server]__f2b15f93._.js",
-        "server/edge/chunks/turbopack-node_modules_next_dist_esm_build_templates_edge-wrapper_002a9fed.js"
+        "server/edge/chunks/turbopack-node_modules_next_dist_esm_build_templates_edge-wrapper_73007e96.js"
       ],
       "name": "middleware",
       "page": "/",
       "matchers": [
         {
-          "regexp": "/:nextData(_next/data/[^/]{1,})?/((?!.*\\..*|_next).*){(\\\\.json)}?",
-          "originalSource": "/((?!.*\\..*|_next).*)"
-        },
-        {
-          "regexp": "/:nextData(_next/data/[^/]{1,})?/(/?index|/?index\\\\.json)?",
-          "originalSource": "/"
+          "regexp": "/:nextData(_next/data/[^/]{1,})?/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*){(\\\\.json)}?",
+          "originalSource": "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)"
         },
         {
           "regexp": "/:nextData(_next/data/[^/]{1,})?/(api|trpc)(.*){(\\\\.json)}?",
@@ -28,9 +24,9 @@
       "env": {
         "__NEXT_BUILD_ID": "development",
         "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "Hyup9HInIrE1JZmiPnJuKuOGhLKS43xBCSDru3mveUE=",
-        "__NEXT_PREVIEW_MODE_ID": "06d2413615e539450e15104cce252fb5",
-        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "e2ce41c89503584066cbf4f93532d2a09c02cfdd3b53b5658d2105e9d1c40409",
-        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "f77276e0610c4dd0d27e1cb3c814d54c5dc1d426e98ca0debeb39732e42aca6e"
+        "__NEXT_PREVIEW_MODE_ID": "15e247cc27931735dc5d6cf4380a8108",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "21b578689b0ea425e260e7c5e8816e84813757aecc8d9e7599f2d2e38975a3fb",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "fe0700a1799413ebe1d168557a96158ee1285424b810f3f4aeebd6d13951b681"
       }
     }
   },

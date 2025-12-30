@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
+
 const f = createUploadthing();
 
 const handleAuth = async () => {
@@ -9,7 +10,8 @@ const handleAuth = async () => {
 };
 
 export const ourFileRouter = {
-  productFile: f({ pdf: { maxFileSize: "32MB", maxFileCount: 1 } })
+  // We define "productFile" so the frontend knows where to send the PDF
+  productFile: f({ pdf: { maxFileSize: "32MB", maxFileCount: 1 }, image: { maxFileSize: "8MB", maxFileCount: 1 } })
     .middleware(() => handleAuth())
     .onUploadComplete(() => {}),
 } satisfies FileRouter;
