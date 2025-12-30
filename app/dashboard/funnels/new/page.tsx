@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-// Schema now includes Price
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
@@ -38,15 +37,9 @@ export default function CreateFunnelPage() {
   const onSubmit = async (values: any) => {
     try {
       setIsLoading(true);
-      // 1. Create the Product
       const response = await axios.post("/api/products", values);
-      
       toast.success("Funnel created! Taking you to upload...");
-      
-      // 2. INSTANTLY REDIRECT to the Full Editor
-      // This is where the User finds Upload, Delete, and Publish
       router.push("/dashboard/funnels/" + response.data.id);
-      
     } catch {
       toast.error("Something went wrong");
     } finally {
@@ -71,7 +64,6 @@ export default function CreateFunnelPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 bg-[#0B0F1A] border border-slate-800 p-8 rounded-2xl shadow-xl">
           
-          {/* NAME FIELD */}
           <FormField
             control={form.control}
             name="name"
@@ -91,7 +83,6 @@ export default function CreateFunnelPage() {
             )}
           />
 
-          {/* DESCRIPTION FIELD */}
           <FormField
             control={form.control}
             name="description"
@@ -111,7 +102,7 @@ export default function CreateFunnelPage() {
             )}
           />
 
-          {/* PRICE FIELD (Added per your request) */}
+          {/* FIXED PRICE FIELD: Explicitly casting the value to number to satisfy TypeScript */}
           <FormField
             control={form.control}
             name="price"
@@ -126,7 +117,10 @@ export default function CreateFunnelPage() {
                     type="number"
                     disabled={isLoading} 
                     placeholder="0" 
-                    {...field} 
+                    {...field}
+                    // FIX: We strictly ensure value is treated as a number
+                    value={field.value as number}
+                    onChange={field.onChange}
                     className="bg-slate-950 border-slate-800 text-white h-12 font-mono" 
                   />
                 </FormControl>
