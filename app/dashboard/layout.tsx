@@ -1,12 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
 import Link from "next/link";
 import { 
   LayoutDashboard, 
   ShoppingBag, 
   Settings, 
-  LogOut, 
   ShieldCheck, 
   User, 
   Globe 
@@ -26,10 +24,12 @@ export default async function DashboardLayout({
   }
 
   // IDENTIFY ROLE
-  // We hardcode your email for security. Only YOU see the Admin badge.
+  // Checks if the email matches yours to assign the ADMIN badge
   const isAdmin = user.emailAddresses[0].emailAddress === "jimmysanny01@gmail.com";
   const roleLabel = isAdmin ? "ADMIN (OWNER)" : "CREATOR";
-  const roleColor = isAdmin ? "text-rose-400 border-rose-500/20 bg-rose-500/10" : "text-indigo-400 border-indigo-500/20 bg-indigo-500/10";
+  const roleColor = isAdmin 
+    ? "text-rose-400 border-rose-500/20 bg-rose-500/10" 
+    : "text-indigo-400 border-indigo-500/20 bg-indigo-500/10";
 
   return (
     <div className="flex min-h-screen bg-black text-slate-200 font-sans selection:bg-indigo-500/30">
@@ -44,8 +44,8 @@ export default async function DashboardLayout({
              <span className="font-bold text-xl tracking-tight text-white">NEXUS OS</span>
           </Link>
           
-          {/* THE ROLE BADGE YOU ASKED FOR */}
-          <div className={mt-3 text-[10px] font-bold px-2 py-1 rounded border w-fit flex items-center gap-1  + roleColor}>
+          {/* THE ROLE BADGE (Syntax Fixed) */}
+          <div className={"mt-3 text-[10px] font-bold px-2 py-1 rounded border w-fit flex items-center gap-1 " + roleColor}>
             {isAdmin ? <ShieldCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
             {roleLabel}
           </div>
@@ -67,7 +67,7 @@ export default async function DashboardLayout({
             </div>
           </Link>
 
-          {/* ADMIN ONLY LINK: MANAGE MARKET */}
+          {/* ADMIN ONLY LINK */}
           {isAdmin && (
              <Link href="/market" target="_blank">
               <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-800 text-rose-400 hover:text-rose-300 transition">
