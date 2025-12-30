@@ -1,6 +1,3 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  // We leave this empty to stop the 'Invalid Options' crash
-};
-
+const nextConfig = {};
 export default nextConfig;
