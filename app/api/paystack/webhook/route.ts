@@ -1,44 +1,49 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { sendReceiptEmail } from "@/lib/email"; 
+import { db } from "@/lib/db";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret = process.env.PAYSTACK_SECRET_KEY || "";
 
-    if (!secret) return NextResponse.json({ message: "Secret missing" }, { status: 500 });
+    // 1. Validate the Event (Security Check)
+    const hash = crypto
+      .createHmac("sha512", secret)
+      .update(JSON.stringify(body))
+      .digest("hex");
 
-    if (body.event === "charge.success") {
-      const { reference, amount, metadata, customer, currency } = body.data; // GET CURRENCY FROM PAYSTACK
-      const email = customer.email;
-      const funnelId = metadata?.funnelId;
-
-      console.log(` Payment: ${currency} ${amount/100}`);
-
-      // 1. Record Sale with Correct Currency
-      if (funnelId) {
-        await prisma.order.create({
-          data: {
-            reference,
-            amount: amount / 100,
-            currency: currency || "KES", // Save USD/KES/NGN
-            email,
-            funnelId,
-            status: "success"
-          }
-        });
-      }
-
-      // 2. Send Receipt with Correct Currency
-      await sendReceiptEmail(email, amount / 100, reference, currency);
-      
-      return NextResponse.json({ status: "success" });
+    if (hash !== req.headers.get("x-paystack-signature")) {
+      return new NextResponse("Invalid signature", { status: 401 });
     }
 
-    return NextResponse.json({ status: "ignored" });
+    const event = body.event;
+    const data = body.data;
+
+    // 2. Handle Successful Payment
+    if (event === "charge.success") {
+      const { metadata, reference, amount, currency, customer } = data;
+
+      // FIX: Map the incoming data to the correct Database Fields
+      // 'funnelId' -> 'productId'
+      // 'status' -> 'isPaid'
+      
+      await db.order.create({
+        data: {
+          userId: metadata?.userId || "unknown", 
+          productId: metadata?.funnelId, // We map the incoming 'funnelId' to our 'productId' column
+          amount: amount / 100,          // Convert Kobo to KES
+          currency: currency || "KES",
+          reference: reference,
+          email: customer?.email,
+          isPaid: true,                  // Database expects boolean 'isPaid', not string 'status'
+        },
+      });
+    }
+
+    return new NextResponse("Webhook received", { status: 200 });
   } catch (error) {
-    console.error("Webhook Error:", error);
-    return NextResponse.json({ message: "Error" }, { status: 500 });
+    console.log("[WEBHOOK_ERROR]", error);
+    return new NextResponse("Internal Error", { status: 500 });
   }
 }
