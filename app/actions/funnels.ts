@@ -1,45 +1,46 @@
-'use server'
+"use server";
 
+import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
-export async function createFunnel(formData: FormData) {
+export async function createFunnel(name: string, description?: string) {
   const { userId } = await auth();
 
   if (!userId) {
     throw new Error("Unauthorized");
   }
 
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-  const price = parseFloat(formData.get("price") as string);
-  const headline = formData.get("headline") as string;
+  // We fixed the table name from 'funnel' to 'product' here
+  const product = await db.product.create({
+    data: {
+      userId,
+      name,
+      description: description || "",
+      price: 0, // Default price
+      isPublished: false,
+    },
+  });
 
-  if (!name || !price) {
-    throw new Error("Name and Price are required");
+  revalidatePath("/dashboard/funnels");
+  return product;
+}
+
+export async function getFunnels() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return [];
   }
 
-  try {
-    await prisma.funnel.create({
-      data: {
-        userId,
-        name,
-        description,
-        price,
-        published: true,
-        currency: "KES",
-      },
-    });
+  const products = await db.product.findMany({
+    where: {
+      userId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-    revalidatePath("/dashboard/funnels");
-  } catch (error) {
-    console.error("Database Error:", error);
-    // In a real app, you might want to return the error to the UI
-    return { message: "Failed to create funnel" };
-  }
-
-  // Redirect must be outside the try/catch block
-  redirect("/dashboard/funnels");
+  return products;
 }
