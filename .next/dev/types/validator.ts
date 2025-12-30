@@ -56,6 +56,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/dashboard/funnels/[funnelId]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/dashboard/funnels/[funnelId]">> = Specific
+  const handler = {} as typeof import("../../../app/dashboard/funnels/[funnelId]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/dashboard/funnels/new/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/dashboard/funnels/new">> = Specific
