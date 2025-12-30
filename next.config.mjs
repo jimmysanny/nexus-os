@@ -13,14 +13,11 @@ const nextConfig = {
       }
     ]
   },
-  // Prevents build failure on small TypeScript errors
+  // Prevents build failure on TypeScript errors (Safe for MVP)
   typescript: {
     ignoreBuildErrors: true,
-  },
-  // Prevents build failure on Linting errors
-  eslint: {
-    ignoreDuringBuilds: true,
   }
+  // REMOVED 'eslint' key because Vercel flagged it as unsupported/invalid
 };
 
 export default nextConfig;
