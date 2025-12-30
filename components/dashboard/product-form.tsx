@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -14,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { FileUpload } from "@/components/file-upload"; // Using the restored component
+import { FileUpload } from "@/components/file-upload";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -43,7 +44,7 @@ export const ProductForm = ({ initialData }: any) => {
     try {
       setIsLoading(true);
       await axios.patch("/api/products/" + initialData.id, values);
-      toast.success("Product updated");
+      toast.success("Funnel updated");
       router.refresh();
       router.push("/dashboard/funnels");
     } catch {
@@ -57,7 +58,7 @@ export const ProductForm = ({ initialData }: any) => {
     try {
       setIsLoading(true);
       await axios.delete("/api/products/" + initialData.id);
-      toast.success("Product deleted");
+      toast.success("Funnel deleted");
       router.refresh();
       router.push("/dashboard/funnels");
     } catch {
@@ -92,7 +93,7 @@ export const ProductForm = ({ initialData }: any) => {
               <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 space-y-4">
                 <FormField control={form.control} name="name" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Funnel Name</FormLabel>
                     <FormControl><Input disabled={isLoading} {...field} className="bg-slate-950 border-slate-800" /></FormControl>
                   </FormItem>
                 )} />
@@ -121,11 +122,10 @@ export const ProductForm = ({ initialData }: any) => {
             {/* RIGHT COL: UPLOAD & PUBLISH */}
             <div className="space-y-6">
               <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6">
-                 <h2 className="font-medium mb-4">Product File (Uploadthing)</h2>
+                 <h2 className="font-medium mb-4">Digital Asset (Uploadthing)</h2>
                  <FormField control={form.control} name="fileUrl" render={({ field }) => (
                    <FormItem>
                      <FormControl>
-                       {/* THIS RESTORES THE DRAG & DROP ZONE */}
                        <FileUpload 
                           endpoint="productFile" 
                           value={field.value} 
