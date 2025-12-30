@@ -1,23 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Fixes the "images.domains is deprecated" warning
+  // 1. Allow images from Uploadthing and Clerk
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "utfs.io", // Allow Uploadthing images
+        hostname: "utfs.io",
       },
       {
         protocol: "https",
-        hostname: "img.clerk.com", // Allow Clerk user avatars
+        hostname: "img.clerk.com",
       }
     ]
   },
-  // Prevents build failure on TypeScript errors (Safe for MVP)
+  // 2. Stop the build from failing on small TypeScript errors
   typescript: {
     ignoreBuildErrors: true,
-  }
-  // REMOVED 'eslint' key because Vercel flagged it as unsupported/invalid
+  },
+  // 3. We REMOVED the 'eslint' key entirely because it causes the crash
 };
 
 export default nextConfig;
