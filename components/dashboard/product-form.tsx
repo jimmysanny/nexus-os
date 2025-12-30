@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Trash, Save, UploadCloud } from "lucide-react";
+import { Loader2, Trash, UploadCloud } from "lucide-react";
 import { Product } from "@prisma/client";
 
 import {
@@ -56,7 +56,8 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      await axios.patch(/api/products/, values);
+      // FIXED: Using standard string concatenation to prevent syntax errors
+      await axios.patch("/api/products/" + initialData.id, values);
       toast.success("Product updated");
       router.refresh();
     } catch {
@@ -69,7 +70,8 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   const onDelete = async () => {
     try {
       setIsDeleting(true);
-      await axios.delete(/api/products/);
+      // FIXED: Using standard string concatenation here too
+      await axios.delete("/api/products/" + initialData.id);
       toast.success("Product deleted");
       router.refresh();
       router.push("/dashboard/funnels");
@@ -144,7 +146,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                           disabled={isLoading}
                           placeholder="0"
                           {...field}
-                          // STRICT TYPE CASTING: This explicitly tells TypeScript "This is a number"
+                          // STRICT TYPE CASTING to fix 'unknown' type error
                           value={field.value as number}
                           onChange={field.onChange}
                           className="bg-slate-950 border-slate-800 text-white"
