@@ -3,13 +3,14 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { ProductForm } from "@/components/dashboard/product-form";
 
+// Correct Next.js 15 Props
 export default async function FunnelIdPage({ 
   params 
 }: { 
   params: Promise<{ funnelId: string }> 
 }) {
   const { userId } = await auth();
-  const { funnelId } = await params;
+  const { funnelId } = await params; // Await here too
 
   if (!userId) {
     redirect("/sign-in");
