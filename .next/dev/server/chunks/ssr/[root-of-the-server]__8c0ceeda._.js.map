@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/jimmy/Desktop/nexus-os/app/layout.tsx"],"sourcesContent":["import { ClerkProvider } from \"@clerk/nextjs\";\nimport \"./globals.css\";\n\nexport const metadata = { title: \"Nexus OS\", description: \"Digital Marketplace\" };\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <ClerkProvider>\n      <html lang=\"en\">\n        <body>{children}</body>\n      </html>\n    </ClerkProvider>\n  );\n}\r\n"],"names":[],"mappings":";;;;;;;AAAA;;;;AAGO,MAAM,WAAW;IAAE,OAAO;IAAY,aAAa;AAAsB;AAEjE,SAAS,WAAW,EAAE,QAAQ,EAAiC;IAC5E,qBACE,8OAAC,0LAAa;kBACZ,cAAA,8OAAC;YAAK,MAAK;sBACT,cAAA,8OAAC;0BAAM;;;;;;;;;;;;;;;;AAIf"}}]
-}
