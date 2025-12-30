@@ -8,26 +8,29 @@ datasource db {
 }
 
 model Product {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   userId      String
   name        String
-  description String?
+  description String?  @db.Text
   price       Float    @default(0)
-  fileUrl     String?  // <--- This is the field we need for your file link
+  fileUrl     String?
   isPublished Boolean  @default(false)
+  
+  orders      Order[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  orders      Order[]
 }
 
 model Order {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
+  userId    String
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  email     String
+  
   amount    Float
-  reference String
+  isPaid    Boolean  @default(false)
+  
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

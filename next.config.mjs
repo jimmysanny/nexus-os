@@ -1,11 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "utfs.io" },
-      { protocol: "https", hostname: "img.clerk.com" }
-    ]
-  }
+  // We leave this empty to stop the 'Invalid Options' crash
 };
 
 export default nextConfig;
