@@ -1,35 +1,56 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Check, ShieldCheck, ArrowRight } from "lucide-react";
 
-export default async function SalesPage({ params }: { params: Promise<{ id: string }> }) {
+// Next.js 15: params is a Promise
+export default async function SalesPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
   const { id } = await params;
-  const product = await db.funnel.findUnique({ where: { id } });
 
-  if (!product) return notFound();
+  // FIX: Use 'db.product' instead of 'db.funnel'
+  const product = await db.product.findUnique({
+    where: { id }
+  });
+
+  if (!product) {
+    return notFound();
+  }
 
   return (
-    <div className="min-h-screen bg-white">
-       <nav className="p-6 border-b flex justify-between items-center sticky top-0 bg-white/95 z-20">
-          <span className="font-bold text-xl">NEXUS</span>
-          <Link href="/market" className="text-sm font-bold hover:underline">Cancel</Link>
-       </nav>
+    <div className="min-h-screen bg-black text-slate-200 font-sans">
+      {/* HERO SECTION */}
+      <div className="max-w-4xl mx-auto px-6 py-20 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-8">
+          <ShieldCheck className="h-4 w-4" />
+          Verified Secure Checkout
+        </div>
+        
+        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
+          {product.name}
+        </h1>
+        
+        <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+          {product.description || "Unlock instant access to this premium digital asset."}
+        </p>
 
-       <div className="max-w-5xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-         <div>
-            <h1 className="text-6xl font-black text-slate-900 mb-6 leading-none">{product.name}</h1>
-            <p className="text-xl text-slate-600 mb-8">{product.description || "Unlock immediate access to this verified digital asset."}</p>
-         </div>
-         <div className="bg-slate-50 p-10 rounded-3xl border border-slate-200 shadow-xl">
-            <div className="mb-8 text-center">
-                <p className="text-sm font-bold text-slate-400 uppercase">One-Time Price</p>
-                <p className="text-6xl font-black text-slate-900">${product.price}</p>
-            </div>
-            <Link href={`/checkout/${product.id}`} className="block w-full py-5 bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold rounded-2xl text-center shadow-lg transition-transform hover:scale-[1.02]">
-                Secure Checkout
-            </Link>
-         </div>
-       </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link href={"/checkout/" + product.id}>
+            <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white h-14 px-8 text-lg rounded-full">
+              Buy Now for KES {product.price.toLocaleString()} <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div className="border-t border-slate-800 mt-20 py-8 text-center text-slate-500 text-sm">
+        <p>Powered by Nexus OS</p>
+      </div>
     </div>
   );
 }
