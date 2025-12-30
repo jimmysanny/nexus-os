@@ -1,9 +1,11 @@
-[00:00:00.851] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
-[00:00:00.980] Server  LOG     ✓ Ready in 692ms
-[00:01:59.428] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:02:32.018] Browser ERROR   ClerkRuntimeError: Clerk: Failed to load Clerk
-
-(code="failed_to_load_clerk_js_timeout")
-
-
-    at handleTimeout (http://localhost:3000/_next/static/chunks/node_modules_36d64b3e._.js:9466:50)
+[00:00:00.835] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:00.959] Server  LOG     ✓ Ready in 682ms
+[00:00:07.079] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:08.907] Browser WARN    Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview
+[00:00:08.907] Browser WARN    Clerk: The prop "afterSignInUrl" is deprecated and should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
+[00:00:09.450] Server  ERROR   ⨯ TypeError: Cannot read properties of undefined (reading 'findMany')
+[00:00:09.903] Browser WARN    Clerk: The "signInFallbackRedirectUrl" prop ("http://localhost:3000/dashboard") has priority over the legacy "afterSignInUrl" (or "redirectUrl") ("http://localhost:3000/dashboard"), which will be completely ignored in this case. "afterSignInUrl" (or "redirectUrl" prop) should be replaced with the new "fallbackRedirectUrl" or "forceRedirectUrl" props instead. Learn more: https://clerk.com/docs/guides/custom-redirects#redirect-url-props
+[00:00:09.903] Browser INFO    🔒 Clerk:
+The <SignIn/> component cannot render when a user is already signed in, unless the application allows multiple sessions. Since a user is signed in and this application only allows a single session, Clerk is redirecting to the `afterSignIn` URL instead.
+(This notice only appears in development)
+[00:00:10.912] Browser ERROR   uncaughtError: TypeError: Cannot read properties of undefined (reading 'findMany')
