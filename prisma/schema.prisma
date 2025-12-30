@@ -15,7 +15,9 @@ model Product {
   price       Float    @default(0)
   fileUrl     String?
   isPublished Boolean  @default(false)
+  
   orders      Order[]
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -25,8 +27,15 @@ model Order {
   userId    String
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
   amount    Float
   isPaid    Boolean  @default(false)
+  
+  // ADDED THESE TO FIX THE BUILD ERROR
+  reference String?  @unique
+  currency  String?
+  email     String?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
