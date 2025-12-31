@@ -10,11 +10,10 @@ const handleAuth = async () => {
 };
 
 export const ourFileRouter = {
-  // We define the router variable
   productFile: f({ pdf: { maxFileSize: "32MB", maxFileCount: 1 }, image: { maxFileSize: "8MB", maxFileCount: 1 } })
     .middleware(() => handleAuth())
     .onUploadComplete(() => {}),
 } satisfies FileRouter;
 
-// THE FIX: We explicitly export the TYPE (Capitalized) based on the variable
+// THE FIX: Explicitly export the type with the Capitalized name
 export type OurFileRouter = typeof ourFileRouter;
