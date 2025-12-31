@@ -7,9 +7,9 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Trash, UploadCloud, FileText, ImageIcon, X } from "lucide-react";
+import { Loader2, Trash, UploadCloud, FileText, ImageIcon, X, Code, FileCode } from "lucide-react";
 import { Product } from "@prisma/client";
-import Image from "next/image"; // Added for thumbnails
+import Image from "next/image";
 
 import {
   Form,
@@ -26,7 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UploadDropzone } from "@/lib/uploadthing";
 
-// Define Schema
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   description: z.string().optional(),
@@ -82,10 +81,16 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     }
   };
 
-  // HELPER: Check if file is image based on extension or assumptions
+  // HELPER: Determine icon based on file type
+  const getFileIcon = (url: string) => {
+    if (url.endsWith(".pdf")) return <FileText className="h-16 w-16 text-slate-500 mx-auto mb-2" />;
+    if (url.endsWith(".html") || url.endsWith(".htm")) return <Code className="h-16 w-16 text-orange-500 mx-auto mb-2" />;
+    if (url.endsWith(".zip")) return <FileCode className="h-16 w-16 text-yellow-500 mx-auto mb-2" />;
+    return <FileText className="h-16 w-16 text-slate-500 mx-auto mb-2" />;
+  };
+
   const isImage = (url: string) => {
-    return url.match(/\.(jpeg|jpg|png|webp|gif)$/i) || url.includes("utfs.io/f/"); 
-    // We assume most uploads here are images for now unless they end in .pdf
+    return url.match(/\.(jpeg|jpg|png|webp|gif)$/i);
   };
 
   return (
@@ -154,7 +159,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
              <div className="space-y-8">
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6">
                  <div className="flex items-center gap-2 mb-4 text-white font-semibold">
-                   {/* Icon changes based on upload status */}
                    {form.watch("fileUrl") ? <ImageIcon className="h-5 w-5 text-green-500" /> : <UploadCloud className="h-5 w-5 text-indigo-400" />}
                    <span>Digital Asset</span>
                  </div>
@@ -167,24 +171,23 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                         <FormControl>
                           {field.value ? (
                             <div className="relative group">
-                              {/* VISUAL PREVIEW LOGIC */}
                               <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-slate-700 bg-slate-900 flex items-center justify-center">
-                                {field.value.endsWith(".pdf") ? (
-                                  <div className="text-center p-4">
-                                     <FileText className="h-16 w-16 text-slate-500 mx-auto mb-2" />
-                                     <p className="text-xs text-slate-400 break-all px-4">{field.value.split('/').pop()}</p>
-                                  </div>
-                                ) : (
+                                {/* DYNAMIC PREVIEW: Shows Icon for HTML/PDF, Image for Pictures */}
+                                {isImage(field.value) ? (
                                   <Image 
                                     src={field.value} 
                                     alt="Upload Preview" 
                                     fill 
                                     className="object-cover" 
                                   />
+                                ) : (
+                                  <div className="text-center p-4">
+                                     {getFileIcon(field.value)}
+                                     <p className="text-xs text-slate-400 break-all px-4">{field.value.split('/').pop()}</p>
+                                  </div>
                                 )}
                               </div>
 
-                              {/* REMOVE BUTTON */}
                               <div className="absolute top-2 right-2">
                                 <Button 
                                   type="button" 

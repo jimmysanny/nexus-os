@@ -10,10 +10,13 @@ const handleAuth = async () => {
 };
 
 export const ourFileRouter = {
-  productFile: f({ pdf: { maxFileSize: "32MB", maxFileCount: 1 }, image: { maxFileSize: "8MB", maxFileCount: 1 } })
+  // CHANGED: 'pdf' -> 'blob'. This allows HTML, ZIP, and other formats.
+  productFile: f({ 
+    image: { maxFileSize: "8MB", maxFileCount: 1 },
+    blob: { maxFileSize: "32MB", maxFileCount: 1 } 
+  })
     .middleware(() => handleAuth())
     .onUploadComplete(() => {}),
 } satisfies FileRouter;
 
-// THE FIX: Explicitly export the type with the Capitalized name
 export type OurFileRouter = typeof ourFileRouter;
