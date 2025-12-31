@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Trash, UploadCloud, FileText, ImageIcon, Eye, Zap, ShieldCheck, Code, ExternalLink } from "lucide-react";
+import { Loader2, Trash, ImageIcon, Eye, Zap, ShieldCheck, FileText, ExternalLink } from "lucide-react";
 import { Product } from "@prisma/client";
 import Image from "next/image";
 
@@ -56,7 +56,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     },
   });
 
-  // Keep preview in sync with form
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'fileUrl') setPreviewUrl(value.fileUrl as string);
@@ -93,7 +92,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
 
   const getFileIcon = (url: string) => {
     if (!url) return null;
-    if (url.endsWith(".pdf")) return <FileText className="h-12 w-12 text-rose-500 mx-auto mb-3" />;
     return <FileText className="h-12 w-12 text-slate-400 mx-auto mb-3" />;
   };
 
@@ -183,7 +181,20 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                               </div>
                             </div>
                           ) : (
-                            <UploadDropzone endpoint="productFile" onClientUploadComplete={(res) => { field.onChange(res?.[0].url); setPreviewUrl(res?.[0].url); toast.success("Uploaded"); }} onUploadError={() => toast.error("Failed")} className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-slate-700 bg-slate-900/50" />
+                            <UploadDropzone 
+                              endpoint="productFile" 
+                              onClientUploadComplete={(res) => { 
+                                // FIX: Wrapped in braces to return void, fixing type error
+                                field.onChange(res?.[0].url); 
+                                setPreviewUrl(res?.[0].url); 
+                                toast.success("Uploaded"); 
+                              }} 
+                              onUploadError={() => { 
+                                // FIX: Wrapped in braces to return void, fixing type error
+                                toast.error("Failed"); 
+                              }} 
+                              className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-slate-700 bg-slate-900/50" 
+                            />
                           )}
                         </FormControl>
                         <FormMessage />
