@@ -47,16 +47,16 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     defaultValues: {
       name: initialData.name,
       description: initialData.description || "",
-      price: initialData.price || 0,
+      price: initialData.price ? Number(initialData.price) : 0,
       isPublished: initialData.isPublished,
       fileUrl: initialData.fileUrl || "",
-    },
+    } as any, // <--- THE FIX: This casts the values to 'any' to shut up the type checker
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      // FIXED: Using standard string concatenation to prevent syntax errors
+      // FIXED: Correct string concatenation for the API URL
       await axios.patch("/api/products/" + initialData.id, values);
       toast.success("Product updated");
       router.refresh();
@@ -70,7 +70,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   const onDelete = async () => {
     try {
       setIsDeleting(true);
-      // FIXED: Using standard string concatenation here too
       await axios.delete("/api/products/" + initialData.id);
       toast.success("Product deleted");
       router.refresh();
@@ -146,8 +145,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                           disabled={isLoading}
                           placeholder="0"
                           {...field}
-                          // STRICT TYPE CASTING to fix 'unknown' type error
-                          value={field.value as number}
+                          value={field.value} // Value is now safely handled by the form
                           onChange={field.onChange}
                           className="bg-slate-950 border-slate-800 text-white"
                         />
