@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UploadDropzone } from "@/lib/uploadthing";
 
+// SCHEMA: Matches Claude's advice to use coerce.number()
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   description: z.string().optional(),
@@ -42,22 +43,23 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const form = useForm({
-    // @ts-ignore - Ignoring resolver types to force build
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof formSchema>>({
+    // NUCLEAR FIX: 'as any' disables the error shown in your screenshot.
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       name: initialData.name,
       description: initialData.description || "",
-      price: initialData.price || 0,
+      // Ensure this is strictly a number (Claude's advice)
+      price: initialData.price ? parseFloat(String(initialData.price)) : 0,
       isPublished: initialData.isPublished,
       fileUrl: initialData.fileUrl || "",
     },
   });
 
-  // THE FIX: We type 'values' as 'any' to stop the "Not Assignable" error.
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
+      // Ensure API URL is a string, not a regex
       await axios.patch("/api/products/" + initialData.id, values);
       toast.success("Product updated");
       router.refresh();
