@@ -5,7 +5,7 @@ import axios from "axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Loader2, Trash, UploadCloud, FileText, ImageIcon, Eye, Zap, ShieldCheck, Code, ExternalLink } from "lucide-react";
 import { Product } from "@prisma/client";
@@ -43,6 +43,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(initialData.fileUrl || "");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema) as any,
@@ -54,6 +55,16 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
       fileUrl: initialData.fileUrl || "",
     },
   });
+
+  // FORCE UPDATE PREVIEW WHEN FORM CHANGES
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'fileUrl') {
+        setPreviewUrl(value.fileUrl as string);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form.watch]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -83,12 +94,14 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   };
 
   const getFileIcon = (url: string) => {
+    if (!url) return null;
     if (url.endsWith(".pdf")) return <FileText className="h-12 w-12 text-rose-500 mx-auto mb-3" />;
     if (url.endsWith(".html") || url.endsWith(".htm")) return <Code className="h-12 w-12 text-orange-500 mx-auto mb-3" />;
     return <FileText className="h-12 w-12 text-slate-400 mx-auto mb-3" />;
   };
 
   const isImage = (url: string) => {
+    if (!url) return false;
     return url.match(/\.(jpeg|jpg|png|webp|gif)$/i);
   };
 
@@ -99,7 +112,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             Edit Funnel
             {form.watch("isPublished") ? (
-              <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600 border-0">Live</Badge>
+              <Badge variant="default" className="bg-green-600 text-white hover:bg-green-700 border-0">Live</Badge>
             ) : (
               <Badge variant="secondary" className="bg-yellow-500 text-black hover:bg-yellow-600 border-0">Draft</Badge>
             )}
@@ -107,12 +120,11 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
           <p className="text-slate-400 mt-2">Manage your product details, pricing, and digital assets.</p>
         </div>
         <div className="flex items-center gap-2">
-           {/* NEW: View Page Button */}
            <Button
              onClick={() => window.open("/preview/" + initialData.id, "_blank")}
              variant="outline"
              size="sm"
-             className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+             className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
            >
              <ExternalLink className="h-4 w-4 mr-2" /> View Public Page
            </Button>
@@ -122,7 +134,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
             disabled={isLoading || isDeleting}
             variant="destructive"
             size="sm"
-            className="bg-red-900/50 text-red-200 hover:bg-red-900 border border-red-900"
+            className="bg-red-900/80 text-red-100 hover:bg-red-900 border border-red-800"
           >
             <Trash className="h-4 w-4 mr-2" /> Delete
           </Button>
@@ -149,8 +161,8 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                         <FormItem>
                           <FormLabel className="text-slate-300">Product Name</FormLabel>
                           <FormControl>
-                            {/* FIXED: Lighter background (slate-900) for better visibility */}
-                            <Input disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white h-12 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                            {/* FIXED: Lighter bg-slate-900 and stronger border-slate-700 for visibility */}
+                            <Input disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white h-12 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-600" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -164,8 +176,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                         <FormItem>
                           <FormLabel className="text-slate-300">Description</FormLabel>
                           <FormControl>
-                            {/* FIXED: Lighter background (slate-900) */}
-                            <Textarea disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white min-h-[120px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                            <Textarea disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white min-h-[120px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-600" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -189,12 +200,11 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                         <FormControl>
                           <div className="relative">
                             <span className="absolute left-3 top-3 text-slate-500">KES</span>
-                            {/* FIXED: Lighter background (slate-900) */}
                             <Input 
                               type="number" 
                               disabled={isLoading} 
                               {...field} 
-                              className="bg-slate-900 border-slate-700 text-white pl-12 h-12 font-mono text-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" 
+                              className="bg-slate-900 border-slate-700 text-white pl-12 h-12 font-mono text-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-600" 
                             />
                           </div>
                         </FormControl>
@@ -221,20 +231,21 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          {field.value ? (
+                          {/* USE LOCAL STATE 'previewUrl' FOR INSTANT FEEDBACK */}
+                          {previewUrl ? (
                             <div className="relative group rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl">
                               <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900">
-                                {isImage(field.value) ? (
+                                {isImage(previewUrl) ? (
                                   <Image 
-                                    src={field.value} 
+                                    src={previewUrl} 
                                     alt="Upload Preview" 
                                     fill 
                                     className="object-cover" 
                                   />
                                 ) : (
                                   <div className="text-center p-6">
-                                     {getFileIcon(field.value)}
-                                     <p className="text-sm font-medium text-slate-300 truncate px-4 max-w-[200px]">{field.value.split('/').pop()}</p>
+                                     {getFileIcon(previewUrl)}
+                                     <p className="text-sm font-medium text-slate-300 truncate px-4 max-w-[200px]">{previewUrl.split('/').pop()}</p>
                                   </div>
                                 )}
                               </div>
@@ -243,14 +254,17 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                                   type="button" 
                                   variant="secondary"
                                   className="bg-white hover:bg-slate-200 text-black font-semibold"
-                                  onClick={() => window.open(field.value, "_blank")}
+                                  onClick={() => window.open(previewUrl, "_blank")}
                                 >
                                   <Eye className="h-4 w-4 mr-2" /> View
                                 </Button>
                                 <Button 
                                   type="button" 
                                   variant="destructive"
-                                  onClick={() => field.onChange("")}
+                                  onClick={() => {
+                                    field.onChange("");
+                                    setPreviewUrl("");
+                                  }}
                                 >
                                   <Trash className="h-4 w-4" />
                                 </Button>
@@ -260,7 +274,9 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                             <UploadDropzone
                               endpoint="productFile"
                               onClientUploadComplete={(res) => {
-                                field.onChange(res?.[0].url);
+                                const url = res?.[0].url;
+                                field.onChange(url);
+                                setPreviewUrl(url); // FORCE UI UPDATE
                                 toast.success("Asset uploaded successfully");
                               }}
                               onUploadError={(error: Error) => {
@@ -292,7 +308,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className="data-[state=checked]:bg-green-500"
+                            className="data-[state=checked]:bg-green-600"
                           />
                         </FormControl>
                       </FormItem>
