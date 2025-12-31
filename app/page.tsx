@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle, Globe, ShieldCheck, Zap, CreditCard, Layout, Users } from "lucide-react";
+import { ArrowRight, CheckCircle, Zap, CreditCard, Layout, Users, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
@@ -34,9 +34,14 @@ export default function Home() {
           {/* Background Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
           
-          <Badge variant="outline" className="mb-6 border-indigo-500/30 text-indigo-400 bg-indigo-500/10 px-4 py-1 text-sm uppercase tracking-wide">
-            The Future of African Creator Money
-          </Badge>
+          <div className="flex items-center gap-2 mb-6">
+            <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/10 px-4 py-1 text-sm uppercase tracking-wide">
+              Powered by Paystack
+            </Badge>
+            <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10 px-4 py-1 text-sm uppercase tracking-wide">
+              Official Partner
+            </Badge>
+          </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-5xl mb-6 leading-[1.1]">
             Stop losing money to <br />
@@ -46,8 +51,8 @@ export default function Home() {
           </h1>
           
           <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-10 leading-relaxed">
-            You drop that fire course, then spend weeks fighting PayPal restrictions. Not anymore. 
-            Build funnels, sell to the whole continent, and get paid via <span className="text-white font-semibold">Mobile Money</span> instantly.
+            Sell to the whole continent and get paid instantly.
+            We accept <span className="text-white font-semibold">M-Pesa, MTN MoMo, Airtel & Cards</span> and settle directly to your local bank account.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
@@ -59,14 +64,15 @@ export default function Home() {
             </Link>
             <Link href="/preview/demo">
               <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white w-full sm:w-auto">
-                See How It Works
+                See Payment Demo
               </Button>
             </Link>
           </div>
           
-          <div className="mt-12 text-sm text-slate-500 flex items-center gap-6">
-            <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> No Credit Card Required</span>
-            <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Instant Setup</span>
+          <div className="mt-12 text-sm text-slate-500 flex items-center justify-center gap-6 flex-wrap">
+            <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Secured by Paystack</span>
+            <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> Instant Bank Settlement</span>
+            <span className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-500" /> No Monthly Fees</span>
           </div>
         </section>
 
@@ -77,7 +83,7 @@ export default function Home() {
               <div>
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
                   Payments That Actually Work <br />
-                  <span className="text-indigo-400">Right Here.</span>
+                  <span className="text-indigo-400">In Africa.</span>
                 </h2>
                 <div className="space-y-6">
                   <div className="flex gap-4">
@@ -86,7 +92,11 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="text-xl font-semibold text-white">Mobile Money First</h3>
-                      <p className="text-slate-400 mt-2">Your customer in Lagos pays with MTN MoMo? Done. Nairobi uses M-Pesa? Instant. We cover the continent.</p>
+                      <p className="text-slate-400 mt-2">
+                        Your customer in Lagos pays with <span className="text-white">MTN MoMo</span>? Done. 
+                        Nairobi uses <span className="text-white">M-Pesa</span>? Instant. 
+                        We cover Nigeria, Kenya, Ghana, and South Africa.
+                      </p>
                     </div>
                   </div>
                   
@@ -95,27 +105,40 @@ export default function Home() {
                       <CreditCard className="h-6 w-6 text-blue-500" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white">Direct Local Settlement</h3>
-                      <p className="text-slate-400 mt-2">Zero excuses. Money hits your own local bank account. No weird holding periods or crazy conversion fees.</p>
+                      <h3 className="text-xl font-semibold text-white">Automated Paystack Splits</h3>
+                      <p className="text-slate-400 mt-2">
+                        Money hits your local bank account automatically. 
+                        No weird holding periods, no "pending review" nightmares. 
+                        Powered by Paystack's world-class infrastructure.
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
               
               {/* VISUAL MAP REPRESENTATION */}
-              <div className="relative h-[400px] bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex items-center justify-center">
+              <div className="relative h-[400px] bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex items-center justify-center shadow-2xl">
                 <div className="absolute inset-0 bg-[url('https://utfs.io/f/9e17300c-6625-4c03-b0c6-30d876d75c6d-1d.svg')] opacity-20 bg-center bg-no-repeat bg-contain"></div>
-                <div className="grid grid-cols-2 gap-4 relative z-10">
-                   <div className="bg-black/80 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-xl">
-                      <p className="text-xs text-slate-500 uppercase">Received from Kenya</p>
+                <div className="grid grid-cols-1 gap-4 relative z-10 w-full max-w-xs px-6">
+                   <div className="bg-[#020817]/90 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-xl flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-slate-500 uppercase font-semibold">M-Pesa Payment</p>
+                        <p className="text-sm text-slate-300">Nairobi, KE</p>
+                      </div>
                       <p className="text-lg font-mono text-green-400 font-bold">+ KES 4,500</p>
                    </div>
-                   <div className="bg-black/80 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-xl translate-y-8">
-                      <p className="text-xs text-slate-500 uppercase">Received from Nigeria</p>
+                   <div className="bg-[#020817]/90 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-xl flex justify-between items-center translate-x-4">
+                      <div>
+                        <p className="text-xs text-slate-500 uppercase font-semibold">MTN Mobile Money</p>
+                        <p className="text-sm text-slate-300">Lagos, NG</p>
+                      </div>
                       <p className="text-lg font-mono text-green-400 font-bold">+ NGN 25,000</p>
                    </div>
-                   <div className="bg-black/80 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-xl">
-                      <p className="text-xs text-slate-500 uppercase">Received from Ghana</p>
+                   <div className="bg-[#020817]/90 backdrop-blur-md p-4 rounded-xl border border-slate-700 shadow-xl flex justify-between items-center">
+                      <div>
+                         <p className="text-xs text-slate-500 uppercase font-semibold">Card Payment</p>
+                         <p className="text-sm text-slate-300">Accra, GH</p>
+                      </div>
                       <p className="text-lg font-mono text-green-400 font-bold">+ GHS 340</p>
                    </div>
                 </div>
@@ -166,7 +189,7 @@ export default function Home() {
       </main>
 
       <footer className="py-8 border-t border-slate-800 bg-[#020817] text-center text-slate-500 text-sm">
-        <p>&copy; {new Date().getFullYear()} Nexus OS. Built for African Creators.</p>
+        <p>&copy; {new Date().getFullYear()} Nexus OS. Powered by Paystack. Built for African Creators.</p>
       </footer>
     </div>
   );
