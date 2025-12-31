@@ -14,7 +14,7 @@ interface PreviewPageProps {
 export default async function PreviewPage({ params }: PreviewPageProps) {
   let product;
 
-  // CRITICAL FIX: Handle 'demo' mode to prevent Database Crash
+  // FIX: Explicitly handle 'demo' to prevent Server Error or 404
   if (params.funnelId === "demo") {
     product = {
       name: "The Ultimate Digital Marketing Masterclass",
@@ -24,7 +24,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       fileUrl: "https://utfs.io/f/9e17300c-6625-4c03-b0c6-30d876d75c6d-1d.svg"
     };
   } else {
-    // REAL MODE: Fetch from Database
+    // REAL MODE
     try {
       product = await db.product.findUnique({
         where: {
@@ -32,7 +32,6 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
         },
       });
     } catch (error) {
-      // If ID is invalid (e.g. not a UUID), return 404 instead of crashing
       return notFound();
     }
   }
