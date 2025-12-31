@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Trash, UploadCloud, FileText, ImageIcon, X, Code, FileCode, Eye, Zap, ShieldCheck } from "lucide-react";
+import { Loader2, Trash, UploadCloud, FileText, ImageIcon, Eye, Zap, ShieldCheck, Code, ExternalLink } from "lucide-react";
 import { Product } from "@prisma/client";
 import Image from "next/image";
 
@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UploadDropzone } from "@/lib/uploadthing";
-import { Badge } from "@/components/ui/badge"; // Using badge for status
+import { Badge } from "@/components/ui/badge";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -85,7 +85,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   const getFileIcon = (url: string) => {
     if (url.endsWith(".pdf")) return <FileText className="h-12 w-12 text-rose-500 mx-auto mb-3" />;
     if (url.endsWith(".html") || url.endsWith(".htm")) return <Code className="h-12 w-12 text-orange-500 mx-auto mb-3" />;
-    if (url.endsWith(".zip")) return <FileCode className="h-12 w-12 text-yellow-500 mx-auto mb-3" />;
     return <FileText className="h-12 w-12 text-slate-400 mx-auto mb-3" />;
   };
 
@@ -95,28 +94,37 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 border-b border-slate-800 pb-6">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             Edit Funnel
             {form.watch("isPublished") ? (
-              <Badge variant="default" className="bg-green-500/10 text-green-500 border-green-500/20">Live</Badge>
+              <Badge variant="default" className="bg-green-500 text-white hover:bg-green-600 border-0">Live</Badge>
             ) : (
-              <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Draft</Badge>
+              <Badge variant="secondary" className="bg-yellow-500 text-black hover:bg-yellow-600 border-0">Draft</Badge>
             )}
           </h1>
           <p className="text-slate-400 mt-2">Manage your product details, pricing, and digital assets.</p>
         </div>
         <div className="flex items-center gap-2">
+           {/* NEW: View Page Button */}
+           <Button
+             onClick={() => window.open("/preview/" + initialData.id, "_blank")}
+             variant="outline"
+             size="sm"
+             className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+           >
+             <ExternalLink className="h-4 w-4 mr-2" /> View Public Page
+           </Button>
+
            <Button
             onClick={onDelete}
             disabled={isLoading || isDeleting}
             variant="destructive"
             size="sm"
-            className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20"
+            className="bg-red-900/50 text-red-200 hover:bg-red-900 border border-red-900"
           >
-            <Trash className="h-4 w-4 mr-2" /> Delete Funnel
+            <Trash className="h-4 w-4 mr-2" /> Delete
           </Button>
         </div>
       </div>
@@ -125,7 +133,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
              
-             {/* LEFT COLUMN (Details) - Spans 2 cols */}
+             {/* LEFT COLUMN */}
              <div className="lg:col-span-2 space-y-6">
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800/50">
@@ -141,7 +149,8 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                         <FormItem>
                           <FormLabel className="text-slate-300">Product Name</FormLabel>
                           <FormControl>
-                            <Input disabled={isLoading} placeholder="e.g. Ultimate Masterclass" {...field} className="bg-slate-950/50 border-slate-800 text-white h-12 focus:border-indigo-500 transition-colors" />
+                            {/* FIXED: Lighter background (slate-900) for better visibility */}
+                            <Input disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white h-12 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -155,7 +164,8 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                         <FormItem>
                           <FormLabel className="text-slate-300">Description</FormLabel>
                           <FormControl>
-                            <Textarea disabled={isLoading} placeholder="Describe what your customers will get..." {...field} className="bg-slate-950/50 border-slate-800 text-white min-h-[120px] focus:border-indigo-500 transition-colors" />
+                            {/* FIXED: Lighter background (slate-900) */}
+                            <Textarea disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white min-h-[120px] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -179,18 +189,15 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                         <FormControl>
                           <div className="relative">
                             <span className="absolute left-3 top-3 text-slate-500">KES</span>
+                            {/* FIXED: Lighter background (slate-900) */}
                             <Input 
                               type="number" 
                               disabled={isLoading} 
-                              placeholder="0" 
                               {...field} 
-                              className="bg-slate-950/50 border-slate-800 text-white pl-12 h-12 font-mono text-lg focus:border-indigo-500 transition-colors" 
+                              className="bg-slate-900 border-slate-700 text-white pl-12 h-12 font-mono text-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" 
                             />
                           </div>
                         </FormControl>
-                        <FormDescription className="text-slate-500 mt-2">
-                          Set the price to 0 to make this product free.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -198,19 +205,14 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                </div>
              </div>
 
-             {/* RIGHT COLUMN (Media & Status) - Spans 1 col */}
+             {/* RIGHT COLUMN */}
              <div className="space-y-6">
-               
-               {/* MEDIA UPLOAD CARD */}
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center justify-between mb-4">
                    <div className="flex items-center gap-2">
                      <ImageIcon className="h-5 w-5 text-indigo-400" />
                      <h2 className="text-lg font-semibold text-white">Asset</h2>
                    </div>
-                   {form.watch("fileUrl") && (
-                      <Badge variant="outline" className="border-indigo-500/30 text-indigo-400 bg-indigo-500/10">Uploaded</Badge>
-                   )}
                  </div>
                  
                  <FormField
@@ -220,9 +222,8 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                       <FormItem>
                         <FormControl>
                           {field.value ? (
-                            <div className="relative group rounded-xl overflow-hidden border border-slate-700 bg-black shadow-2xl transition-all duration-300 hover:border-slate-500">
-                              {/* VISUAL PREVIEW */}
-                              <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900/50">
+                            <div className="relative group rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl">
+                              <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900">
                                 {isImage(field.value) ? (
                                   <Image 
                                     src={field.value} 
@@ -234,12 +235,9 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                                   <div className="text-center p-6">
                                      {getFileIcon(field.value)}
                                      <p className="text-sm font-medium text-slate-300 truncate px-4 max-w-[200px]">{field.value.split('/').pop()}</p>
-                                     <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider">Ready to Download</p>
                                   </div>
                                 )}
                               </div>
-
-                              {/* OVERLAY ACTIONS */}
                               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
                                 <Button 
                                   type="button" 
@@ -247,7 +245,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                                   className="bg-white hover:bg-slate-200 text-black font-semibold"
                                   onClick={() => window.open(field.value, "_blank")}
                                 >
-                                  <Eye className="h-4 w-4 mr-2" /> Preview
+                                  <Eye className="h-4 w-4 mr-2" /> View
                                 </Button>
                                 <Button 
                                   type="button" 
@@ -259,19 +257,17 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                               </div>
                             </div>
                           ) : (
-                            <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 hover:bg-indigo-500/5 rounded-xl transition-all duration-300">
-                              <UploadDropzone
-                                endpoint="productFile"
-                                onClientUploadComplete={(res) => {
-                                  field.onChange(res?.[0].url);
-                                  toast.success("Asset uploaded successfully");
-                                }}
-                                onUploadError={(error: Error) => {
-                                  toast.error("Upload failed. Try a smaller file.");
-                                }}
-                                className="ut-label:text-indigo-400 ut-button:bg-indigo-600 ut-button:ut-readying:bg-indigo-600/50 py-8"
-                              />
-                            </div>
+                            <UploadDropzone
+                              endpoint="productFile"
+                              onClientUploadComplete={(res) => {
+                                field.onChange(res?.[0].url);
+                                toast.success("Asset uploaded successfully");
+                              }}
+                              onUploadError={(error: Error) => {
+                                toast.error("Upload failed");
+                              }}
+                              className="ut-label:text-indigo-400 ut-button:bg-indigo-600 ut-button:ut-readying:bg-indigo-600/50 py-8 border-slate-700 bg-slate-900/50"
+                            />
                           )}
                         </FormControl>
                         <FormMessage />
@@ -280,7 +276,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                   />
                </div>
 
-               {/* PUBLISH STATUS CARD */}
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                   <FormField
                     control={form.control}
@@ -316,4 +311,3 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     </div>
   );
 };
-// Force Vercel Rebuild
