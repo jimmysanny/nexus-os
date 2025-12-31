@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Trash, UploadCloud, FileText, ImageIcon, X, Code, FileCode } from "lucide-react";
+import { Loader2, Trash, UploadCloud, FileText, ImageIcon, X, Code, FileCode, Eye } from "lucide-react";
 import { Product } from "@prisma/client";
 import Image from "next/image";
 
@@ -81,7 +81,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     }
   };
 
-  // HELPER: Determine icon based on file type
   const getFileIcon = (url: string) => {
     if (url.endsWith(".pdf")) return <FileText className="h-16 w-16 text-slate-500 mx-auto mb-2" />;
     if (url.endsWith(".html") || url.endsWith(".htm")) return <Code className="h-16 w-16 text-orange-500 mx-auto mb-2" />;
@@ -172,7 +171,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                           {field.value ? (
                             <div className="relative group">
                               <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-slate-700 bg-slate-900 flex items-center justify-center">
-                                {/* DYNAMIC PREVIEW: Shows Icon for HTML/PDF, Image for Pictures */}
                                 {isImage(field.value) ? (
                                   <Image 
                                     src={field.value} 
@@ -188,13 +186,28 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                                 )}
                               </div>
 
-                              <div className="absolute top-2 right-2">
+                              {/* NEW: PREVIEW BUTTONS CONTAINER */}
+                              <div className="absolute top-2 right-2 flex gap-2">
+                                {/* 1. VIEW BUTTON (The Eye) */}
+                                <Button 
+                                  type="button" 
+                                  variant="secondary" 
+                                  size="icon" 
+                                  className="h-8 w-8 opacity-90 hover:opacity-100 bg-indigo-600 hover:bg-indigo-700 text-white border-0"
+                                  onClick={() => window.open(field.value, "_blank")}
+                                  title="View File"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+
+                                {/* 2. REMOVE BUTTON (The X) */}
                                 <Button 
                                   type="button" 
                                   variant="destructive" 
                                   size="icon" 
                                   className="h-8 w-8 opacity-90 hover:opacity-100"
                                   onClick={() => field.onChange("")}
+                                  title="Remove File"
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
