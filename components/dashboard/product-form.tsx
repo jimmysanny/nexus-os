@@ -184,13 +184,13 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                             <UploadDropzone 
                               endpoint="productFile" 
                               onClientUploadComplete={(res) => { 
-                                // FIX: Braces added here to satisfy Void return type
+                                // FIX: Wrapped in curly braces to fix the build error
                                 field.onChange(res?.[0].url); 
                                 setPreviewUrl(res?.[0].url); 
                                 toast.success("Uploaded"); 
                               }} 
                               onUploadError={() => { 
-                                // FIX: Braces added here
+                                // FIX: Wrapped in curly braces
                                 toast.error("Failed"); 
                               }} 
                               className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-slate-700 bg-slate-900/50" 
