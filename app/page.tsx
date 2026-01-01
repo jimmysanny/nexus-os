@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Smartphone, Globe, Lock, Rocket, Zap, ShoppingBag } from "lucide-react";
+import { ArrowRight, Smartphone, Globe, Lock, Rocket, Zap, ShoppingBag, CreditCard } from "lucide-react";
 
 export default function Home() {
   return (
@@ -11,9 +11,11 @@ export default function Home() {
           <span className="text-xl font-bold text-white tracking-tight">Nexus OS</span>
         </div>
         <div className="flex items-center gap-6">
-          {/* NEW: Marketplace Link */}
           <Link href="/marketplace" className="text-slate-400 hover:text-white text-sm font-medium flex items-center gap-2 transition-colors">
             <ShoppingBag className="h-4 w-4" /> Marketplace
+          </Link>
+          <Link href="/pricing" className="text-slate-400 hover:text-white text-sm font-medium flex items-center gap-2 transition-colors">
+             Pricing
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/sign-in"><Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800 font-medium">Log in</Button></Link>
