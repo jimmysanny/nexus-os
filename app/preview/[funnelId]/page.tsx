@@ -5,8 +5,13 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, ShieldCheck, Zap, Globe, Smartphone, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export default async function PreviewPage({ params }: { params: Promise<{ funnelId: string }> }) {
-  // FIX: In Next.js 15, we MUST await params before using them.
+// FIX: Type definition for Next.js 15 Params
+interface PreviewPageProps {
+  params: Promise<{ funnelId: string }>;
+}
+
+export default async function PreviewPage({ params }: PreviewPageProps) {
+  // FIX: We MUST await params before using them
   const { funnelId } = await params;
 
   let product;
@@ -104,12 +109,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ funnel
 
           <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-800 bg-[#0B0F1A] shadow-2xl shadow-indigo-500/10 animate-in fade-in zoom-in duration-700 delay-150">
             {product.fileUrl && isImage(product.fileUrl) ? (
-              <Image 
-                src={product.fileUrl} 
-                alt={product.name} 
-                fill 
-                className="object-cover" 
-              />
+              <Image src={product.fileUrl} alt={product.name} fill className="object-cover" />
             ) : (
               <div className="flex items-center justify-center h-full flex-col gap-4">
                 <div className="h-24 w-24 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800 shadow-inner">
@@ -118,10 +118,8 @@ export default async function PreviewPage({ params }: { params: Promise<{ funnel
                 <p className="text-slate-500 font-medium">Digital Course Content</p>
               </div>
             )}
-            
             <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-transparent opacity-60" />
           </div>
-
         </div>
       </div>
     </div>
