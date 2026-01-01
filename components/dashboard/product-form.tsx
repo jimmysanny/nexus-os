@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Trash, ImageIcon, Eye, Zap, ShieldCheck, FileText, ExternalLink, CloudUpload } from "lucide-react";
+import { Loader2, Trash, ImageIcon, Eye, Zap, ShieldCheck, FileText, ExternalLink, UploadCloud } from "lucide-react";
 import { Product } from "@prisma/client";
 import Image from "next/image";
 
@@ -185,11 +185,13 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                               endpoint="productFile" 
                               content={{ label: "Upload Course PDF, Video, or Ebook" }}
                               onClientUploadComplete={(res) => { 
+                                // FIX: Wrapped in braces
                                 field.onChange(res?.[0].url); 
                                 setPreviewUrl(res?.[0].url); 
                                 toast.success("Uploaded successfully"); 
                               }} 
                               onUploadError={() => { 
+                                // FIX: Wrapped in braces
                                 toast.error("Upload failed"); 
                               }} 
                               className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-slate-700 bg-slate-900/50 ut-label:mt-2" 

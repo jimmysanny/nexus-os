@@ -10,11 +10,12 @@ interface PreviewPageProps {
 }
 
 export default async function PreviewPage({ params }: PreviewPageProps) {
+  // CRITICAL FIX: Awaiting params for Next.js 15
   const { funnelId } = await params;
 
   let product;
 
-  // SYSTEM DEMO: High-Converting Placeholder Data
+  // SYSTEM DEMO: Marketing Copy
   if (funnelId === "demo") {
     product = {
       name: "The 7-Figure Creator Roadmap",
