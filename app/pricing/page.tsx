@@ -29,7 +29,7 @@ export default function PricingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {/* FREE TIER */}
-          <div className="bg-[#0B0F1A] border border-slate-800 rounded-2xl p-8 shadow-xl flex flex-col relative overflow-hidden">
+          <div className="bg-[#0B0F1A] border border-slate-800 rounded-2xl p-8 shadow-xl flex flex-col relative overflow-hidden transform hover:scale-[1.01] transition-all duration-300">
             <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
             <h2 className="text-2xl font-bold text-white mb-2">Starter</h2>
             <div className="flex items-end gap-1 mb-6">
@@ -47,7 +47,7 @@ export default function PricingPage() {
             </ul>
 
             <Link href="/sign-up">
-              <Button size="lg" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12">Start Selling for Free</Button>
+              <Button size="lg" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 shadow-lg shadow-indigo-500/20">Start Selling for Free</Button>
             </Link>
           </div>
 
@@ -75,13 +75,21 @@ export default function PricingPage() {
         <div className="max-w-3xl mx-auto mt-20 text-center border-t border-slate-800 pt-12">
            <h3 className="text-lg font-bold text-white mb-4 flex items-center justify-center gap-2"><HelpCircle className="h-5 w-5 text-slate-400" /> Frequently Asked Questions</h3>
            <div className="text-left space-y-6 mt-8">
-              <div>
+              <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
                 <h4 className="font-semibold text-white">When do I get paid?</h4>
-                <p className="text-slate-400 text-sm mt-1">We settle funds to your bank or mobile money account automatically every week.</p>
+                <p className="text-slate-400 text-sm mt-1">We settle funds to your bank or mobile money account automatically every week. You can track your pending payouts in the dashboard.</p>
               </div>
-              <div>
+              <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
                 <h4 className="font-semibold text-white">Does the 5% fee include payment processing?</h4>
-                <p className="text-slate-400 text-sm mt-1">No, standard payment processing fees (Paystack) still apply. The 5% is the platform fee for using Nexus OS.</p>
+                <p className="text-slate-400 text-sm mt-1">No, standard payment processing fees (Paystack) still apply. The 5% is the platform fee for using Nexus OS to host and deliver your products.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
+                <h4 className="font-semibold text-white">Can I upgrade to Pro later?</h4>
+                <p className="text-slate-400 text-sm mt-1">Absolutely. Once the Pro plan launches, you will be able to upgrade your account instantly to enjoy 0% transaction fees.</p>
+              </div>
+              <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
+                <h4 className="font-semibold text-white">Is there a contract?</h4>
+                <p className="text-slate-400 text-sm mt-1">No. Nexus OS is month-to-month. You can cancel or switch plans at any time.</p>
               </div>
            </div>
         </div>
