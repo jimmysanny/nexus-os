@@ -14,7 +14,6 @@ interface PreviewPageProps {
 export default async function PreviewPage({ params }: PreviewPageProps) {
   let product;
 
-  // FIX: Explicitly handle 'demo' to prevent Server Error or 404
   if (params.funnelId === "demo") {
     product = {
       name: "The Ultimate Digital Marketing Masterclass",
@@ -24,21 +23,14 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       fileUrl: "https://utfs.io/f/9e17300c-6625-4c03-b0c6-30d876d75c6d-1d.svg"
     };
   } else {
-    // REAL MODE
     try {
-      product = await db.product.findUnique({
-        where: {
-          id: params.funnelId,
-        },
-      });
+      product = await db.product.findUnique({ where: { id: params.funnelId } });
     } catch (error) {
       return notFound();
     }
   }
 
-  if (!product) {
-    return notFound();
-  }
+  if (!product) return notFound();
 
   const isImage = (url: string) => url?.match(/\.(jpeg|jpg|png|webp|gif|svg)$/i);
 
@@ -55,11 +47,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div>
-              {product.isPublished ? (
-                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 mb-4 px-3 py-1">Available Now</Badge>
-              ) : (
-                <Badge variant="outline" className="text-yellow-500 border-yellow-500/20 mb-4">Coming Soon</Badge>
-              )}
+              {product.isPublished ? <Badge className="bg-green-500/10 text-green-500 border-green-500/20 mb-4 px-3 py-1">Available Now</Badge> : <Badge variant="outline" className="text-yellow-500 border-yellow-500/20 mb-4">Coming Soon</Badge>}
               <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white mb-6">{product.name}</h1>
               <p className="text-lg text-slate-400 leading-relaxed border-l-2 border-indigo-500/50 pl-6">{product.description || "No description provided yet."}</p>
             </div>
@@ -78,14 +66,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
             </div>
           </div>
           <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-800 bg-[#0B0F1A] shadow-2xl shadow-indigo-500/10 animate-in fade-in zoom-in duration-700 delay-150">
-            {product.fileUrl && isImage(product.fileUrl) ? (
-              <Image src={product.fileUrl} alt={product.name} fill className="object-cover" />
-            ) : (
-              <div className="flex items-center justify-center h-full flex-col gap-4">
-                <div className="h-24 w-24 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800 shadow-inner"><ShieldCheck className="h-10 w-10 text-indigo-500" /></div>
-                <p className="text-slate-500 font-medium">Digital Course Content</p>
-              </div>
-            )}
+            {product.fileUrl && isImage(product.fileUrl) ? <Image src={product.fileUrl} alt={product.name} fill className="object-cover" /> : <div className="flex items-center justify-center h-full flex-col gap-4"><div className="h-24 w-24 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800 shadow-inner"><ShieldCheck className="h-10 w-10 text-indigo-500" /></div><p className="text-slate-500 font-medium">Digital Course Content</p></div>}
             <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-transparent opacity-60" />
           </div>
         </div>
