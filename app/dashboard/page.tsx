@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server"; // FIXED IMPORT
+import { auth } from "@clerk/nextjs/server"; // FIXED: Correct import for v5
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, DollarSign, Package, ShoppingBag } from "lucide-react";
@@ -11,7 +11,7 @@ export default async function DashboardPage() {
     return redirect("/sign-in");
   }
 
-  // Fetch Orders via Product Relation
+  // Fetch Orders via Product Relation (Fixes "userId" query error)
   const orders = await db.order.findMany({
     where: {
       product: {
