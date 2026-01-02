@@ -5,12 +5,11 @@ import { CheckCircle } from "lucide-react";
 
 export default async function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
   const product = await db.product.findUnique({ where: { id } });
 
   if (!product) return notFound();
-
-  // FIX: Handle nullable price safely
+  
+  // FIX: Fallback for null price
   const price = product.price || 0;
 
   return (

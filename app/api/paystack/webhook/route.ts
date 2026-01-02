@@ -8,10 +8,9 @@ export async function POST(req: Request) {
 
     if (event.event === "charge.success") {
       const { metadata, amount, customer } = event.data;
-      
-      const paidAmount = amount / 100; // KES
-      const fee = paidAmount * 0.10;   // 10%
-      const net = paidAmount * 0.90;   // 90%
+      const paidAmount = amount / 100;
+      const fee = paidAmount * 0.10;
+      const net = paidAmount * 0.90;
 
       if (metadata?.orderId) {
         await db.order.update({

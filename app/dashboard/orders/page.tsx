@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server"; // FIX: Clerk v5 Import
+import { auth } from "@clerk/nextjs/server"; 
 import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -13,13 +13,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default async function OrdersPage() {
-  const { userId } = auth();
+  // FIX: In Next.js 15, auth() is async. We MUST await it.
+  const { userId } = await auth();
 
   if (!userId) {
     return redirect("/sign-in");
   }
 
-  // FIX: Correct Query for the new Schema
+  // FIX: Query orders via the Product relation
   const orders = await db.order.findMany({
     where: {
       product: {

@@ -12,7 +12,6 @@ export async function POST(req: Request) {
 
     if (!product || !product.isPublished) return new NextResponse("Product not found", { status: 404 });
 
-    // 10% FEE LOGIC
     const amount = product.price || 0;
     const platformFee = amount * 0.10; 
     const creatorNet = amount - platformFee;
