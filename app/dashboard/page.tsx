@@ -1,18 +1,17 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server"; // FIXED: Import from /server for Clerk v5+
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, DollarSign, Package, ShoppingBag } from "lucide-react";
 
 export default async function DashboardPage() {
-  const { userId } = auth();
+  const { userId } = await auth(); // FIXED: auth() is now async in v5
 
   if (!userId) {
     return redirect("/sign-in");
   }
 
   // 1. FETCH ORDERS (Corrected Relational Query)
-  // We find orders where the RELATED PRODUCT belongs to this user.
   const orders = await db.order.findMany({
     where: {
       product: {
@@ -50,7 +49,6 @@ export default async function DashboardPage() {
           <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
         </div>
         
-        {/* METRIC CARDS */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
           <Card className="bg-[#0B0F1A] border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -59,7 +57,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">KES {totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-slate-500">+20.1% from last month</p>
+              <p className="text-xs text-slate-500">Net Earnings (90%)</p>
             </CardContent>
           </Card>
           
@@ -70,7 +68,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">+{totalSales}</div>
-              <p className="text-xs text-slate-500">+19% from last month</p>
+              <p className="text-xs text-slate-500">Total Orders</p>
             </CardContent>
           </Card>
 
@@ -86,7 +84,6 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* RECENT SALES TABLE */}
         <div className="grid gap-4 grid-cols-1">
           <Card className="bg-[#0B0F1A] border-slate-800">
             <CardHeader>
