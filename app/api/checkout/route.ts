@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { currentUser } from "@clerk/nextjs";
+// FIX: Removed unused 'currentUser' import that was causing the build crash
 
 export async function POST(req: Request) {
   try {
