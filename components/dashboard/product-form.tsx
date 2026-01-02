@@ -185,13 +185,11 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                               endpoint="productFile" 
                               content={{ label: "Upload Course PDF, Video, or Ebook" }}
                               onClientUploadComplete={(res) => { 
-                                // FIX: Wrapped in braces
                                 field.onChange(res?.[0].url); 
                                 setPreviewUrl(res?.[0].url); 
                                 toast.success("Uploaded successfully"); 
                               }} 
                               onUploadError={() => { 
-                                // FIX: Wrapped in braces
                                 toast.error("Upload failed"); 
                               }} 
                               className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-slate-700 bg-slate-900/50 ut-label:mt-2" 
