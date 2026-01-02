@@ -11,28 +11,22 @@ interface FunnelPageProps {
 }
 
 export default async function FunnelPage({ params }: FunnelPageProps) {
-  // FIX: Await params for Next.js 15
   const { id } = await params;
-
   let product;
 
-  // DEMO DATA
   if (id === "demo") {
     product = {
       id: "demo",
       name: "The 7-Figure Creator Roadmap",
-      description: "Stop guessing. Get the exact step-by-step blueprint to launch, scale, and automate your digital business across Africa.",
+      description: "Stop guessing. Get the exact step-by-step blueprint to launch, scale, and automate your digital business.",
       price: 25000,
       isPublished: true,
       fileUrl: "https://utfs.io/f/9e17300c-6625-4c03-b0c6-30d876d75c6d-1d.svg"
     };
   } else {
-    // REAL DATA
     try {
       product = await db.product.findUnique({ where: { id } });
-    } catch (error) {
-      return notFound();
-    }
+    } catch (error) { return notFound(); }
   }
 
   if (!product || !product.isPublished) return notFound();
@@ -59,27 +53,22 @@ export default async function FunnelPage({ params }: FunnelPageProps) {
             
             <div className="pt-8 border-t border-slate-800">
               <div className="flex items-end gap-4 mb-6">
-                {/* FIX: Handle null price safely */}
+                {/* FIX: Safe Price Check */}
                 <div className="text-5xl font-bold text-white tracking-tighter">
-                  {product.price ? "KES " + product.price.toLocaleString() : "FREE"}
+                  KES {product.price?.toLocaleString() ?? "0"}
                 </div>
               </div>
               
-              {/* BUY BUTTON */}
-              {/* Using a Link to Sign Up for now (Platform Collection Mode) */}
               <Link href="/sign-up"> 
                 <Button size="lg" className="w-full h-16 text-xl font-bold bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 rounded-xl transition-all hover:scale-[1.02]">
-                  {/* FIX: Handle null price in button text too */}
-                  Buy Now for {product.price ? "KES " + product.price.toLocaleString() : "FREE"} 
+                  Buy Now for KES {product.price?.toLocaleString() ?? "0"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              
-              <p className="text-xs text-slate-500 mt-4 text-center flex items-center justify-center gap-2"><Lock className="h-3 w-3" /> Encrypted & Secure Payment</p>
             </div>
           </div>
           <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-800 bg-[#0B0F1A] shadow-2xl shadow-indigo-500/10 animate-in fade-in zoom-in duration-700 delay-150">
-            {product.fileUrl && isImage(product.fileUrl) ? <Image src={product.fileUrl} alt={product.name} fill className="object-cover" /> : <div className="flex items-center justify-center h-full flex-col gap-4"><div className="h-24 w-24 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800 shadow-inner"><ShieldCheck className="h-10 w-10 text-indigo-500" /></div><p className="text-slate-500 font-medium">Digital Course Content</p></div>}
+            {product.fileUrl && isImage(product.fileUrl) ? <Image src={product.fileUrl} alt={product.name} fill className="object-cover" /> : <div className="flex items-center justify-center h-full flex-col gap-4"><div className="h-24 w-24 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800 shadow-inner"><ShieldCheck className="h-10 w-10 text-indigo-500" /></div></div>}
           </div>
         </div>
       </div>
