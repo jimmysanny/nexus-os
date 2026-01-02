@@ -9,19 +9,16 @@ export async function POST(req: Request) {
     if (event.event === "charge.success") {
       const { metadata, amount, customer } = event.data;
       
-      // Calculate split based on actual amount paid (in Kobo)
-      const paidAmount = amount / 100; // Convert to KES
-      const fee = paidAmount * 0.10;   // 10% Fee
-      const net = paidAmount * 0.90;   // 90% Net
+      const paidAmount = amount / 100; // KES
+      const fee = paidAmount * 0.10;   // 10%
+      const net = paidAmount * 0.90;   // 90%
 
       if (metadata?.orderId) {
-        // Update existing pending order
         await db.order.update({
           where: { id: metadata.orderId },
           data: { status: "paid" }
         });
       } else {
-        // Create new order if one doesn't exist
         await db.order.create({
           data: {
             productId: metadata?.funnelId || "unknown",

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server"; // FIX: Clerk v5 Import
 import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -19,7 +19,7 @@ export default async function OrdersPage() {
     return redirect("/sign-in");
   }
 
-  // FIX: Query orders via the Product relation
+  // FIX: Correct Query for the new Schema
   const orders = await db.order.findMany({
     where: {
       product: {
@@ -59,7 +59,7 @@ export default async function OrdersPage() {
             {orders.length === 0 ? (
               <TableRow className="border-slate-800 hover:bg-transparent">
                  <TableCell colSpan={6} className="h-24 text-center text-slate-500">
-                   No orders found. Share your funnel links to start selling!
+                   No orders found yet.
                  </TableCell>
               </TableRow>
             ) : (
