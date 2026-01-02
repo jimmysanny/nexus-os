@@ -5,37 +5,33 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model Product {
   id          String   @id @default(uuid())
   userId      String
-  name        String
+  name        String   @db.Text
   description String?  @db.Text
-  price       Float    @default(0)
-  fileUrl     String?
+  price       Float?
   isPublished Boolean  @default(false)
-  
-  orders      Order[]
-  
+  fileUrl     String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  orders      Order[]
 }
 
 model Order {
-  id        String   @id @default(uuid())
-  userId    String
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  amount    Float
-  isPaid    Boolean  @default(false)
-  
-  // ADDED THESE TO FIX THE BUILD ERROR
-  reference String?  @unique
-  currency  String?
-  email     String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price         Float
+  fee           Float
+  net           Float
+  customerEmail String
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+
+  @@index([productId])
 }
