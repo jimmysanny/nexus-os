@@ -40,8 +40,8 @@ export default function PricingPage() {
             
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-start gap-3 text-slate-300"><CheckCircle className="h-5 w-5 text-green-500 shrink-0" /> <span>Unlimited Products</span></li>
-              <li className="flex items-start gap-3 text-slate-300"><CheckCircle className="h-5 w-5 text-green-500 shrink-0" /> <span>5% Transaction Fee</span></li>
-              <li className="flex items-start gap-3 text-slate-300"><CheckCircle className="h-5 w-5 text-green-500 shrink-0" /> <span>M-Pesa & Card Payments</span></li>
+              <li className="flex items-start gap-3 text-slate-300"><CheckCircle className="h-5 w-5 text-green-500 shrink-0" /> <span className="text-white font-bold">10% Transaction Fee</span></li>
+              <li className="flex items-start gap-3 text-slate-300"><CheckCircle className="h-5 w-5 text-green-500 shrink-0" /> <span>Automated Split Payments</span></li>
               <li className="flex items-start gap-3 text-slate-300"><CheckCircle className="h-5 w-5 text-green-500 shrink-0" /> <span>Hosted Product Pages</span></li>
               <li className="flex items-start gap-3 text-slate-300"><CheckCircle className="h-5 w-5 text-green-500 shrink-0" /> <span>1GB Storage Included</span></li>
             </ul>
@@ -76,20 +76,16 @@ export default function PricingPage() {
            <h3 className="text-lg font-bold text-white mb-4 flex items-center justify-center gap-2"><HelpCircle className="h-5 w-5 text-slate-400" /> Frequently Asked Questions</h3>
            <div className="text-left space-y-6 mt-8">
               <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
-                <h4 className="font-semibold text-white">When do I get paid?</h4>
-                <p className="text-slate-400 text-sm mt-1">We settle funds to your bank or mobile money account automatically every week. You can track your pending payouts in the dashboard.</p>
+                <h4 className="font-semibold text-white">How does the 10% fee work?</h4>
+                <p className="text-slate-400 text-sm mt-1">We use automated split payments. When a customer pays, Paystack sends 90% to you and 10% to Nexus OS instantly. You don't have to worry about monthly bills.</p>
               </div>
               <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
-                <h4 className="font-semibold text-white">Does the 5% fee include payment processing?</h4>
-                <p className="text-slate-400 text-sm mt-1">No, standard payment processing fees (Paystack) still apply. The 5% is the platform fee for using Nexus OS to host and deliver your products.</p>
+                <h4 className="font-semibold text-white">When do I get paid?</h4>
+                <p className="text-slate-400 text-sm mt-1">Because we use Split Payments, your 90% share is settled directly to your bank account by Paystack according to their standard schedule (usually T+1 in Nigeria/Kenya).</p>
               </div>
               <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
                 <h4 className="font-semibold text-white">Can I upgrade to Pro later?</h4>
                 <p className="text-slate-400 text-sm mt-1">Absolutely. Once the Pro plan launches, you will be able to upgrade your account instantly to enjoy 0% transaction fees.</p>
-              </div>
-              <div className="p-4 rounded-lg bg-[#0B0F1A] border border-slate-800">
-                <h4 className="font-semibold text-white">Is there a contract?</h4>
-                <p className="text-slate-400 text-sm mt-1">No. Nexus OS is month-to-month. You can cancel or switch plans at any time.</p>
               </div>
            </div>
         </div>
