@@ -1,25 +1,17 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-// FIX: Removed unused 'currentUser' import that was causing the build crash
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { productId, email } = body;
 
-    if (!productId || !email) {
-      return new NextResponse("Missing data", { status: 400 });
-    }
+    if (!productId || !email) return new NextResponse("Missing data", { status: 400 });
 
-    const product = await db.product.findUnique({
-      where: { id: productId }
-    });
+    const product = await db.product.findUnique({ where: { id: productId } });
 
-    if (!product || !product.isPublished) {
-      return new NextResponse("Product not found", { status: 404 });
-    }
+    if (!product || !product.isPublished) return new NextResponse("Product not found", { status: 404 });
 
-    // 10% FEE LOGIC
     const amount = product.price || 0;
     const platformFee = amount * 0.10; 
     const creatorNet = amount - platformFee;
@@ -35,11 +27,7 @@ export async function POST(req: Request) {
       }
     });
 
-    return NextResponse.json({ 
-      url: "https://checkout.paystack.com/preview", 
-      orderId: order.id 
-    });
-
+    return NextResponse.json({ url: "https://checkout.paystack.com/preview", orderId: order.id });
   } catch (error) {
     console.log("[CHECKOUT_ERROR]", error);
     return new NextResponse("Internal Error", { status: 500 });
