@@ -26,8 +26,8 @@ import { Switch } from "@/components/ui/switch";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { Badge } from "@/components/ui/badge";
 
-// REMOVED: Missing Alert Import
-// import { Alert, AlertDescription } from "@/components/ui/alert"; 
+// FIX: Removed the missing Alert import
+// This was the cause of the "Module not found" error.
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -58,6 +58,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     },
   });
 
+  // PREVIEW LOGIC: Watch for changes and update state immediately
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'fileUrl') {
@@ -236,7 +237,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                   />
                </div>
                
-               {/* CUSTOM ALERT (No Import Needed) */}
+               {/* FIX: Used standard HTML instead of 'Alert' component */}
                {!form.watch("isPublished") && (
                  <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-sm">
                    <AlertCircle className="h-4 w-4" />
