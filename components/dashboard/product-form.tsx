@@ -26,9 +26,6 @@ import { Switch } from "@/components/ui/switch";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { Badge } from "@/components/ui/badge";
 
-// FIX: Removed the missing Alert import
-// This was the cause of the "Module not found" error.
-
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
   description: z.string().optional(),
@@ -58,12 +55,9 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     },
   });
 
-  // PREVIEW LOGIC: Watch for changes and update state immediately
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (name === 'fileUrl') {
-         setPreviewUrl(value.fileUrl as string);
-      }
+      if (name === 'fileUrl') setPreviewUrl(value.fileUrl as string);
     });
     return () => subscription.unsubscribe();
   }, [form.watch]);
@@ -121,17 +115,12 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
         </div>
         <div className="flex items-center gap-2">
            {!form.watch("isPublished") && (
-             <span className="text-xs text-yellow-500 mr-2 hidden md:inline-block">
-                Publish to view
-             </span>
+             <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs">
+               <AlertCircle className="h-3 w-3" />
+               <span>Publish to view</span>
+             </div>
            )}
-           <Button
-             onClick={() => window.open("/f/" + initialData.id, "_blank")}
-             disabled={!form.watch("isPublished")}
-             variant="outline"
-             size="sm"
-             className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50"
-           >
+           <Button onClick={() => window.open("/f/" + initialData.id, "_blank")} disabled={!form.watch("isPublished")} variant="outline" size="sm" className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50">
              <ExternalLink className="h-4 w-4 mr-2" /> View Public Page
            </Button>
            <Button onClick={onDelete} disabled={isLoading || isDeleting} variant="destructive" size="sm" className="bg-red-900/80 text-red-100 hover:bg-red-900 border border-red-800">
@@ -196,10 +185,10 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                                     const url = res?.[0].url;
                                     field.onChange(url); 
                                     setPreviewUrl(url); 
-                                    toast.success("File uploaded! Click Save to finish."); 
+                                    toast.success("File uploaded!"); 
                                   }} 
                                   onUploadError={() => { 
-                                    toast.error("Upload failed. Try a smaller file."); 
+                                    toast.error("Upload failed."); 
                                   }} 
                                   className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-0" 
                                 />
@@ -237,14 +226,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                   />
                </div>
                
-               {/* FIX: Used standard HTML instead of 'Alert' component */}
-               {!form.watch("isPublished") && (
-                 <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-sm">
-                   <AlertCircle className="h-4 w-4" />
-                   <span>Your product is hidden. Turn on "Publish Status" to sell.</span>
-                 </div>
-               )}
-
                <Button disabled={isLoading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-12 text-lg font-medium shadow-lg">Save Changes</Button>
              </div>
           </div>

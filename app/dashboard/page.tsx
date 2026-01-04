@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server"; // FIXED: Correct import for v5
+import { auth } from "@clerk/nextjs/server"; 
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, DollarSign, Package, ShoppingBag } from "lucide-react";
@@ -11,29 +11,16 @@ export default async function DashboardPage() {
     return redirect("/sign-in");
   }
 
-  // Fetch Orders via Product Relation (Fixes "userId" query error)
   const orders = await db.order.findMany({
-    where: {
-      product: {
-        userId: userId,
-      },
-    },
-    include: {
-      product: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
+    where: { product: { userId: userId } },
+    include: { product: true },
+    orderBy: { createdAt: "desc" },
     take: 5,
   });
 
   const products = await db.product.findMany({
-    where: {
-      userId: userId,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
+    where: { userId: userId },
+    orderBy: { createdAt: "desc" },
   });
 
   const totalRevenue = orders.reduce((acc, order) => acc + order.net, 0);
@@ -52,7 +39,6 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">KES {totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-slate-500">Net Earnings (90%)</p>
             </CardContent>
           </Card>
           <Card className="bg-[#0B0F1A] border-slate-800">
@@ -60,18 +46,14 @@ export default async function DashboardPage() {
               <CardTitle className="text-sm font-medium text-slate-200">Sales</CardTitle>
               <CreditCard className="h-4 w-4 text-indigo-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{totalSales}</div>
-            </CardContent>
+            <CardContent><div className="text-2xl font-bold text-white">{totalSales}</div></CardContent>
           </Card>
           <Card className="bg-[#0B0F1A] border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-slate-200">Active Products</CardTitle>
               <Package className="h-4 w-4 text-blue-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{activeProducts}</div>
-            </CardContent>
+            <CardContent><div className="text-2xl font-bold text-white">{activeProducts}</div></CardContent>
           </Card>
         </div>
       </div>
