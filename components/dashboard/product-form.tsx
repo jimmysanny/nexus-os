@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, Trash, ImageIcon, Eye, Zap, ShieldCheck, FileText, ExternalLink, Cloud } from "lucide-react"; // Changed icon to standard 'Cloud' to be safe
+import { Loader2, Trash, ImageIcon, Eye, Zap, ShieldCheck, FileText, ExternalLink, Cloud, AlertCircle } from "lucide-react";
 import { Product } from "@prisma/client";
 import Image from "next/image";
 
@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -55,9 +56,13 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     },
   });
 
+  // Watch for external changes to fileUrl to update preview immediately
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
-      if (name === 'fileUrl') setPreviewUrl(value.fileUrl as string);
+      if (name === 'fileUrl') {
+         console.log("File URL changed:", value.fileUrl);
+         setPreviewUrl(value.fileUrl as string);
+      }
     });
     return () => subscription.unsubscribe();
   }, [form.watch]);
@@ -114,11 +119,17 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
           <p className="text-slate-400 mt-2">Manage your product details, pricing, and digital assets.</p>
         </div>
         <div className="flex items-center gap-2">
+           {!form.watch("isPublished") && (
+             <span className="text-xs text-yellow-500 mr-2 hidden md:inline-block">
+                Publish to view
+             </span>
+           )}
            <Button
              onClick={() => window.open("/f/" + initialData.id, "_blank")}
+             disabled={!form.watch("isPublished")}
              variant="outline"
              size="sm"
-             className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+             className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50"
            >
              <ExternalLink className="h-4 w-4 mr-2" /> View Public Page
            </Button>
@@ -146,6 +157,63 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                    )} />
                  </div>
                </div>
+               
+               {/* UPLOAD SECTION - UPGRADED */}
+               <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
+                 <div className="flex items-center justify-between mb-4">
+                   <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-indigo-400" /><h2 className="text-lg font-semibold text-white">Digital Asset</h2></div>
+                 </div>
+                 
+                 <FormField control={form.control} name="fileUrl" render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          {previewUrl ? (
+                            <div className="relative group rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl transition-all duration-300">
+                              <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900">
+                                {isImage(previewUrl) ? (
+                                  <Image src={previewUrl} alt="Upload Preview" fill className="object-cover" />
+                                ) : (
+                                  <div className="text-center p-8 flex flex-col items-center">
+                                     <div className="h-16 w-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                                       <FileText className="h-8 w-8 text-indigo-400" />
+                                     </div>
+                                     <p className="text-sm font-medium text-white truncate max-w-[200px]">{previewUrl.split('/').pop()}</p>
+                                     <Badge variant="outline" className="mt-2 border-indigo-500/30 text-indigo-300">Ready to Sell</Badge>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                                <Button type="button" variant="secondary" onClick={() => window.open(previewUrl, "_blank")}><Eye className="h-4 w-4 mr-2" /> View File</Button>
+                                <Button type="button" variant="destructive" onClick={() => { field.onChange(""); setPreviewUrl(""); }}><Trash className="h-4 w-4" /></Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="border border-dashed border-slate-700 rounded-xl bg-slate-900/30 hover:bg-slate-900/50 transition-colors p-2">
+                                <UploadDropzone 
+                                  endpoint="productFile" 
+                                  content={{ label: "Upload Course PDF, Video, or Ebook" }}
+                                  onClientUploadComplete={(res) => { 
+                                    const url = res?.[0].url;
+                                    field.onChange(url); 
+                                    setPreviewUrl(url); 
+                                    toast.success("File uploaded! Click Save to finish."); 
+                                  }} 
+                                  onUploadError={() => { 
+                                    toast.error("Upload failed. Try a smaller file."); 
+                                  }} 
+                                  className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-0" 
+                                />
+                            </div>
+                          )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+               </div>
+             </div>
+
+             <div className="space-y-6">
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800/50">
                     <ShieldCheck className="h-5 w-5 text-green-500" />
@@ -155,58 +223,29 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                       <FormItem><FormLabel className="text-slate-300">Price (KES)</FormLabel><FormControl><div className="relative"><span className="absolute left-3 top-3 text-slate-500">KES</span><Input type="number" disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white pl-12 h-12 font-mono text-lg focus:border-indigo-500 placeholder:text-slate-600" /></div></FormControl><FormMessage /></FormItem>
                  )} />
                </div>
-             </div>
 
-             <div className="space-y-6">
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
-                 <div className="flex items-center justify-between mb-4">
-                   <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-indigo-400" /><h2 className="text-lg font-semibold text-white">Digital Asset</h2></div>
-                 </div>
-                 <FormField control={form.control} name="fileUrl" render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          {previewUrl ? (
-                            <div className="relative group rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl">
-                              <div className="relative aspect-video w-full flex items-center justify-center bg-slate-900">
-                                {isImage(previewUrl) ? (
-                                  <Image src={previewUrl} alt="Upload Preview" fill className="object-cover" />
-                                ) : (
-                                  <div className="text-center p-6">{getFileIcon(previewUrl)}<p className="text-sm font-medium text-slate-300 truncate px-4">{previewUrl.split('/').pop()}</p></div>
-                                )}
-                              </div>
-                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
-                                <Button type="button" variant="secondary" onClick={() => window.open(previewUrl, "_blank")}><Eye className="h-4 w-4 mr-2" /> View</Button>
-                                <Button type="button" variant="destructive" onClick={() => { field.onChange(""); setPreviewUrl(""); }}><Trash className="h-4 w-4" /></Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <UploadDropzone 
-                              endpoint="productFile" 
-                              content={{ label: "Upload Course PDF, Video, or Ebook" }}
-                              onClientUploadComplete={(res) => { 
-                                // FIX: Wrapped in braces to prevent return type error
-                                field.onChange(res?.[0].url); 
-                                setPreviewUrl(res?.[0].url); 
-                                toast.success("Uploaded successfully"); 
-                              }} 
-                              onUploadError={() => { 
-                                toast.error("Upload failed"); 
-                              }} 
-                              className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-slate-700 bg-slate-900/50 ut-label:mt-2" 
-                            />
-                          )}
-                        </FormControl>
-                        <FormMessage />
+                  <FormField control={form.control} name="isPublished" render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg p-1">
+                        <div className="space-y-1">
+                          <FormLabel className="text-base font-semibold text-white">Publish Status</FormLabel>
+                          <p className="text-xs text-slate-400">Public customers can only see live products.</p>
+                        </div>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-green-600" /></FormControl>
                       </FormItem>
                     )}
                   />
                </div>
-               <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
-                  <FormField control={form.control} name="isPublished" render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg p-1"><div className="space-y-1"><FormLabel className="text-base font-semibold text-white">Publish Status</FormLabel></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-green-600" /></FormControl></FormItem>
-                    )}
-                  />
-               </div>
+               
+               {!form.watch("isPublished") && (
+                 <Alert variant="destructive" className="bg-yellow-500/10 border-yellow-500/20 text-yellow-500">
+                   <AlertCircle className="h-4 w-4" />
+                   <AlertDescription>
+                     Your product is hidden. Turn on "Publish Status" to sell.
+                   </AlertDescription>
+                 </Alert>
+               )}
+
                <Button disabled={isLoading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-12 text-lg font-medium shadow-lg">Save Changes</Button>
              </div>
           </div>
