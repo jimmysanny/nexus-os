@@ -25,7 +25,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
+// REMOVED: Missing Alert Import
+// import { Alert, AlertDescription } from "@/components/ui/alert"; 
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -56,11 +58,9 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     },
   });
 
-  // Watch for external changes to fileUrl to update preview immediately
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'fileUrl') {
-         console.log("File URL changed:", value.fileUrl);
          setPreviewUrl(value.fileUrl as string);
       }
     });
@@ -158,7 +158,6 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                  </div>
                </div>
                
-               {/* UPLOAD SECTION - UPGRADED */}
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center justify-between mb-4">
                    <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-indigo-400" /><h2 className="text-lg font-semibold text-white">Digital Asset</h2></div>
@@ -237,13 +236,12 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                   />
                </div>
                
+               {/* CUSTOM ALERT (No Import Needed) */}
                {!form.watch("isPublished") && (
-                 <Alert variant="destructive" className="bg-yellow-500/10 border-yellow-500/20 text-yellow-500">
+                 <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-sm">
                    <AlertCircle className="h-4 w-4" />
-                   <AlertDescription>
-                     Your product is hidden. Turn on "Publish Status" to sell.
-                   </AlertDescription>
-                 </Alert>
+                   <span>Your product is hidden. Turn on "Publish Status" to sell.</span>
+                 </div>
                )}
 
                <Button disabled={isLoading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-12 text-lg font-medium shadow-lg">Save Changes</Button>
