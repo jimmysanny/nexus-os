@@ -32,7 +32,7 @@ const formSchema = z.object({
   price: z.coerce.number().min(0),
   isPublished: z.boolean().default(false),
   fileUrl: z.string().optional(),
-  paymentLink: z.string().optional(), // NEW FIELD
+  paymentLink: z.string().optional(), // NEW: Validation for payment link
 });
 
 interface ProductFormProps {
@@ -68,7 +68,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     try {
       setIsLoading(true);
       await axios.patch("/api/products/" + initialData.id, values);
-      toast.success("Saved successfully");
+      toast.success("Product updated successfully");
       router.refresh();
     } catch {
       toast.error("Something went wrong");
@@ -99,12 +99,23 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             Edit Funnel
-            {form.watch("isPublished") ? <Badge className="bg-green-600 px-3 py-1">Live</Badge> : <Badge variant="secondary" className="bg-yellow-500 text-black px-3 py-1">Draft</Badge>}
+            {form.watch("isPublished") ? (
+              <Badge className="bg-green-600 px-3 py-1 text-white border-0">Live</Badge>
+            ) : (
+              <Badge variant="secondary" className="bg-yellow-500 text-black px-3 py-1 border-0">Draft</Badge>
+            )}
           </h1>
+          <p className="text-slate-400 mt-2">Manage your product details, pricing, and digital assets.</p>
         </div>
         <div className="flex items-center gap-2">
-           <Button onClick={() => window.open("/f/" + initialData.id, "_blank")} disabled={!form.watch("isPublished")} variant="outline" size="sm" className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50">
-             <ExternalLink className="h-4 w-4 mr-2" /> View Page
+           <Button
+             onClick={() => window.open("/f/" + initialData.id, "_blank")}
+             disabled={!form.watch("isPublished")}
+             variant="outline"
+             size="sm"
+             className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50"
+           >
+             <ExternalLink className="h-4 w-4 mr-2" /> View Public Page
            </Button>
            <Button onClick={onDelete} disabled={isLoading || isDeleting} variant="destructive" size="sm" className="bg-red-900/80 text-red-100 hover:bg-red-900 border border-red-800">
             <Trash className="h-4 w-4 mr-2" /> Delete
@@ -115,12 +126,13 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+             
+             {/* LEFT COLUMN */}
              <div className="lg:col-span-2 space-y-6">
-               {/* DETAILS */}
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800/50">
                    <Zap className="h-5 w-5 text-indigo-500" />
-                   <h2 className="text-lg font-semibold text-white">Details</h2>
+                   <h2 className="text-lg font-semibold text-white">Product Details</h2>
                  </div>
                  <div className="space-y-6">
                    <FormField control={form.control} name="name" render={({ field }) => (
@@ -132,8 +144,12 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                  </div>
                </div>
                
-               {/* UPLOAD */}
+               {/* UPLOAD SECTION (Fixed & Integrated) */}
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
+                 <div className="flex items-center justify-between mb-4">
+                   <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-indigo-400" /><h2 className="text-lg font-semibold text-white">Digital Asset</h2></div>
+                 </div>
+                 
                  <FormField control={form.control} name="fileUrl" render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -141,23 +157,39 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                             <div className="relative group rounded-xl overflow-hidden border border-slate-700 bg-slate-900 shadow-xl transition-all duration-300">
                               <div className="relative w-full p-8 flex flex-col items-center justify-center bg-slate-900 min-h-[250px]">
                                 {isImage(previewUrl) ? (
-                                  <div className="relative w-full h-64"><Image src={previewUrl} alt="Upload Preview" fill className="object-contain" /></div>
+                                  <div className="relative w-full h-64">
+                                     <Image src={previewUrl} alt="Upload Preview" fill className="object-contain" />
+                                  </div>
                                 ) : (
-                                  <div className="text-center flex flex-col items-center">
-                                     <div className="h-24 w-24 bg-indigo-500/10 rounded-full flex items-center justify-center mb-6 border border-indigo-500/20"><FileCheck className="h-10 w-10 text-indigo-400" /></div>
+                                  <div className="text-center flex flex-col items-center animate-in zoom-in duration-300">
+                                     <div className="h-24 w-24 bg-indigo-500/10 rounded-full flex items-center justify-center mb-6 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                                       <FileCheck className="h-10 w-10 text-indigo-400" />
+                                     </div>
                                      <h3 className="text-xl font-bold text-white mb-2">File Ready</h3>
-                                     <p className="text-sm font-mono text-slate-400 bg-slate-950 px-4 py-2 rounded-lg border border-slate-800 max-w-[300px] truncate">{previewUrl.split('/').pop()}</p>
+                                     <p className="text-sm font-mono text-slate-400 bg-slate-950 px-4 py-2 rounded-lg border border-slate-800 max-w-[300px] truncate shadow-inner">
+                                       {previewUrl.split('/').pop()}
+                                     </p>
                                   </div>
                                 )}
                               </div>
-                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3">
+                              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 backdrop-blur-sm">
                                 <Button type="button" variant="secondary" onClick={() => window.open(previewUrl, "_blank")}><Eye className="h-4 w-4 mr-2" /> View File</Button>
                                 <Button type="button" variant="destructive" onClick={() => { field.onChange(""); setPreviewUrl(""); }}><Trash className="h-4 w-4" /></Button>
                               </div>
                             </div>
                           ) : (
                             <div className="border border-dashed border-slate-700 rounded-xl bg-slate-900/30 hover:bg-slate-900/50 transition-colors p-8">
-                                <UploadDropzone endpoint="productFile" onClientUploadComplete={(res) => { field.onChange(res?.[0].url); setPreviewUrl(res?.[0].url); toast.success("Uploaded!"); }} onUploadError={() => toast.error("Failed")} className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-0" />
+                                <UploadDropzone 
+                                  endpoint="productFile" 
+                                  onClientUploadComplete={(res) => { 
+                                    const url = res?.[0].url;
+                                    field.onChange(url); 
+                                    setPreviewUrl(url); 
+                                    toast.success("File uploaded successfully!"); 
+                                  }} 
+                                  onUploadError={() => { toast.error("Upload failed."); }} 
+                                  className="ut-label:text-indigo-400 ut-button:bg-indigo-600 border-0" 
+                                />
                             </div>
                           )}
                         </FormControl>
@@ -168,12 +200,12 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                </div>
              </div>
 
+             {/* RIGHT COLUMN */}
              <div className="space-y-6">
-               {/* PRICING & LINK */}
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800/50">
                     <ShieldCheck className="h-5 w-5 text-green-500" />
-                    <h2 className="text-lg font-semibold text-white">Payment</h2>
+                    <h2 className="text-lg font-semibold text-white">Pricing</h2>
                  </div>
                  <div className="space-y-4">
                    <FormField control={form.control} name="price" render={({ field }) => (
@@ -181,29 +213,37 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                    )} />
                    
                    {/* NEW: PAYMENT LINK INPUT */}
-                   <FormField control={form.control} name="paymentLink" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-slate-300 flex items-center gap-2"><LinkIcon className="h-4 w-4 text-indigo-400" /> Payment Link (Paystack/M-Pesa)</FormLabel>
-                          <FormControl><Input placeholder="https://paystack.com/pay/..." disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-indigo-300 h-12" /></FormControl>
-                          <p className="text-xs text-slate-500">Create a page on Paystack and paste the link here.</p>
-                          <FormMessage />
-                        </FormItem>
-                   )} />
+                   <div className="pt-4 border-t border-slate-800/50">
+                     <FormField control={form.control} name="paymentLink" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-slate-300 flex items-center gap-2"><LinkIcon className="h-4 w-4 text-indigo-400" /> Direct Payment Link</FormLabel>
+                            <FormControl>
+                               <Input placeholder="https://paystack.com/pay/..." disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-indigo-300 h-12" />
+                            </FormControl>
+                            <p className="text-xs text-slate-500">Paste your Paystack or Gumroad link here to sell directly.</p>
+                            <FormMessage />
+                          </FormItem>
+                     )} />
+                   </div>
                  </div>
                </div>
 
-               {/* PUBLISH */}
-               <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 shadow-lg">
+               <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 shadow-lg relative overflow-hidden">
                   <FormField control={form.control} name="isPublished" render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg p-1">
-                        <div className="space-y-1"><FormLabel className="text-xl font-bold text-white">Publish</FormLabel><p className="text-sm text-slate-300">Visible to public</p></div>
-                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-green-500 scale-125 mr-2" /></FormControl>
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg p-1 relative z-10">
+                        <div className="space-y-1">
+                          <FormLabel className="text-xl font-bold text-white tracking-tight">Publish Status</FormLabel>
+                          <p className="text-sm text-slate-300 font-medium">Visible to public</p>
+                        </div>
+                        <FormControl>
+                           <Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-green-500 scale-125 mr-2 shadow-xl" />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
                </div>
                
-               <Button disabled={isLoading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-14 text-xl font-bold shadow-xl mt-4">Save Changes</Button>
+               <Button disabled={isLoading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-14 text-xl font-bold shadow-xl mt-4 border border-indigo-500/50">Save Changes</Button>
              </div>
           </div>
         </form>

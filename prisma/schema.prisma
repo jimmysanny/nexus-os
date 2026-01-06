@@ -16,7 +16,10 @@ model Product {
   price       Float?
   isPublished Boolean  @default(false)
   fileUrl     String?  @db.Text
-  paymentLink String?  @db.Text  // NEW: Store your Paystack/Gumroad link here
+  
+  // NEW: Field to store your Paystack/Gumroad link
+  paymentLink String?  @db.Text
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

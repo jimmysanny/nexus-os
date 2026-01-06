@@ -3,13 +3,13 @@ import { auth } from "@clerk/nextjs/server";
  
 const f = createUploadthing();
  
-const handleAuth = () => {
-  const { userId } = auth();
+// FIX: Added 'async' and 'await' to handle Clerk v5 Promises correctly
+const handleAuth = async () => {
+  const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   return { userId };
 };
  
-// This is the "productFile" endpoint your frontend is trying to reach
 export const ourFileRouter = {
   productFile: f({ 
     image: { maxFileSize: "16MB", maxFileCount: 1 },
@@ -17,7 +17,7 @@ export const ourFileRouter = {
     video: { maxFileSize: "64MB", maxFileCount: 1 },
     text: { maxFileSize: "4MB", maxFileCount: 1 }
   })
-    .middleware(() => handleAuth())
+    .middleware(async () => await handleAuth())
     .onUploadComplete(() => {})
 } satisfies FileRouter;
  
