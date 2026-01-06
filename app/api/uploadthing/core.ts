@@ -3,9 +3,8 @@ import { auth } from "@clerk/nextjs/server";
  
 const f = createUploadthing();
  
-// FIX: Added 'async' and 'await' to handle Clerk v5 Promises correctly
 const handleAuth = async () => {
-  const { userId } = await auth();
+  const { userId } = await auth(); // FIX: Added await here
   if (!userId) throw new Error("Unauthorized");
   return { userId };
 };

@@ -32,7 +32,7 @@ const formSchema = z.object({
   price: z.coerce.number().min(0),
   isPublished: z.boolean().default(false),
   fileUrl: z.string().optional(),
-  paymentLink: z.string().optional(), // NEW: Validation for payment link
+  paymentLink: z.string().optional(),
 });
 
 interface ProductFormProps {
@@ -43,6 +43,8 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // FIX: Initialize state correctly to avoid lag
   const [previewUrl, setPreviewUrl] = useState(initialData.fileUrl || "");
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,10 +55,11 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
       price: initialData.price ? parseFloat(String(initialData.price)) : 0,
       isPublished: initialData.isPublished,
       fileUrl: initialData.fileUrl || "",
-      paymentLink: initialData.paymentLink || "", // Load existing link
+      paymentLink: initialData.paymentLink || "",
     },
   });
 
+  // FIX: Watch fileUrl changes to update preview INSTANTLY
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
       if (name === 'fileUrl') setPreviewUrl(value.fileUrl as string);
@@ -68,7 +71,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
     try {
       setIsLoading(true);
       await axios.patch("/api/products/" + initialData.id, values);
-      toast.success("Product updated successfully");
+      toast.success("Product saved successfully");
       router.refresh();
     } catch {
       toast.error("Something went wrong");
@@ -100,12 +103,12 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
             Edit Funnel
             {form.watch("isPublished") ? (
-              <Badge className="bg-green-600 px-3 py-1 text-white border-0">Live</Badge>
+              <Badge className="bg-green-600 px-3 py-1 border-0 text-white hover:bg-green-700">Live</Badge>
             ) : (
-              <Badge variant="secondary" className="bg-yellow-500 text-black px-3 py-1 border-0">Draft</Badge>
+              <Badge variant="secondary" className="bg-yellow-500 text-black px-3 py-1 border-0 hover:bg-yellow-600">Draft</Badge>
             )}
           </h1>
-          <p className="text-slate-400 mt-2">Manage your product details, pricing, and digital assets.</p>
+          <p className="text-slate-400 mt-2">Manage details, assets, and payment links.</p>
         </div>
         <div className="flex items-center gap-2">
            <Button
@@ -115,7 +118,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
              size="sm"
              className="bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50"
            >
-             <ExternalLink className="h-4 w-4 mr-2" /> View Public Page
+             <ExternalLink className="h-4 w-4 mr-2" /> View Page
            </Button>
            <Button onClick={onDelete} disabled={isLoading || isDeleting} variant="destructive" size="sm" className="bg-red-900/80 text-red-100 hover:bg-red-900 border border-red-800">
             <Trash className="h-4 w-4 mr-2" /> Delete
@@ -144,7 +147,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                  </div>
                </div>
                
-               {/* UPLOAD SECTION (Fixed & Integrated) */}
+               {/* UPLOAD SECTION */}
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center justify-between mb-4">
                    <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-indigo-400" /><h2 className="text-lg font-semibold text-white">Digital Asset</h2></div>
@@ -181,6 +184,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                             <div className="border border-dashed border-slate-700 rounded-xl bg-slate-900/30 hover:bg-slate-900/50 transition-colors p-8">
                                 <UploadDropzone 
                                   endpoint="productFile" 
+                                  content={{ label: "Upload PDF, Video, or Image" }}
                                   onClientUploadComplete={(res) => { 
                                     const url = res?.[0].url;
                                     field.onChange(url); 
@@ -205,14 +209,14 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                <div className="bg-[#0B0F1A] border border-slate-800 rounded-xl p-6 shadow-sm">
                  <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800/50">
                     <ShieldCheck className="h-5 w-5 text-green-500" />
-                    <h2 className="text-lg font-semibold text-white">Pricing</h2>
+                    <h2 className="text-lg font-semibold text-white">Pricing & Links</h2>
                  </div>
                  <div className="space-y-4">
                    <FormField control={form.control} name="price" render={({ field }) => (
                         <FormItem><FormLabel className="text-slate-300">Price (KES)</FormLabel><FormControl><Input type="number" disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-white pl-4 h-12 font-mono text-lg" /></FormControl><FormMessage /></FormItem>
                    )} />
                    
-                   {/* NEW: PAYMENT LINK INPUT */}
+                   {/* GROK PIVOT: Direct Payment Link */}
                    <div className="pt-4 border-t border-slate-800/50">
                      <FormField control={form.control} name="paymentLink" render={({ field }) => (
                           <FormItem>
@@ -220,7 +224,7 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                             <FormControl>
                                <Input placeholder="https://paystack.com/pay/..." disabled={isLoading} {...field} className="bg-slate-900 border-slate-700 text-indigo-300 h-12" />
                             </FormControl>
-                            <p className="text-xs text-slate-500">Paste your Paystack or Gumroad link here to sell directly.</p>
+                            <p className="text-xs text-slate-500">Paste your Paystack, Gumroad, or Affiliate link here.</p>
                             <FormMessage />
                           </FormItem>
                      )} />
@@ -228,12 +232,14 @@ export const ProductForm = ({ initialData }: ProductFormProps) => {
                  </div>
                </div>
 
-               <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 shadow-lg relative overflow-hidden">
+               {/* FIX: High Contrast Publish Toggle */}
+               <div className="bg-slate-800 border border-slate-600 rounded-xl p-6 shadow-lg relative overflow-hidden group hover:border-indigo-500/50 transition-colors">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none" />
                   <FormField control={form.control} name="isPublished" render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg p-1 relative z-10">
                         <div className="space-y-1">
                           <FormLabel className="text-xl font-bold text-white tracking-tight">Publish Status</FormLabel>
-                          <p className="text-sm text-slate-300 font-medium">Visible to public</p>
+                          <p className="text-sm text-slate-300 font-medium">Make visible to public</p>
                         </div>
                         <FormControl>
                            <Switch checked={field.value} onCheckedChange={field.onChange} className="data-[state=checked]:bg-green-500 scale-125 mr-2 shadow-xl" />

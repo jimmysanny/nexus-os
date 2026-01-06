@@ -17,7 +17,7 @@ model Product {
   isPublished Boolean  @default(false)
   fileUrl     String?  @db.Text
   
-  // NEW: Field to store your Paystack/Gumroad link
+  // NEW: Field for Paystack/Gumroad/Affiliate links
   paymentLink String?  @db.Text
   
   createdAt   DateTime @default(now())
