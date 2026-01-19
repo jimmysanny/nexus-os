@@ -5,37 +5,25 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  relationMode = "prisma"
 }
 
-model Product {
+model Funnel {
   id          String   @id @default(uuid())
-  userId      String
-  name        String   @db.Text
-  description String?  @db.Text
-  price       Float?
-  isPublished Boolean  @default(false)
-  fileUrl     String?  @db.Text
-  
-  // NEW: Field for Paystack/Gumroad/Affiliate links
-  paymentLink String?  @db.Text
-  
+  userId      String   // Secured by Clerk
+  name        String
+  description String?
+  subdomain   String?  @unique
+  published   Boolean  @default(false)
+  visits      Int      @default(0)      //  Analytics Counter
+  blocks      Json?    @default("[]")   // Stores the Drag & Drop content
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  orders      Order[]
 }
 
 model Order {
   id        String   @id @default(uuid())
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  price     Float
-  fee       Float
-  net       Float
-  customerEmail String
-  status    String   @default("pending")
+  amount    Float
+  status    String   @default("SUCCESS")
+  reference String   @unique
   createdAt DateTime @default(now())
-
-  @@index([productId])
 }

@@ -6,11 +6,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Nexus OS - The Creator Operating System",
-  description: "Build funnels, sell products, and automate your business in Africa.",
-  icons: {
-    icon: "/favicon.ico",
-  },
+  title: "Nexus OS",
+  description: "SaaS Funnel Builder for African Creators",
 };
 
 export default function RootLayout({
@@ -26,5 +23,3 @@ export default function RootLayout({
     </ClerkProvider>
   );
 }
-// Deploy Trigger: 12/31/2025 14:39:02
-// deployed: 01/02/2026 03:09:20
