@@ -1,32 +1,30 @@
-﻿import { UserProfile } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { UserProfile } from "@clerk/nextjs";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const user = await currentUser();
+  if (!user) redirect("/sign-in");
+
   return (
-    <div className="p-4 md:p-8 max-w-full w-full overflow-x-hidden">
-      <div className="mb-6 md:mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-2 text-white">Account Settings</h2>
-        <p className="text-slate-400 text-sm md:text-base">Manage your profile, security, and preferences.</p>
+    <div>
+      <div className="mb-8">
+        <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
+          Settings
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your account settings and profile.
+        </p>
       </div>
 
-      <div className="bg-slate-900 rounded-xl border border-slate-800 w-full overflow-hidden">
-        <UserProfile 
-          routing="hash" 
+      <div className="overflow-hidden rounded-lg">
+        <UserProfile
           appearance={{
             elements: {
               rootBox: "w-full",
-              card: "bg-transparent shadow-none w-full max-w-full",
-              navbar: "hidden", // Keeps it simple
-              pageScrollBox: "p-4 md:p-6", // Adds breathing room inside
-              scrollBox: "w-full max-w-full"
+              cardBox: "w-full shadow-none",
+              card: "w-full shadow-none bg-transparent",
             },
-            variables: {
-              colorBackground: "#0f172a", 
-              colorText: "white",
-              colorInputBackground: "#1e293b",
-              colorInputText: "white",
-              colorPrimary: "#4f46e5",
-              borderRadius: "0.5rem"
-            }
           }}
         />
       </div>

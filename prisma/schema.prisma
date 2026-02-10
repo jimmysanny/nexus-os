@@ -7,23 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Funnel {
-  id          String   @id @default(uuid())
-  userId      String   // Secured by Clerk
-  name        String
-  description String?
-  subdomain   String?  @unique
-  published   Boolean  @default(false)
-  visits      Int      @default(0)      //  Analytics Counter
-  blocks      Json?    @default("[]")   // Stores the Drag & Drop content
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  service   String
+  budget    String?
+  message   String
+  fileUrl   String?
+  createdAt DateTime @default(now())
 }
 
-model Order {
-  id        String   @id @default(uuid())
-  amount    Float
-  status    String   @default("SUCCESS")
-  reference String   @unique
-  createdAt DateTime @default(now())
+model Project {
+  id         String    @id @default(cuid())
+  clientId   String
+  name       String
+  service    String
+  status     String    @default("In Progress")
+  progress   Int       @default(0)
+  dueDate    DateTime?
+  assignedTo String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  invoices   Invoice[]
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId    String
+  amount      Float
+  currency    String   @default("KES")
+  status      String   @default("Pending")
+  paystackRef String?
+  createdAt   DateTime @default(now())
 }

@@ -1,34 +1,75 @@
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function sendReceiptEmail(
-  customerEmail: string, 
-  amount: number, 
-  reference: string, 
-  currency: string = "KES" // Default to KES if missing
-) {
-  if (!process.env.RESEND_API_KEY) return;
+const AGENCY_EMAIL = process.env.AGENCY_EMAIL || "hello@nexus.agency";
+const FROM_EMAIL = process.env.FROM_EMAIL || "NEXUS Agency <onboarding@resend.dev>";
 
-  try {
-    await resend.emails.send({
-      from: 'Nexus OS <info@nexusos.africa>',
-      reply_to: 'jimmysanny01@gmail.com',
-      to: customerEmail,
-      subject: 'Payment Receipt - Nexus OS',
-      html: `
-        <div style="font-family: sans-serif; max-w-md; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-          <h1 style="color: #4f46e5;">Payment Received</h1>
-          <p>Thank you for your purchase of <strong>${currency} ${amount}</strong>.</p>
-          <p>Transaction Ref: <code style="background: #f4f4f5; padding: 4px; border-radius: 4px;">${reference}</code></p>
-          <br/>
-          <p>Your digital assets are unlocked.</p>
-          <hr style="border: 0; border-top: 1px solid #eaeaea; margin: 20px 0;" />
-          <p style="color: #666; font-size: 12px;">Nexus OS Inc.</p>
+export async function sendContactConfirmation({
+  name,
+  email,
+  service,
+}: {
+  name: string;
+  email: string;
+  service: string;
+}) {
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: email,
+    subject: "We received your inquiry - NEXUS Agency",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #080808; color: #f5f0e8; padding: 40px;">
+        <h1 style="color: #e8b84b; font-size: 24px;">Thank you, ${name}!</h1>
+        <p style="line-height: 1.6; color: #999;">
+          We received your inquiry about <strong style="color: #f5f0e8;">${service}</strong>. 
+          Our team will review your request and get back to you within 24 hours.
+        </p>
+        <p style="line-height: 1.6; color: #999;">
+          In the meantime, feel free to book a free strategy call with us.
+        </p>
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #222;">
+          <p style="color: #666; font-size: 14px;">NEXUS Agency - Nairobi, Kenya</p>
         </div>
-      `
-    });
-  } catch (err) {
-    console.error("Failed to send email:", err);
-  }
+      </div>
+    `,
+  });
+}
+
+export async function sendAgencyNotification({
+  name,
+  email,
+  phone,
+  company,
+  service,
+  budget,
+  message,
+}: {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  service: string;
+  budget?: string;
+  message: string;
+}) {
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to: AGENCY_EMAIL,
+    subject: `New Lead: ${name} - ${service}`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>New Contact Form Submission</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px; font-weight: bold;">Name:</td><td style="padding: 8px;">${name}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold;">Email:</td><td style="padding: 8px;">${email}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold;">Phone:</td><td style="padding: 8px;">${phone || "N/A"}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold;">Company:</td><td style="padding: 8px;">${company || "N/A"}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold;">Service:</td><td style="padding: 8px;">${service}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold;">Budget:</td><td style="padding: 8px;">${budget || "N/A"}</td></tr>
+          <tr><td style="padding: 8px; font-weight: bold;">Message:</td><td style="padding: 8px;">${message}</td></tr>
+        </table>
+      </div>
+    `,
+  });
 }
