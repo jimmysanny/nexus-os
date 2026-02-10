@@ -1,3 +1,81 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3.1%;
+    --foreground: 36 33% 93%;
+    --card: 0 0% 6.7%;
+    --card-foreground: 36 33% 93%;
+    --popover: 0 0% 6.7%;
+    --popover-foreground: 36 33% 93%;
+    --primary: 40 76% 60%;
+    --primary-foreground: 0 0% 3.1%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 36 33% 93%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 40 76% 60%;
+    --accent-foreground: 0 0% 3.1%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 36 33% 93%;
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 40 76% 60%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Ticker animation */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
