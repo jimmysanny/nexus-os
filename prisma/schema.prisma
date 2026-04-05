@@ -7,23 +7,158 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Funnel {
-  id          String   @id @default(uuid())
-  userId      String   // Secured by Clerk
+// ─────────────────────────────────────────
+// TENANT (Course Creator / School)
+// ─────────────────────────────────────────
+model Tenant {
+  id          String   @id @default(cuid())
   name        String
+  slug        String   @unique // used in URL: nexusos.com/[slug]
+  logoUrl     String?
   description String?
-  subdomain   String?  @unique
-  published   Boolean  @default(false)
-  visits      Int      @default(0)      //  Analytics Counter
-  blocks      Json?    @default("[]")   // Stores the Drag & Drop content
+  clerkOrgId  String?  @unique // optional: link to Clerk org
+  ownerId     String   // Clerk userId of the owner
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  courses     Course[]
+  students    Enrollment[]
+  payments    Payment[]
+  members     TenantMember[]
 }
 
-model Order {
-  id        String   @id @default(uuid())
-  amount    Float
-  status    String   @default("SUCCESS")
-  reference String   @unique
+// ─────────────────────────────────────────
+// TENANT MEMBERS (instructors, admins per tenant)
+// ─────────────────────────────────────────
+model TenantMember {
+  id        String           @id @default(cuid())
+  tenantId  String
+  clerkId   String           // Clerk userId
+  role      TenantMemberRole @default(INSTRUCTOR)
+  createdAt DateTime         @default(now())
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, clerkId])
+}
+
+enum TenantMemberRole {
+  OWNER
+  ADMIN
+  INSTRUCTOR
+}
+
+// ─────────────────────────────────────────
+// COURSE
+// ─────────────────────────────────────────
+model Course {
+  id          String       @id @default(cuid())
+  tenantId    String
+  title       String
+  slug        String
+  description String?
+  imageUrl    String?
+  price       Float        @default(0)
+  currency    String       @default("KES")
+  isPublished Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  chapters    Chapter[]
+  enrollments Enrollment[]
+  payments    Payment[]
+
+  @@unique([tenantId, slug])
+}
+
+// ─────────────────────────────────────────
+// CHAPTER
+// ─────────────────────────────────────────
+model Chapter {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  videoUrl    String?  // YouTube / Vimeo embed URL
+  position    Int
+  isPublished Boolean  @default(false)
+  isFree      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userProgress UserProgress[]
+
+  @@index([courseId])
+}
+
+// ─────────────────────────────────────────
+// USER PROGRESS
+// ─────────────────────────────────────────
+model UserProgress {
+  id          String   @id @default(cuid())
+  clerkId     String
+  chapterId   String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chapter     Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([clerkId, chapterId])
+  @@index([chapterId])
+}
+
+// ─────────────────────────────────────────
+// ENROLLMENT
+// ─────────────────────────────────────────
+model Enrollment {
+  id        String   @id @default(cuid())
+  clerkId   String   // student's Clerk userId
+  courseId  String
+  tenantId  String
   createdAt DateTime @default(now())
+
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([clerkId, courseId])
+  @@index([courseId])
+}
+
+// ─────────────────────────────────────────
+// PAYMENT
+// ─────────────────────────────────────────
+model Payment {
+  id              String        @id @default(cuid())
+  clerkId         String        // buyer
+  courseId        String
+  tenantId        String
+  amount          Float
+  currency        String        @default("KES")
+  provider        PaymentProvider
+  providerRef     String?       @unique // Paystack/IntaSend reference
+  status          PaymentStatus @default(PENDING)
+  webhookVerified Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  course          Course  @relation(fields: [courseId], references: [id])
+  tenant          Tenant  @relation(fields: [tenantId], references: [id])
+
+  @@index([clerkId])
+  @@index([courseId])
+}
+
+enum PaymentProvider {
+  PAYSTACK
+  INTASEND
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
 }
